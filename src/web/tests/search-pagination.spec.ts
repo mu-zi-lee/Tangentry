@@ -1,5 +1,15 @@
 import { expect, test } from './e2e'
 
+test('top-level add action opens the guided add-content entry', async ({ page }) => {
+  await page.goto('/')
+  await page.locator('.experience-add').click()
+  await expect(page).toHaveURL(/\/search\?entry=add$/)
+  await expect(page.getByRole('heading', { name: '添加内容', exact: true })).toBeVisible()
+  const input = page.getByLabel('UP 主 UID 或视频地址')
+  await input.fill('https://www.youtube.com/watch?v=abcdefghijk')
+  await expect(page.getByRole('button', { name: 'YouTube', exact: true })).toHaveAttribute('aria-pressed', 'true')
+})
+
 test('search pagination retains its result source after switching inputs and deduplicates every batch', async ({ page }) => {
   const item = (index: number) => ({ id: `bilibili:BVsearch${index}`, platform: 'bilibili', platformId: `BVsearch${index}`, kind: 'video', title: `分页视频 ${index}`, author: '测试作者', authorId: '', url: `https://www.bilibili.com/video/BVsearch${index}`, thumbnailUrl: '', description: '', durationSeconds: 10, publishedAt: 0 })
   const calls: string[] = []

@@ -32,7 +32,7 @@ export function SourceComposer({ source, onSource, draft, onDraft, loading, inpu
   const selected = discoverySources[source]
   return <section className="source-composer" aria-label="内容来源">
     <div className="source-options" role="group" aria-label="搜索来源">{Object.entries(discoverySources).map(([id, entry]) => <Button variant="quiet" key={id} type="button" aria-pressed={source === id} onClick={() => onSource(id as DiscoverySource)}>{entry.label}</Button>)}</div>
-    <form onSubmit={event => { event.preventDefault(); onSubmit() }}><label className="source-input"><Link2 size={19} aria-hidden="true"/><Input ref={input} aria-label={selected.inputLabel} placeholder={selected.placeholder} value={draft} onChange={event => {
+    <form onSubmit={event => { event.preventDefault(); onSubmit() }}><label className="source-input"><Link2 size={19} aria-hidden="true"/><Input ref={input} data-add-content-input aria-label={selected.inputLabel} placeholder={selected.placeholder} value={draft} onChange={event => {
       const next = event.target.value
       const detected = detectSource(next)
       if (detected && detected !== source) onSource(detected)
