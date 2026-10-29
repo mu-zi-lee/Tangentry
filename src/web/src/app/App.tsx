@@ -176,8 +176,12 @@ export function App() {
       window.setTimeout(() => document.getElementById('subscription-query')?.focus(), 0)
       return
     }
-    if (view !== 'search') navigate('search', true, galleryQuery.trim() ? `/search?q=${encodeURIComponent(galleryQuery.trim())}` : '/search')
-    window.setTimeout(() => { (document.querySelector<HTMLInputElement>('.unified-search-form input') ?? input.current)?.focus(); input.current?.scrollIntoView({ block: 'center' }) }, 0)
+    navigate('search', view !== 'search', '/search?entry=add')
+    window.setTimeout(() => {
+      const target = document.querySelector<HTMLInputElement>('[data-add-content-input]') ?? document.querySelector<HTMLInputElement>('.unified-search-form input') ?? input.current
+      target?.focus()
+      target?.scrollIntoView({ block: 'center' })
+    }, 0)
   }
 
 
@@ -318,7 +322,7 @@ export function App() {
       savedViews={savedViews.views}
       onNavigateSavedView={id=>{setSubscriptionView(id);setSubscriptionMode('history');navigate('subscriptions',view !== 'subscriptions',`/subscriptions?view=${encodeURIComponent(id)}`)}}
       onReorderSavedViews={ids=>void savedViews.reorder(ids)}
-      onSearchQuery={query => navigate('search', view !== 'search', query.trim() ? `/search?q=${encodeURIComponent(query.trim())}` : '/search')}
+      onSearchQuery={query => navigate('search', view !== 'search', query.trim() ? `/search?entry=search&q=${encodeURIComponent(query.trim())}` : '/search?entry=search')}
       onHome={returnHome}
       activeDownloads={downloads.jobs.filter(job => job.state === 'queued' || job.state === 'running').length}
       savedCount={library.items.length}
