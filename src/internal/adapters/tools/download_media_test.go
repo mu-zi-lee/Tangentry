@@ -58,6 +58,9 @@ func TestDownloadArgumentsUseTitleContainerAndLiteralChoices(t *testing.T) {
 		}
 		args := tk.mediaArguments(rawURL, "/test/output", 720, tc.options)
 		text := strings.Join(args, " ")
+		if !strings.Contains(text, "--http-chunk-size 10M") {
+			t.Fatalf("CDN chunking fallback missing in %s", text)
+		}
 		wantOutput := "%(title).180B.%(ext)s"
 		if rawURL == "https://www.bilibili.com/video/BV17x411w7KC/" {
 			wantOutput = "%(playlist_index&Season 1/|)s%(title).100B [%(id)s]%(playlist_index& - S01E{playlist_index:02d}|)s.%(ext)s"

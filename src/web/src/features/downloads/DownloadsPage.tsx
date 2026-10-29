@@ -46,7 +46,7 @@ export function DownloadsPage({ downloads, onRead, intent }: { downloads: Downlo
   const [height, setHeight] = useState(0)
   const [options, setOptions] = useState<DownloadOptions>(() => ({ ...defaults, mode: intent?.mode ?? 'video' }))
   const [filter, setFilter] = useState<'all' | 'active' | 'completed' | 'failed'>('all')
-  const [settingsOpen, setSettingsOpen] = useState(() => matchMedia('(min-width: 761px)').matches)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const [thumbnailFailed, setThumbnailFailed] = useState(false)
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [deleteDialog, setDeleteDialog] = useState<{ ids: string[]; clear: boolean } | null>(null)
@@ -70,12 +70,6 @@ export function DownloadsPage({ downloads, onRead, intent }: { downloads: Downlo
   const subtitleTracks = (info?.subtitles ?? []).filter(track => !track.automatic || options.automaticSubtitles)
   const languages = [...new Map(subtitleTracks.map(track => [track.language, track])).values()]
   function update(value: Partial<DownloadOptions>) { setOptions(current => ({ ...current, ...value })) }
-  useEffect(() => {
-    const media = matchMedia('(min-width: 761px)')
-    const resize = () => setSettingsOpen(media.matches)
-    media.addEventListener('change', resize)
-    return () => media.removeEventListener('change', resize)
-  }, [])
   useEffect(() => {
     if (intent?.url) {
       setURL(intent.url)
@@ -113,28 +107,30 @@ export function DownloadsPage({ downloads, onRead, intent }: { downloads: Downlo
     }
   }
 
-  const settingsPanel = <aside className="download-settings" aria-label="下载设置">
-    <details className="download-options-disclosure" open={settingsOpen} onToggle={event => setSettingsOpen(event.currentTarget.open)}>
-      <summary><Settings2 size={16} aria-hidden="true"/><strong>下载设置</strong><span>{audioOnly ? options.audioFormat === 'best' ? '原始音频' : options.audioFormat?.toUpperCase() : `${options.container?.toUpperCase()} · ${height ? `${height}p` : '最高画质'}`}</span><ChevronDown size={16} aria-hidden="true"/></summary>
-      <div className="download-settings-body">
-        <div className="download-setting-block">
-          <span className="download-setting-label" id="download-kind-label">下载类型</span>
-          <div className="download-segment" role="group" aria-labelledby="download-kind-label">
-            <Button variant="quiet" aria-pressed={!audioOnly} disabled={!!info && !videoFormats.length} onClick={() => update({ mode: 'video' })}><Video size={15} />视频</Button>
-            <Button variant="quiet" aria-pressed={audioOnly} disabled={!!info && !audioAvailable} onClick={() => update({ mode: 'audio' })}><FileAudio size={15} />音频</Button>
-          </div>
+  const settingsPanel = <section className="download-settings" aria-label="下载设置">
+    <div className="download-quick-settings">
+      <div className="download-setting-block">
+        <span className="download-setting-label" id="download-kind-label">下载类型</span>
+        <div className="download-segment" role="group" aria-labelledby="download-kind-label">
+          <Button variant="quiet" aria-pressed={!audioOnly} disabled={!!info && !videoFormats.length} onClick={() => update({ mode: 'video' })}><Video size={15} />视频</Button>
+          <Button variant="quiet" aria-pressed={audioOnly} disabled={!!info && !audioAvailable} onClick={() => update({ mode: 'audio' })}><FileAudio size={15} />音频</Button>
         </div>
-        {!audioOnly ? <>
-          <div className="download-setting-block">
-            <span className="download-setting-label" id="download-container-label">文件格式</span>
-            <div className="download-segment" role="group" aria-labelledby="download-container-label">{(['mp4', 'mkv'] as const).map(container => <Button variant="quiet" key={container} aria-pressed={options.container === container} onClick={() => update({ container })}>{container.toUpperCase()}</Button>)}</div>
-          </div>
-          <label className="download-setting-block"><span className="download-setting-label">下载画质</span><Select aria-label="下载画质" value={height} disabled={!info || !!options.videoFormatId} onChange={event => setHeight(Number(event.target.value))}><option value={0}>最高原画</option>{heights.map(value => <option key={value} value={value}>最高 {value}p</option>)}</Select></label>
-          <div className="download-checks">
-            <label className="download-check"><Checkbox type="checkbox" checked={!options.videoOnly} disabled={!!info && !audioAvailable} onChange={event => update({ videoOnly: !event.target.checked })} /><span>保留音频</span></label>
-            <label className="download-check"><Checkbox type="checkbox" checked={!!options.compress} onChange={event => update({ compress: event.target.checked })} /><span>节省空间</span></label>
-          </div>
-        </> : <label className="download-setting-block"><span className="download-setting-label">音频格式</span><Select aria-label="音频格式" value={options.audioFormat} onChange={event => update({ audioFormat: event.target.value as DownloadOptions['audioFormat'] })}><option value="best">原始音质</option><option value="mp3">MP3</option><option value="m4a">M4A</option><option value="flac">FLAC</option><option value="wav">WAV</option><option value="opus">Opus</option></Select></label>}
+      </div>
+      {!audioOnly ? <>
+        <div className="download-setting-block">
+          <span className="download-setting-label" id="download-container-label">文件格式</span>
+          <div className="download-segment" role="group" aria-labelledby="download-container-label">{(['mp4', 'mkv'] as const).map(container => <Button variant="quiet" key={container} aria-pressed={options.container === container} onClick={() => update({ container })}>{container.toUpperCase()}</Button>)}</div>
+        </div>
+        <label className="download-setting-block"><span className="download-setting-label">下载画质</span><Select aria-label="下载画质" value={height} disabled={!info || !!options.videoFormatId} onChange={event => setHeight(Number(event.target.value))}><option value={0}>最高原画</option>{heights.map(value => <option key={value} value={value}>最高 {value}p</option>)}</Select></label>
+      </> : <label className="download-setting-block"><span className="download-setting-label">音频格式</span><Select aria-label="音频格式" value={options.audioFormat} onChange={event => update({ audioFormat: event.target.value as DownloadOptions['audioFormat'] })}><option value="best">原始音质</option><option value="mp3">MP3</option><option value="m4a">M4A</option><option value="flac">FLAC</option><option value="wav">WAV</option><option value="opus">Opus</option></Select></label>}
+    </div>
+    <details className="download-options-disclosure" open={settingsOpen} onToggle={event => setSettingsOpen(event.currentTarget.open)}>
+      <summary><Settings2 size={16} aria-hidden="true"/><strong>更多选项</strong><ChevronDown size={16} aria-hidden="true"/></summary>
+      <div className="download-settings-body">
+        {!audioOnly && <div className="download-checks">
+          <label className="download-check"><Checkbox type="checkbox" checked={!options.videoOnly} disabled={!!info && !audioAvailable} onChange={event => update({ videoOnly: !event.target.checked })} /><span>保留音频</span></label>
+          <label className="download-check"><Checkbox type="checkbox" checked={!!options.compress} onChange={event => update({ compress: event.target.checked })} /><span>节省空间</span></label>
+        </div>}
         <section className="download-setting-section" aria-label="字幕设置">
           <h3><Subtitles size={15} aria-hidden="true" />字幕</h3>
           <label className="download-check"><Checkbox type="checkbox" checked={!!options.automaticSubtitles} onChange={event => {
@@ -144,14 +140,20 @@ export function DownloadsPage({ downloads, onRead, intent }: { downloads: Downlo
           }} /><span>包含自动字幕</span></label>
           {!info ? <p className="download-muted">获取信息后显示可用字幕</p> : languages.length === 0 ? <p className="download-muted">没有可用{options.automaticSubtitles ? '' : '人工'}字幕</p> : <div className="download-languages">{languages.map(track => <label className="download-check" key={track.language}><Checkbox type="checkbox" aria-label={`下载字幕 ${track.language}`} checked={options.subtitleLanguages?.includes(track.language) ?? false} onChange={event => update({ subtitleLanguages: event.target.checked ? [...options.subtitleLanguages ?? [], track.language] : options.subtitleLanguages?.filter(language => language !== track.language) })} /><span>{track.label}<small>{track.language}{track.automatic ? ' · 自动' : ''}</small></span></label>)}</div>}
         </section>
+        {info && <section className="download-setting-section download-advanced-formats" aria-label="精确格式选择">
+          <h3><Settings2 size={15} aria-hidden="true" />精确格式</h3>
+          <div className="download-format-selection">
+            {!audioOnly && <FormatChoices formats={videoFormats} label="视频格式" selected={options.videoFormatId ?? ''} onChange={id => { update({ videoFormatId: id }); setHeight(0) }} />}
+            {(audioOnly || !options.videoOnly) && audioFormats.length > 0 && <FormatChoices formats={audioFormats} label="音频格式" selected={options.audioFormatId ?? ''} onChange={id => update({ audioFormatId: id })} />}
+          </div>
+        </section>}
       </div>
     </details>
-  </aside>
+  </section>
   return <div className="download-workspace">
     <PageHeader className="download-heading" title="下载" summary={activeCount ? `${activeCount} 个任务处理中，完成后可离线播放与阅读` : '把视频、音频和字幕保存到本机，随时离线继续。'} actions={<a className="button button-secondary" href="/tools#storage" aria-label="下载与存储设置" title="下载与存储设置"><Folder size={15}/>存储位置</a>}/>
     <section className="download-composer" aria-label="新建下载">
       <div className="download-composer-head">
-        <h2>新建下载</h2>
         <span className={`download-tool-status ${downloads.tools?.downloadReady ? 'is-ready' : ''}`}><span aria-hidden="true"/>{downloads.tools?.downloadReady ? '下载工具已就绪' : downloads.loading ? '检查下载工具…' : '下载工具未就绪'}</span>
       </div>
       <form onSubmit={event => { event.preventDefault(); void downloads.inspect(url) }}>
@@ -160,27 +162,19 @@ export function DownloadsPage({ downloads, onRead, intent }: { downloads: Downlo
       </form>
       {downloads.infoError && <div className="error-panel" role="alert"><p>{downloads.infoError}</p><Button variant="secondary" className="button button-secondary" disabled={downloads.inspecting} onClick={() => void downloads.inspect(url)}><RefreshCw size={15} />重试</Button></div>}
       {!downloads.loading && !downloads.tools?.downloadReady && <p className="inline-feedback"><CircleHelp size={17} />下载工具尚未准备好。<a href="/tools#storage">检查工具设置</a></p>}
-      <div className="download-workbench">
-        {info ? <section className="download-media" aria-label="媒体信息">
+      {info && <div className="download-workbench">
+        <section className="download-media" aria-label="媒体信息">
           <div className="download-preview">
             <div className="download-thumbnail">{info.thumbnailUrl && !thumbnailFailed ? <img src={info.thumbnailUrl} alt={info.title} referrerPolicy="no-referrer" onError={() => setThumbnailFailed(true)} /> : <>{videoFormats.length ? <Video size={32} strokeWidth={1.4} /> : <FileAudio size={32} strokeWidth={1.4} />}<span>暂无封面</span></>}{info.duration > 0 && <span className="download-duration">{duration(info.duration)}</span>}</div>
             <div className="download-media-copy"><span className="download-media-source">{info.extractor || new URL(info.url).hostname}</span><h2>{info.title}</h2>{info.author && <p>{info.author}</p>}<a href={info.url} target="_blank" rel="noopener noreferrer">打开原链接<ExternalLink size={13} /></a></div>
           </div>
-          <div className="download-format-selection">
-            {!audioOnly && <FormatChoices formats={videoFormats} label="视频格式" selected={options.videoFormatId ?? ''} onChange={id => { update({ videoFormatId: id }); setHeight(0) }} />}
-            {(audioOnly || !options.videoOnly) && audioFormats.length > 0 && <FormatChoices formats={audioFormats} label="音频格式" selected={options.audioFormatId ?? ''} onChange={id => update({ audioFormatId: id })} />}
-          </div>
-        </section> : <section className="download-awaiting" aria-busy={downloads.inspecting} aria-label="媒体预览">
-          {downloads.inspecting ? <LoaderCircle size={26} className="spin" /> : <Link2 size={26} strokeWidth={1.4} />}
-          <h2>{downloads.inspecting ? '正在读取媒体信息' : '等待下载链接'}</h2>
-          <p>{downloads.inspecting ? '正在获取画质、音轨和字幕' : '获取信息后，在这里核对标题并选择画质、音轨与字幕'}</p>
-        </section>}
+        </section>
         {settingsPanel}
-      </div>
-      <div className="download-submit">
-        <div><strong>{info ? `${audioOnly ? options.audioFormat === 'best' ? '原始音频' : options.audioFormat?.toUpperCase() : options.container?.toUpperCase()}${!audioOnly && options.videoOnly ? ' · 无音频' : ''}${!audioOnly && options.compress ? ' · 节省空间' : ''}` : '未选择媒体'}</strong><span>{info ? `${info.title}.${audioOnly ? options.audioFormat === 'best' ? '音频' : options.audioFormat : options.container}` : `保存到 ${downloads.tools?.downloadDir ?? '…'}`}{options.subtitleLanguages?.length ? ` · ${options.subtitleLanguages.length} 种字幕` : ''}</span></div>
+      </div>}
+      {info && <div className="download-submit">
+        <div><strong>{`${audioOnly ? options.audioFormat === 'best' ? '原始音频' : options.audioFormat?.toUpperCase() : options.container?.toUpperCase()}${!audioOnly && options.videoOnly ? ' · 无音频' : ''}${!audioOnly && options.compress ? ' · 节省空间' : ''}`}</strong><span>{`${info.title}.${audioOnly ? options.audioFormat === 'best' ? '音频' : options.audioFormat : options.container}`}{options.subtitleLanguages?.length ? ` · ${options.subtitleLanguages.length} 种字幕` : ''}</span></div>
         <Button variant="primary" className="button button-primary" disabled={!ready || downloads.submitting} onClick={() => void start()}>{downloads.submitting ? <LoaderCircle className="spin" size={16} /> : <ArrowDownToLine size={16} />}开始下载</Button>
-      </div>
+      </div>}
     </section>
     {downloads.error && <div className="error-panel" role="alert"><p>{downloads.error}</p><Button variant="secondary" className="button button-secondary" onClick={() => void downloads.reload()}>重新检查</Button></div>}
     {downloads.notice && <p className="inline-feedback" role="status"><Check size={16} />{downloads.notice}</p>}

@@ -297,6 +297,7 @@ export TANGENTRY_FASTER_WHISPER_PYTHON=~/.venvs/faster-whisper/bin/python
 | 命令 | 作用 |
 | --- | --- |
 | `make desktop` | 构建前端并以开发模式启动桌面应用（[MyGo](https://github.com/egoist/mygo)） |
+| `make dev-local` | 启动本机浏览器开发环境，直接使用 macOS 桌面版数据（仅绑定 `127.0.0.1`，免登录） |
 | `make server` | 构建 `build/tangentry-server` 无界面服务端 |
 | `make build` | 打包当前平台桌面应用；`PLATFORMS=windows/amd64,...` 交叉打包 |
 | `make desktop-build-all` | 打包全部平台（macOS 运行时需在 Apple Silicon 上构建） |

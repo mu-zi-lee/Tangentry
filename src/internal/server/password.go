@@ -65,6 +65,22 @@ func NewPasswordGate(next http.Handler, password string) *PasswordGate {
 	return &PasswordGate{next: next, password: sha256.Sum256([]byte(password)), now: time.Now, sessions: make(map[string]time.Time)}
 }
 
+// NewLocalDevelopmentHandler serves a deliberately loopback-only development
+// server without a sign-in page while retaining same-origin protection.
+func NewLocalDevelopmentHandler(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !sameOrigin(r) {
+			http.Error(w, "forbidden origin", http.StatusForbidden)
+			return
+		}
+		if r.URL.Path == "/healthz" && (r.Method == http.MethodGet || r.Method == http.MethodHead) {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		forward(next, w, r)
+	})
+}
+
 func (g *PasswordGate) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if !sameOrigin(r) {
 		http.Error(w, "forbidden origin", http.StatusForbidden)

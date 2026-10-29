@@ -109,7 +109,7 @@ export function restoreDiscoveryBatchSession(session: DiscoveryBatchSession | nu
 }
 
 const sourceLabels: Record<string, string> = {
-  subscriptions: '订阅更新', bilibili: 'B站推荐', youtube: 'YouTube 推荐',
+  subscriptions: '我的订阅', bilibili: 'B站推荐', youtube: 'YouTube 推荐',
   xiaohongshu: '小红书推荐', linuxdo: 'Linux.do 推荐', xiaoyuzhou: '小宇宙发现', douyin: '抖音推荐',
   huggingface: 'HF 每日论文',
 }
@@ -181,9 +181,9 @@ export function appendDiscoveryBatch(current: DiscoveryBatchResponse | null, nex
 
 /** Convert source/reason metadata into the quiet card label used by the feed. */
 export function discoverySourceLabel(source: string, reason = '', carriedOver = false): string {
-  if (carriedOver && source === 'subscriptions') return '订阅更新'
+  if (carriedOver && source === 'subscriptions') return '我的订阅'
   if (/陌生探索|随机探索/.test(reason)) return '陌生探索'
-  if (source === 'subscriptions' || /订阅优先|订阅更新/.test(reason)) return '订阅更新'
+  if (source === 'subscriptions' || /订阅优先|订阅更新/.test(reason)) return '我的订阅'
   return sourceLabels[source] ?? (source ? `${source} 推荐` : '发现')
 }
 

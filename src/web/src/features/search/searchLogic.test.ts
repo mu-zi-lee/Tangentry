@@ -10,7 +10,7 @@ describe('unified search grouping', () => {
   })
 
   test('appends only unseen cards', () => {
-    expect(appendSearchItems([{ id: 'a' } as any], [{ id: 'a' } as any, { id: 'b' } as any]).map(item => item.id)).toEqual(['a', 'b'])
+    expect(appendSearchItems([{ id: 'a' } as any], [{ id: 'a' } as any, { id: 'b' } as any, { id: 'b' } as any]).map(item => item.id)).toEqual(['a', 'b'])
   })
 
   test('keeps a failed platform group visible without cards', () => {

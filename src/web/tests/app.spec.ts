@@ -292,8 +292,8 @@ test('download failure stays visible and tool settings report actual configured 
   await expect(page.getByText('平台限制了下载请求', { exact: false }).first()).toBeVisible({ timeout: 10000 })
   await page.getByRole('button', { name: '工具设置', exact: true }).click()
   await expect(page.getByRole('heading', { name: '设置', exact: true })).toBeVisible()
-  await page.getByRole('navigation', { name: '设置类别' }).getByRole('button', { name: /下载与存储/ }).click()
-  await expect(page.getByRole('region', { name: '下载工具' }).getByText('已就绪', { exact: true }).first()).toBeVisible()
+  await page.getByRole('navigation', { name: '设置目录' }).getByRole('button', { name: '下载与存储', exact: true }).click()
+  await expect(page.locator('.settings-action-storage .settings-tool-row .settings-state[data-ready="true"]').first()).toBeVisible()
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
 })
 
@@ -329,7 +329,28 @@ test('browse, preview, save, reload and unsave use actual storage', async ({ pag
 
 test('existing subtitles load only on demand, search, switch language and export without media jobs', async ({ page, request }) => {
   let captionRequests = 0
-  await page.route('**/api/subtitles/bilibili?**', route => { captionRequests++; return route.continue() })
+  await page.route('**/api/subtitles/bilibili?**', route => {
+    captionRequests++
+    return route.fulfill({ json: {
+      videoId: fixture.platformId,
+      part: 1,
+      status: 'available',
+      tracks: [
+        { language: 'ai-zh', label: '简体中文', automatic: true, source: 'ai', cues: [
+          { start: 1.25, end: 4, text: '第一段测试字幕：好奇心。' },
+          { start: 5, end: 8.5, text: '第二段测试字幕：继续发现。' },
+          { start: 9, end: 11, text: '<script>这只是字幕文本</script>' },
+        ] },
+        { language: 'en', label: 'English', automatic: true, cues: [
+          { start: 1.25, end: 4, text: 'English subtitle fixture.' },
+        ] },
+      ],
+      languages: [
+        { language: 'ai-zh', label: '简体中文', automatic: true, source: 'ai', hasUrl: true },
+        { language: 'en', label: 'English', automatic: true, hasUrl: true },
+      ],
+    } })
+  })
   await page.route('**/api/discovery/bilibili?**', route => route.fulfill({ json: { items: [fixture], page: 1, total: 1, hasMore: false, sourceTitle: fixture.author, query: fixture.platformId } }))
   const beforeJobs = (await (await request.get('/api/downloads')).json()).jobs
   await page.goto('/search')
@@ -341,7 +362,9 @@ test('existing subtitles load only on demand, search, switch language and export
   await expect(page.locator('.preview-dialog')).toHaveCount(0)
   await expect(page.getByRole('list', { name: '字幕段落' }).getByRole('listitem')).toHaveCount(3)
   expect(captionRequests).toBe(1)
-  await expect(page.getByRole('link', { name: '在原视频打开 00:01' })).toHaveAttribute('href', `${fixture.url}?p=1&t=1`)
+  const seek = page.getByRole('button', { name: '跳转播放时间 00:01', exact: true })
+  await expect(seek).toBeVisible()
+  await seekRealPlayback(page)
   await expect(page.getByText('<script>这只是字幕文本</script>', { exact: true })).toBeVisible()
   expect(await page.locator('.subtitle-reader script').count()).toBe(0)
   await closeSubtitleOptions(page)
@@ -369,9 +392,13 @@ test('existing subtitles load only on demand, search, switch language and export
   expect((await (await request.get('/api/library')).json()).items).toEqual([])
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
   await page.setViewportSize({ width: 390, height: 844 })
+  await page.getByRole('group', { name: '阅读区域' }).getByRole('button', { name: '字幕', exact: true }).click()
   await closeSubtitleOptions(page)
   await openSubtitleSettings(page)
-  await page.getByLabel('字幕语言', { exact: true }).selectOption('ai-zh')
+  const visibleReader = page.locator('.subtitle-reader:visible')
+  const visibleLanguage = visibleReader.getByLabel('字幕语言', { exact: true })
+  await expect(visibleLanguage).toBeVisible()
+  await visibleLanguage.selectOption('ai-zh')
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
   await page.locator('.subtitle-reader').scrollIntoViewIfNeeded()
   // Reading actions scroll away with the page instead of covering the transcript.
@@ -387,16 +414,30 @@ test('no captions, login requirement and platform failure stay distinct', async 
     const id = new URL(route.request().url()).searchParams.get('q')!
     return route.fulfill({ json: { items: [{ ...fixture, id: `bilibili:${id}`, platformId: id, url: `https://www.bilibili.com/video/${id}/` }], page: 1, total: 1, hasMore: false, sourceTitle: fixture.author, query: id } })
   })
+  await page.route('**/api/subtitles/bilibili?**', route => {
+    const id = new URL(route.request().url()).searchParams.get('q')!
+    const document = id === 'BVnone000000'
+      ? { videoId: id, part: 1, status: 'none', tracks: [] }
+      : id === 'BVlogin00000'
+        ? { videoId: id, part: 1, status: 'login_required', tracks: [] }
+        : { videoId: id, part: 1, status: 'error', errorCode: 412, errorMessage: '字幕未能完整获取 · E2E 测试夹具', tracks: [] }
+    return route.fulfill({ json: document })
+  })
   await page.goto('/search')
   for (const [id, message] of [
     ['BVnone000000', '第一分 P 暂无可用字幕，可以按需转录。'],
-    ['BVlogin00000', '平台提示读取字幕需要登录。'],
+    ['BVlogin00000', 'B站提示读取字幕需要登录'],
     ['BVfailed0000', '字幕未能完整获取'],
   ]) {
     await page.getByLabel('UP 主 UID 或视频地址').fill(id)
     await page.getByRole('button', { name: '获取内容' }).click()
     await page.getByRole('button', { name: `阅读 ${fixture.title}` }).click()
-    await expect(page.getByText(message, { exact: false })).toBeVisible()
+    const messageLocator = id === 'BVlogin00000'
+      ? page.locator('.subtitle-empty').getByText(message, { exact: false })
+      : id === 'BVfailed0000'
+        ? page.getByRole('alert').getByText(message, { exact: false })
+        : page.locator('.subtitle-note').getByText(message, { exact: false })
+    await expect(messageLocator).toBeVisible()
     await expect(page.getByRole('list', { name: '字幕段落' })).toHaveCount(0)
     if (id === 'BVfailed0000') await expect(page.getByRole('alert')).toContainText('字幕未能完整获取')
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])

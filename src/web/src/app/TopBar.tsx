@@ -9,8 +9,7 @@ import { BrandMark } from '../shared/ui/BrandMark'
 const groups = [
   { label: '浏览', items: [
     { view: 'discovery', label: '发现' },
-    { view: 'podcasts', label: '播客' },
-    { view: 'subscriptions', label: '订阅' },
+    { view: 'subscriptions', label: '订阅管理' },
   ] },
   { label: '资料库', items: [
     { view: 'library', label: '收藏' },

@@ -9,7 +9,6 @@ import type { GallerySource, useGallery } from './useGallery'
 import './discovery.css'
 import { request } from '../../shared/api/client'
 import { useRecommendationExposure } from './useRecommendationExposure'
-import { MediaFilters } from '../../shared/ui/MediaFilters'
 import { SkeletonGallery } from '../../shared/ui/SkeletonLoading'
 import { openDesktopPlatformLogin, useCapabilities, type PlatformWebView } from '../../shared/api/desktop'
 import { discoveryBottomState, discoveryReasonType, getDiscoverySourceLabel, hasDiscoveryContinuation, readDiscoveryFilterState, updateDiscoveryFilterState, useDiscoveryBatch } from './useDiscoveryBatch'
@@ -18,7 +17,7 @@ import { feedbackMessage, type DiscoveryFeedbackTarget, type DiscoveryFeedbackTy
 import { PaperCard } from '../documents/PaperCard'
 import { canPollPlatformVerification } from './discoveryVerification'
 
-const labels: Record<GallerySource | 'huggingface', string> = { subscriptions: '订阅更新', bilibili: 'B站推荐', youtube: 'YouTube 推荐', xiaohongshu: '小红书推荐', linuxdo: 'Linux.do 话题', xiaoyuzhou: '小宇宙发现', douyin: '抖音推荐', huggingface: 'HF 每日论文' }
+const labels: Record<GallerySource | 'huggingface', string> = { subscriptions: '我的订阅', bilibili: 'B站推荐', youtube: 'YouTube 推荐', xiaohongshu: '小红书推荐', linuxdo: 'Linux.do 话题', xiaoyuzhou: '小宇宙发现', douyin: '抖音推荐', huggingface: 'HF 每日论文' }
 
 function DiscoveryTopicDialog({ topic, error, onSave, onClose }: {
   topic: DiscoveryTopicRule | null
@@ -63,9 +62,9 @@ function DiscoveryTopicDialog({ topic, error, onSave, onClose }: {
   </Dialog>
 }
 
-export function DiscoveryGallery({ active, kind, onKind, query, onClearQuery, onQueryChange, notice, noticeError, gallery, savedIDs, pending, savingUnavailable, onSave, onRead, onDownload, onCreator, onSearch, onSubscriptions, onSettings, onBilibili, onRouteChange }: {
+export function DiscoveryGallery({ active, query, onClearQuery, onQueryChange, notice, noticeError, gallery, savedIDs, pending, savingUnavailable, onSave, onRead, onDownload, onCreator, onSearch, onSubscriptions, onSettings, onBilibili, onRouteChange }: {
   active: boolean
-  kind: string; onKind: (kind: string) => void; origin: string; onOrigin: (origin: string) => void; notice: string; noticeError: boolean
+  notice: string; noticeError: boolean
   query: string; onClearQuery: () => void; onQueryChange?: (query: string) => void
   gallery: ReturnType<typeof useGallery>; savedIDs: Set<string>; pending: Set<string>; savingUnavailable: boolean
   onSave: (item: ContentItem) => void; onRead: (item: ContentItem) => void; onDownload: (item: ContentItem) => void; onCreator: (platform: string, authorID: string) => void; onSearch: () => void; onSubscriptions: () => void; onSettings: () => void; onBilibili: () => void; onRouteChange?: (path: string) => void
@@ -85,20 +84,20 @@ export function DiscoveryGallery({ active, kind, onKind, query, onClearQuery, on
   const [feedbackHidden, setFeedbackHidden] = useState(() => new Set<string>())
   const [undoFeedback, setUndoFeedback] = useState<{ id: string; itemID: string; message: string } | null>(null)
   const [feedbackError, setFeedbackError] = useState('')
-  const matchesKind = (mediaKind: string) => kind === 'all' || mediaKind === kind
   const sourceOptions = gallerySources.filter(source => source === 'subscriptions' || gallery.enabled?.[source] !== false)
   const sourceStatus = batchState.batch?.sourceStatus ?? {}
   const selectedEntries = (batchState.batch?.items ?? []).filter(entry => platform === 'all' || entry.source === platform)
   const search = query.trim().toLocaleLowerCase()
-  const items = selectedEntries.filter(({ item, reason }) => !feedbackHidden.has(item.id) && matchesKind(item.kind) && (!search || `${item.title} ${item.author} ${item.description} ${item.previewText || ''} ${item.platform} ${reason}`.toLocaleLowerCase().includes(search)))
+  // Discovery is intentionally one mixed stream. Media type is metadata on a
+  // card, not a second navigation system competing with sources and topics.
+  const items = selectedEntries.filter(({ item, reason }) => !feedbackHidden.has(item.id) && (!search || `${item.title} ${item.author} ${item.description} ${item.previewText || ''} ${item.platform} ${reason}`.toLocaleLowerCase().includes(search)))
   useRecommendationExposure(active, items.map(({ item }) => item.id).join(','), '[data-app-view="discovery"]')
   const loading = batchState.loading
   const errorCount = Object.values(sourceStatus).filter(status => status.status !== 'ok' && status.status !== 'disabled' && status.status !== 'loading').length
   const loadingCount = Object.values(sourceStatus).filter(status => status.status === 'loading').length
-  const syncURL = (next: Partial<{ kind: string; platform: string; topic: string; query: string }>) => {
+  const syncURL = (next: Partial<{ platform: string; topic: string; query: string }>) => {
     const params = new URLSearchParams()
-    const values = { kind, platform, topic, query, ...next }
-    if (values.kind && values.kind !== 'all') params.set('kind', values.kind)
+    const values = { platform, topic, query, ...next }
     if (values.platform && values.platform !== 'all') params.set('platform', values.platform)
     if (values.topic) params.set('topic', values.topic)
     if (values.query.trim()) params.set('q', values.query.trim())
@@ -106,18 +105,19 @@ export function DiscoveryGallery({ active, kind, onKind, query, onClearQuery, on
   }
   const setPlatform = (value: string) => { setPlatformState(value); updateDiscoveryFilterState({ platform: value }); batchState.setOptions({ source: value === 'all' ? '' : value }); syncURL({ platform: value }) }
   const setTopic = (value: string) => { setTopicState(value); updateDiscoveryFilterState({ topic: value }); batchState.setOptions({ topic: value }); syncURL({ topic: value }) }
-  const setKind = (value: string) => { onKind(value); updateDiscoveryFilterState({ kind: value }); syncURL({ kind: value }) }
   useEffect(() => {
     const sync = () => {
       if (location.pathname !== '/') return
       const params = new URLSearchParams(location.search)
-      const nextKind = params.get('kind') ?? 'all', nextPlatform = params.get('platform') ?? 'all', nextTopic = params.get('topic') ?? ''
-      onKind(nextKind); setPlatformState(nextPlatform); setTopicState(nextTopic); onQueryChange?.(params.get('q') ?? ''); updateDiscoveryFilterState({ kind: nextKind, platform: nextPlatform, topic: nextTopic })
+      const nextPlatform = params.get('platform') ?? 'all', nextTopic = params.get('topic') ?? ''
+      // Ignore the legacy media-type filter. Existing bookmarks still open the
+      // same mixed feed instead of silently hiding most of the content.
+      setPlatformState(nextPlatform); setTopicState(nextTopic); onQueryChange?.(params.get('q') ?? ''); updateDiscoveryFilterState({ kind: 'all', platform: nextPlatform, topic: nextTopic })
       const source = nextPlatform === 'all' ? '' : nextPlatform
       if (batchState.options.topic !== nextTopic || batchState.options.source !== source) batchState.setOptions({ topic: nextTopic, source })
     }
     sync(); window.addEventListener('popstate', sync); return () => window.removeEventListener('popstate', sync)
-  }, [batchState.options.source, batchState.options.topic, batchState.setOptions, onKind, onQueryChange])
+  }, [batchState.options.source, batchState.options.topic, batchState.setOptions, onQueryChange])
 
   useEffect(() => {
     const target = sentinel.current
@@ -202,8 +202,7 @@ export function DiscoveryGallery({ active, kind, onKind, query, onClearQuery, on
         <Button variant="quiet" iconOnly type="button" className="icon-button" aria-label="打开B站专区" title="打开B站专区" onClick={onBilibili}><TvMinimal size={18} /></Button>
         <Button variant="quiet" iconOnly type="button" className="icon-button" aria-label="刷新发现内容" title="刷新发现内容" disabled={loading} onClick={batchState.retry}>{loading ? <LoaderCircle size={18} className="spin" /> : <RefreshCw size={18} />}</Button>
       </div>
-      <div className="discovery-filter-rail" role="group" aria-label="筛选发现内容" tabIndex={0}>
-        <MediaFilters value={kind} onChange={setKind} />
+      <div className="discovery-filter-rail" role="group" aria-label="发现内容来源与主题" tabIndex={0}>
         <div className="discovery-platforms" role="group" aria-label="内容来源"><Button variant="quiet" type="button" aria-pressed={platform === 'all'} onClick={() => setPlatform('all')}>全部</Button>{sourceOptions.map(source => <Button variant="quiet" key={source} type="button" data-platform={source} aria-pressed={platform === source} onClick={() => setPlatform(platform === source ? 'all' : source)}><span className="platform-dot" aria-hidden="true" />{labels[source]}</Button>)}</div>
         <div className="discovery-topics" role="group" aria-label="主题筛选"><Button variant="quiet" type="button" aria-pressed={!topic} onClick={() => setTopic('')}>全部主题</Button>{topicState.topics.map(value => <span className="discovery-topic-chip" key={value.id}><Button variant="quiet" type="button" aria-pressed={topic === value.id} onClick={() => setTopic(value.id)}>{value.name}</Button><Button variant="quiet" type="button" className="discovery-topic-action" aria-label={`编辑主题 ${value.name}`} title="编辑主题" onClick={() => manageTopic(value)}><Edit3 size={12} /></Button><Button variant="quiet" type="button" className="discovery-topic-action" aria-label={`删除主题 ${value.name}`} title="删除主题" onClick={() => void topicState.remove(value)}><X size={12} /></Button></span>)}<Button variant="quiet" type="button" className="discovery-topic-add" aria-label="新增主题" title="新增主题" onClick={() => manageTopic()}><Plus size={15} /></Button></div>
       </div>
@@ -216,7 +215,7 @@ export function DiscoveryGallery({ active, kind, onKind, query, onClearQuery, on
     {notice && <p className="inline-feedback collection-save-feedback" role={noticeError ? 'alert' : 'status'}>{notice}</p>}
     {savingUnavailable && <p className="field-hint" role="status">资料库暂不可用，收藏操作等待重新连接。</p>}
     {search && <p className="discovery-search-result" role="status">当前已加载内容中找到 {items.length} 条结果<Button variant="quiet" type="button" className="text-button" onClick={onClearQuery}>清除搜索</Button></p>}
-    {items.length > 0 ? <CardCollection masonry={!['video', 'audio'].includes(kind)} rowGap={20} data-media={kind} className="mixed-gallery" aria-label="发现内容">{items.map(({ item, source, reason, carriedOver }) => item.paper ? <PaperCard key={item.id} item={item} saved={savedIDs.has(item.id)} pending={savingUnavailable || pending.has(item.id)} onRead={openRecommendation} onSave={onSave} /> : <ModernGalleryCard discovery key={item.id} item={item} origin={getDiscoverySourceLabel(source, reason, carriedOver)} discoveryReason={reason} discoveryType={discoveryReasonType(source, reason, carriedOver)} saved={savedIDs.has(item.id)} pending={savingUnavailable || pending.has(item.id)} onRead={openRecommendation} onSave={onSave} onCreator={item.authorId ? value => onCreator(value.platform, value.authorId) : undefined} onDownload={onDownload} onFeedback={(type, target, value) => void sendFeedback(type, target, value, item)} />)}</CardCollection> : loading ? <SkeletonGallery count={8} /> : search ? <section className="empty-state"><h2>没有找到匹配的内容</h2><p>试试其他关键词，或清除搜索查看当前内容。</p><Button variant="secondary" type="button" className="button button-secondary" onClick={onClearQuery}>查看全部内容</Button></section> : <section className="empty-state"><h2>还没有可浏览的推荐</h2><p>添加链接开始阅读，或连接平台和订阅来获取个性化内容。</p><div className="empty-state-actions"><Button variant="primary" className="button button-primary" onClick={onSearch}>添加内容</Button><Button variant="secondary" className="button button-secondary" onClick={onSettings}>连接平台</Button><Button variant="quiet" className="text-button" onClick={onSubscriptions}>管理订阅</Button></div></section>}
+    {items.length > 0 ? <CardCollection masonry rowGap={20} data-media="all" className="mixed-gallery" aria-label="发现内容">{items.map(({ item, source, reason, carriedOver }) => item.paper ? <PaperCard key={item.id} item={item} saved={savedIDs.has(item.id)} pending={savingUnavailable || pending.has(item.id)} onRead={openRecommendation} onSave={onSave} /> : <ModernGalleryCard discovery key={item.id} item={item} origin={getDiscoverySourceLabel(source, reason, carriedOver)} discoveryReason={reason} discoveryType={discoveryReasonType(source, reason, carriedOver)} saved={savedIDs.has(item.id)} pending={savingUnavailable || pending.has(item.id)} onRead={openRecommendation} onSave={onSave} onCreator={item.authorId ? value => onCreator(value.platform, value.authorId) : undefined} onDownload={onDownload} onFeedback={(type, target, value) => void sendFeedback(type, target, value, item)} />)}</CardCollection> : loading ? <SkeletonGallery count={8} /> : search ? <section className="empty-state"><h2>没有找到匹配的内容</h2><p>试试其他关键词，或清除搜索查看当前内容。</p><Button variant="secondary" type="button" className="button button-secondary" onClick={onClearQuery}>查看全部内容</Button></section> : <section className="empty-state"><h2>还没有可浏览的推荐</h2><p>添加链接开始阅读，或连接平台和订阅来获取个性化内容。</p><div className="empty-state-actions"><Button variant="primary" className="button button-primary" onClick={onSearch}>添加内容</Button><Button variant="secondary" className="button button-secondary" onClick={onSettings}>连接平台</Button><Button variant="quiet" className="text-button" onClick={onSubscriptions}>管理订阅</Button></div></section>}
     <div ref={sentinel} className="gallery-load-more discovery-feed-status" aria-live="polite">{(() => {
       const state = discoveryBottomState(batchState.error, loading, batchState.batch, items.length)
       if (state.kind === 'error') return <><span role="alert">{state.message}</span><Button variant="secondary" className="button button-secondary" onClick={batchState.retry}><RefreshCw size={15} />重试</Button></>

@@ -209,6 +209,8 @@ func classify(raw string) error {
 	switch {
 	case strings.Contains(text, "412"), strings.Contains(text, "403"), strings.Contains(text, "429"), strings.Contains(text, "-352"), strings.Contains(text, "risk control"):
 		return errors.New("平台限制了下载请求，请稍后重试；登录态或网络环境可能影响访问。")
+	case strings.Contains(text, "http error 567"), strings.Contains(text, "error 567"):
+		return errors.New("视频 CDN 暂时拒绝了分片请求，已自动改用小分片下载；请稍后重试。")
 	case strings.Contains(text, "login"), strings.Contains(text, "sign in"), strings.Contains(text, "cookies"), strings.Contains(text, "premium"):
 		return errors.New("此视频需要有效登录态或账号权限，请检查登录配置。")
 	case strings.Contains(text, "requested format"), strings.Contains(text, "no video formats"):

@@ -58,5 +58,9 @@ export function mergeSearchItems(groups: SearchGroup[]): ContentItem[] {
 
 export function appendSearchItems(existing: ContentItem[], next: ContentItem[]): ContentItem[] {
   const seen = new Set(existing.map(item => item.id))
-  return [...existing, ...next.filter(item => !seen.has(item.id))]
+  return [...existing, ...next.filter(item => {
+    if (seen.has(item.id)) return false
+    seen.add(item.id)
+    return true
+  })]
 }

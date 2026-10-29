@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := build
-.PHONY: dev build server docker test test-unit test-e2e check-race desktop desktop-build desktop-build-windows desktop-build-linux desktop-build-all clean
+.PHONY: dev dev-local build server docker test test-unit test-e2e check-race desktop desktop-build desktop-build-windows desktop-build-linux desktop-build-all clean
 
 VERSION ?= 0.0.3.3
 IMAGE ?= tangentry
@@ -31,6 +31,16 @@ desktop:
 	cd $(SOURCE_DIR) && go tool mygo dev
 
 dev: desktop
+
+# Local browser testing uses the same data as the installed macOS app. The
+# server is intentionally loopback-only and skips the sign-in page.
+dev-local:
+	@set -e; \
+	data="$(HOME)/Library/Application Support/Tangentry"; \
+	(cd $(SOURCE_DIR) && TANGENTRY_DEV_LOCAL=1 TANGENTRY_DATA="$$data" go run ./cmd/tangentry-server -addr 127.0.0.1:7380) & \
+	server_pid=$$!; \
+	trap 'kill $$server_pid 2>/dev/null || true' EXIT INT TERM; \
+	cd $(WEB_DIR) && npm run dev -- --host 127.0.0.1
 
 # Headless server for Docker / NAS hosts; see README.
 server:

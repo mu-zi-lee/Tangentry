@@ -2,24 +2,34 @@
 /* One toolbar for every medium: where you came from on the left, what you can do with
    this item on the right. Status messages take their own line instead of pushing buttons. */
 .reading-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; padding: 4px 0 12px; border-bottom: 1px solid var(--line); }
-.reading-nav > .button:first-child { padding-inline: 8px 12px; border-color: transparent; background: transparent; box-shadow: none; color: var(--muted); }
-.reading-nav > .button:first-child:hover { color: var(--ink); background: var(--hover); }
+.reading-nav > .button:first-child { min-height: 34px; padding: 5px 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); box-shadow: none; color: var(--muted); }
+.reading-nav > .button:first-child:hover { color: var(--ink); background: var(--surface); }
 .reading-nav > span { min-width: 0; margin-right: auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--faint); font-size: 12.5px; }
 .reading-nav > span::before { content: '/'; margin-right: 8px; color: var(--line-strong); }
-.reading-nav .button { min-height: 32px; padding: 5px 11px; font-size: 12.5px; }
+.reading-nav .button { min-height: 34px; height: 34px; padding: 5px 11px; font-size: 12.5px; }
 .reading-nav .button-secondary { box-shadow: none; }
 .reading-nav-actions { min-width: 0; display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 6px; }
 .reading-nav-modes { display: flex; flex: 0 1 auto; min-width: 0; align-items: center; }
-.reading-nav-modes .reading-notebook-navigation { display: flex; align-items: center; gap: 2px; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.reading-nav-modes .reading-notebook-navigation { display: flex; align-items: center; gap: 0; min-width: 0; overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); scrollbar-width: none; }
 .reading-nav-modes .reading-notebook-navigation::-webkit-scrollbar { display: none; }
-.reading-nav-modes .reading-notebook-navigation button { display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 32px; padding: 4px 8px; border: 1px solid transparent; border-radius: var(--radius); color: var(--muted); font-size: 12px; white-space: nowrap; }
-.reading-nav-modes .reading-notebook-navigation button[aria-pressed='true'] { border-color: var(--line); background: var(--surface); color: var(--ink); }
-.reading-nav-modes .reading-notebook-navigation .reading-theater-toggle { margin-left: 4px; border-color: var(--line); }
+.reading-nav-modes .reading-notebook-navigation button { display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 32px; padding: 4px 10px; border: 0; border-radius: 0; color: var(--muted); background: transparent; font-size: 12px; white-space: nowrap; }
+.reading-nav-modes .reading-notebook-navigation button[aria-pressed='true'] { background: var(--surface); color: var(--ink); box-shadow: inset 0 -2px var(--accent); }
+.reading-nav-modes .reading-notebook-navigation button:hover { color: var(--ink); background: var(--hover); }
+.reading-nav-modes .reading-notebook-navigation .reading-theater-toggle { margin-left: 0; border-left: 1px solid var(--line); }
 .reading-nav-actions .reader-read-state { flex-wrap: nowrap; }
 .reading-nav-actions .reader-read-state .button,
 .reading-nav-actions > .button,
-.reading-nav-actions .ai-inline-trigger { width: 34px; min-width: 34px; height: 34px; min-height: 34px; padding: 0; gap: 0; justify-content: center; overflow: hidden; font-size: 0; }
+.reading-nav-actions .ai-inline-trigger,
+.reading-nav-actions .icon-button,
+.reading-nav-actions .toolbar-popover-trigger,
+.reading-nav > .icon-button { width: 34px; min-width: 34px; height: 34px; min-height: 34px; padding: 0; gap: 0; justify-content: center; overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); font-size: 0; }
 .reading-nav-actions :is(.reader-read-state .button, .button, .ai-inline-trigger) svg { flex: 0 0 auto; }
+.reading-nav-actions .toolbar-popover-trigger { color: var(--muted); }
+.reading-nav-actions .toolbar-popover-trigger:hover, .reading-nav-actions .icon-button:hover, .reading-nav > .icon-button:hover { background: var(--surface); }
+.reading-nav-actions .toolbar-popover { display: inline-flex; }
+.reading-nav-actions :is(.reader-read-state .button, .button, .ai-inline-trigger, .icon-button, .toolbar-popover-trigger):disabled { opacity: .5; }
+.reading-nav .reader-original-link { width: 34px; min-width: 34px; height: 34px; min-height: 34px; padding: 0; justify-content: center; gap: 0; overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); box-shadow: none; font-size: 0; }
+.reading-nav .reader-original-link:hover { background: var(--surface); }
 .reader-read-state { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px; }
 .reader-read-state .button[aria-pressed='true'] { border-color: var(--accent-line); background: var(--accent-soft); color: var(--accent-ink); }
 .immersive-reader .reading-nav { position: static; }

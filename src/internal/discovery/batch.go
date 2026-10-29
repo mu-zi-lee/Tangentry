@@ -219,7 +219,7 @@ func (s *BatchService) Create(ctx context.Context, request BatchRequest) (BatchR
 		fetch  func(context.Context) (Feed, error)
 	}
 	tasks := make([]initialSourceTask, 0, len(s.sources)+1)
-	if s.subscriptions != nil && request.Source == "" {
+	if s.subscriptions != nil && (request.Source == "" || request.Source == "subscriptions") {
 		tasks = append(tasks, initialSourceTask{source: "subscriptions", fetch: s.subscriptions})
 	}
 	platformSources := make([]string, 0, len(s.sources))
@@ -868,7 +868,7 @@ func validateBatchRequest(request *BatchRequest) error {
 	if request.View == "topic" && strings.TrimSpace(request.Topic) == "" {
 		return ErrInvalidBatch
 	}
-	if request.Source != "" && !RecommendationPlatform(request.Source) {
+	if request.Source != "" && request.Source != "subscriptions" && !RecommendationPlatform(request.Source) {
 		return ErrInvalidBatch
 	}
 	if len(request.UnreadIDs) > 100 {

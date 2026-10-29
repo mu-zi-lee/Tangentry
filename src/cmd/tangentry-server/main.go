@@ -38,6 +38,7 @@ func env(name, fallback string) string {
 func run() error {
 	addr := flag.String("addr", env("TANGENTRY_ADDR", ":7380"), "listen address (TANGENTRY_ADDR)")
 	dataDir := flag.String("data", env("TANGENTRY_DATA", "/data"), "data directory (TANGENTRY_DATA)")
+	localDevelopment := flag.Bool("local-development", os.Getenv("TANGENTRY_DEV_LOCAL") == "1", "serve without sign-in; only allowed on loopback")
 	health := flag.Bool("health", false, "check that the server at -addr answers, then exit")
 	flag.Parse()
 	if *health {
@@ -50,12 +51,8 @@ func run() error {
 	if err := os.MkdirAll(data, 0700); err != nil {
 		return err
 	}
-	password, generated, err := server.LoadPassword(data, os.Getenv("TANGENTRY_PASSWORD"))
-	if err != nil {
-		return err
-	}
-	if generated {
-		slog.Info("generated a sign-in password; set TANGENTRY_PASSWORD to choose your own", "password", password, "stored", filepath.Join(data, "admin-password"))
+	if *localDevelopment && !loopbackAddress(*addr) {
+		return fmt.Errorf("local development mode requires a loopback address, got %q", *addr)
 	}
 	application, err := app.New(data, web.Assets())
 	if err != nil {
@@ -74,8 +71,22 @@ func run() error {
 	if err := backend.UseDownloadDirectory(downloads); err != nil {
 		return err
 	}
+	var handler http.Handler
+	if *localDevelopment {
+		slog.Warn("local development mode enabled; sign-in is disabled", "addr", *addr, "data", data)
+		handler = server.NewLocalDevelopmentHandler(backend)
+	} else {
+		password, generated, err := server.LoadPassword(data, os.Getenv("TANGENTRY_PASSWORD"))
+		if err != nil {
+			return err
+		}
+		if generated {
+			slog.Info("generated a sign-in password; set TANGENTRY_PASSWORD to choose your own", "password", password, "stored", filepath.Join(data, "admin-password"))
+		}
+		handler = server.NewPasswordGate(backend, password)
+	}
 	httpServer := &http.Server{
-		Addr: *addr, Handler: server.NewPasswordGate(backend, password),
+		Addr: *addr, Handler: handler,
 		ReadHeaderTimeout: 10 * time.Second, IdleTimeout: 2 * time.Minute,
 	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -96,6 +107,18 @@ func run() error {
 	}
 	<-drained
 	return nil
+}
+
+func loopbackAddress(addr string) bool {
+	host, _, err := net.SplitHostPort(addr)
+	if err != nil {
+		return false
+	}
+	if host == "localhost" {
+		return true
+	}
+	ip := net.ParseIP(host)
+	return ip != nil && ip.IsLoopback()
 }
 
 // checkHealth backs the container HEALTHCHECK, which has no curl to call.

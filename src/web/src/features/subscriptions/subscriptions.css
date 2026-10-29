@@ -47,7 +47,8 @@
   .subscription-health-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 .subscription-more { position: relative; }
-.subscription-more > summary { list-style: none; }
+.subscription-more > summary { list-style: none; width: 36px; min-width: 36px; justify-content: center; padding-inline: 0; gap: 0; font-size: 0; }
+.subscription-more > summary svg { flex: 0 0 auto; }
 .subscription-more-panel { position: absolute; z-index: 25; top: calc(100% + 6px); right: 0; width: min(380px, calc(100vw - 32px)); padding: 16px; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--card); box-shadow: var(--shadow-lg); }
 .subscription-portability { display: flex; flex-direction: column; gap: 12px; }
 .subscription-portability-copy { display: flex; flex-direction: column; gap: 4px; }
@@ -62,7 +63,7 @@
 
 /* Add a source: one line, resolved name confirmed inline. */
 #subscription-add-panel:not([hidden]) { margin-bottom: 18px; }
-.subscription-add-compact { padding: 14px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--card); box-shadow: var(--shadow); }
+.subscription-add-compact { padding: 12px 0; border-block: 1px solid var(--line); border-radius: 0; background: transparent; box-shadow: none; }
 .add-input-row { display: flex; align-items: center; gap: 8px; }
 .add-input-wrapper { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; min-height: 42px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--card); color: var(--faint); }
 .add-input-wrapper:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
@@ -74,10 +75,8 @@
 .add-source-confirm strong { color: var(--ink); font-weight: 600; }
 
 /* Two panes: a source rail and the selected stream. */
-.subscriptions-workspace { display: grid; grid-template-columns: 272px minmax(0, 1fr); align-items: start; gap: 28px; }
-.subscription-source-directory { min-width: 0; }
-.subscription-source-directory > summary { display: none; }
-.subscription-sources { position: sticky; top: calc(var(--header-height) + 16px); display: flex; flex-direction: column; gap: 8px; max-height: calc(100dvh - var(--header-height) - 32px); overflow-y: auto; padding: 12px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--card); scrollbar-width: none; -ms-overflow-style: none; }
+.subscriptions-workspace { display: grid; grid-template-columns: minmax(230px, 272px) minmax(0, 1fr); align-items: start; gap: 28px; }
+.subscription-sources { position: sticky; top: calc(var(--header-height) + 16px); display: flex; flex-direction: column; gap: 8px; max-height: calc(100dvh - var(--header-height) - 32px); overflow-y: auto; padding: 4px 12px 4px 0; border: 0; border-right: 1px solid var(--line); border-radius: 0; background: transparent; scrollbar-width: thin; }
 .subscription-sources::-webkit-scrollbar { display: none; width: 0; height: 0; }
 .subscription-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 2px; }
 .subscription-section-heading h2 { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: 13px; font-weight: 600; }
@@ -104,7 +103,7 @@
 .subscription-source { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; grid-template-rows: auto auto; column-gap: 10px; width: 100%; min-height: 50px; padding: 7px 8px; border-radius: var(--radius); text-align: left; transition: background-color 140ms var(--ease-out); }
 .subscription-source-row { display: flex; align-items: stretch; gap: 2px; min-width: 0; border-radius: var(--radius); }
 .subscription-source-row.selected { background: color-mix(in srgb, var(--accent-soft) 72%, var(--card)); }
-.subscription-source-check { width: 15px; min-width: 15px; margin: 0 0 0 7px; align-self: center; accent-color: var(--accent); }
+.subscription-source-check { width: 18px; min-width: 18px; height: 18px; margin: 0 0 0 5px; align-self: center; border-radius: 5px; accent-color: var(--accent); }
 .subscription-source-row .subscription-source { flex: 1; min-width: 0; }
 .subscription-source > .subscription-source-avatar { grid-row: 1 / 3; align-self: center; }
 .subscription-source > strong { grid-column: 2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 500; line-height: 1.4; }
@@ -129,9 +128,19 @@
 .subscription-source-avatar[data-platform='youtube'] { color: var(--youtube-red); background: color-mix(in srgb, var(--youtube-red) 10%, var(--card)); }
 .subscription-source-avatar[data-platform='bilibili'] { color: var(--bilibili-blue); background: color-mix(in srgb, var(--bilibili-blue) 10%, var(--card)); }
 .subscription-source-avatar[data-platform='rss'] { color: var(--rss-orange); background: color-mix(in srgb, var(--rss-orange) 10%, var(--card)); }
+.subscription-all-sources { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; align-items: center; gap: 9px; width: 100%; min-height: 50px; padding: 7px 8px; border-radius: var(--radius); text-align: left; color: var(--muted); }
+.subscription-all-sources.active { background: var(--accent-soft); color: var(--ink); }
+.subscription-all-sources-icon { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 8px; background: var(--surface); color: var(--accent-ink); }
+.subscription-all-sources > span:nth-child(2) { display: flex; flex-direction: column; min-width: 0; gap: 1px; }
+.subscription-all-sources strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 600; }
+.subscription-all-sources small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--faint); font-size: 11px; }
+.subscription-all-sources b { color: var(--faint); font: 500 11px/1 var(--font-display); font-variant-numeric: tabular-nums; }
 
 /* Selected source stream */
 .subscription-results { min-width: 0; }
+.subscription-all-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 0 12px; border-bottom: 1px solid var(--line); }
+.subscription-all-heading h2 { margin: 0; font-size: 18px; font-weight: 650; }
+.subscription-all-heading p { margin: 3px 0 0; color: var(--muted); font-size: 12.5px; }
 .subscription-detail-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 0 0 12px; border-bottom: 1px solid var(--line); }
 .subscription-source-identity { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1 1 280px; }
 .subscription-source-identity .subscription-source-avatar { width: 44px; height: 44px; border-radius: 12px; }
@@ -171,7 +180,7 @@
 .unread-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
 .subscription-gallery .content-card:has(.subscription-read-status[data-read='true']) .card-title { color: var(--muted); font-weight: 500; }
 .subscription-gallery .content-action-popover > button span { flex: 1; }
-.subscription-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; margin: 28px 0; padding: 40px 24px; border: 1px dashed var(--line-strong); border-radius: var(--radius-lg); text-align: center; }
+.subscription-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; margin: 14px 0 0; padding: 76px 24px; border-block: 1px solid var(--line); border-radius: 0; text-align: center; }
 .subscription-empty h2, .subscription-empty h3 { margin: 0; font-size: 16px; font-weight: 600; }
 .subscription-empty p { margin: 0 0 8px; color: var(--muted); font-size: 13px; }
 .subscription-empty .button + .button { margin-top: 4px; }
@@ -213,16 +222,12 @@
 .inbox-pagination { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 20px; color: var(--muted); font-size: 13px; }
 
 @media (max-width: 960px) {
-  .subscriptions-workspace { grid-template-columns: minmax(0, 1fr); gap: 14px; }
-  .subscription-source-directory { border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--card); }
-  .subscription-source-directory > summary { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 14px; font-size: 14px; font-weight: 600; }
-  .subscription-source-directory > summary span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .subscription-source-directory > summary small { color: var(--faint); font-weight: 400; font-size: 12px; }
-  .subscription-source-directory[open] > summary svg:last-child { transform: rotate(180deg); }
-  .subscription-sources { position: static; max-height: 60dvh; border: 0; border-top: 1px solid var(--line); border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+  .subscriptions-workspace { grid-template-columns: minmax(210px, 240px) minmax(0, 1fr); gap: 18px; }
   .inbox-provenance { margin-left: 12px; }
 }
 @media (max-width: 760px) {
+  .subscriptions-workspace { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .subscription-sources { position: static; max-height: min(42dvh, 360px); padding: 0 0 12px; border-right: 0; border-bottom: 1px solid var(--line); }
   .subscription-page-header .page-heading-actions { width: 100%; }
   .subscription-page-header .page-heading-copy p { display: none; }
   .subscription-page-tabs { gap: 2px; overflow-x: auto; scrollbar-width: none; }

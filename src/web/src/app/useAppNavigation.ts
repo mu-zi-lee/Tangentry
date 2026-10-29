@@ -12,7 +12,6 @@ const initialScrollPositions = (): Record<View, number> => ({
   bilibili: 0,
   history: 0,
   discovery: 0,
-  podcasts: 0,
   search: 0,
   library: 0,
   downloads: 0,
@@ -42,6 +41,8 @@ export function RestoreViewport({ top, sourceID, focusID = '', routeKey: targetR
   useLayoutEffect(() => {
     let frame = 0
     let attempts = 0
+    let stableFrames = 0
+    let lastHeight = 0
     let stopped = false
     const observer = typeof MutationObserver === 'undefined' ? null : new MutationObserver(() => schedule())
     // Keep watching long enough for network-backed galleries/readers to mount.
@@ -56,8 +57,22 @@ export function RestoreViewport({ top, sourceID, focusID = '', routeKey: targetR
       window.scrollTo({ top, behavior: 'instant' })
       const source = findSource(view, sourceID, focusID)
       if (source) {
+        const targetReachable = document.documentElement.scrollHeight >= top + window.innerHeight
+        const targetReached = Math.abs(window.scrollY - top) <= 1
+        if (!targetReachable || !targetReached) {
+          stableFrames = 0
+          schedule()
+          return
+        }
         source.focus({ preventScroll: true })
-        stop()
+        const height = document.documentElement.scrollHeight
+        stableFrames = height === lastHeight ? stableFrames + 1 : 0
+        lastHeight = height
+        if (stableFrames >= 8) {
+          stop()
+          return
+        }
+        schedule()
         return
       }
       if ((!sourceID && !focusID) || attempts >= maxAttempts) {

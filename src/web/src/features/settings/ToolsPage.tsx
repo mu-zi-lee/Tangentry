@@ -1,4 +1,4 @@
-import { Eye, Languages, Mic, HardDrive, RotateCcw, UserRound, ShieldCheck, Bot } from 'lucide-react'
+import { Compass, Eye, Languages, Mic, HardDrive, RotateCcw, UserRound, ShieldCheck, Bot } from 'lucide-react'
 import { replacePath } from '../../shared/browser/historyStack'
 import { useEffect, useState } from 'react'
 import { SettingsShell, type SettingsNavItem } from './ui/SettingsShell'
@@ -14,12 +14,12 @@ import { StorageSettingsPage } from './pages/StorageSettingsPage'
 import { BackupSettingsPage } from './pages/BackupSettingsPage'
 import { AboutSettingsPage } from './pages/AboutSettingsPage'
 import { AgentSettingsPage } from './pages/AgentSettingsPage'
+import { DiscoverySettingsPage } from './pages/DiscoverySettingsPage'
 
-type SettingsSection = 'display' | 'accounts' | 'translation' | 'transcription' | 'storage' | 'backup' | 'agent' | 'about'
+type SettingsSection = 'display' | 'accounts' | 'discovery' | 'translation' | 'transcription' | 'storage' | 'backup' | 'agent' | 'about'
 function sectionFromURL(): SettingsSection {
   const hash = window.location.hash.slice(1)
-  if (hash === 'discovery') return 'accounts'
-  return ['display', 'accounts', 'translation', 'transcription', 'storage', 'backup', 'agent', 'about'].includes(hash) ? hash as SettingsSection : 'display'
+  return ['display', 'accounts', 'discovery', 'translation', 'transcription', 'storage', 'backup', 'agent', 'about'].includes(hash) ? hash as SettingsSection : 'display'
 }
 
 export function ToolsPage({ downloads, columns, onColumns, onCookieChanged, onYouTubeFeed, onDiscover }: {
@@ -59,6 +59,7 @@ export function ToolsPage({ downloads, columns, onColumns, onCookieChanged, onYo
   const sections: SettingsNavItem[] = [
     { id: 'display', group: '体验', label: '外观', hint: '调整阅读方式', icon: <Eye size={16} /> },
     { id: 'accounts', group: '连接', label: '账号', hint: '连接内容来源', icon: <UserRound size={16} /> },
+    { id: 'discovery', group: '体验', label: '发现', hint: '管理推荐与反馈', icon: <Compass size={16} /> },
     { id: 'translation', group: '连接', label: '翻译与摘要', hint: '配置模型服务', icon: <Languages size={16} /> },
     { id: 'transcription', group: '连接', label: '字幕转录', hint: '选择识别方式', icon: <Mic size={16} /> },
     { id: 'storage', group: '本地数据', label: '下载与存储', hint: '选择文件位置', icon: <HardDrive size={16} /> },
@@ -67,7 +68,8 @@ export function ToolsPage({ downloads, columns, onColumns, onCookieChanged, onYo
     { id: 'about', group: '系统', label: '关于与更新', hint: '检查应用更新', icon: <RotateCcw size={16} /> },
   ]
   let content = <DisplaySettingsPage />
-  if (section === 'accounts') content = <AccountsSettingsPage downloads={downloads} cookieRevision={youtubeCookieRevision} onChanged={cookiesChanged} onFeed={onYouTubeFeed} onDiscover={onDiscover} />
+  if (section === 'accounts') content = <AccountsSettingsPage onChanged={cookiesChanged} />
+  if (section === 'discovery') content = <DiscoverySettingsPage downloads={downloads} cookieRevision={youtubeCookieRevision} onFeed={onYouTubeFeed} onDiscover={onDiscover} />
   if (section === 'translation') content = <TranslationSettingsPage />
   if (section === 'transcription') content = <TranscriptionSettingsPage revision={modelRevision} />
   if (section === 'storage') content = <StorageSettingsPage downloads={downloads} onModelDirectoryChanged={() => setModelRevision(value => value + 1)} />

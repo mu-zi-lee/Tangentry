@@ -45,7 +45,7 @@ export function SubtitlePage({ query, initialItem, onItem, onReturn, notes, insi
   }, [query, initialItem, onItem, valid, attempt])
 
   return <section className="subtitle-page video-workspace">
-    <div className="reading-nav"><Button variant="secondary" className="button button-secondary" onClick={onReturn}><ArrowLeft size={16} />返回列表</Button><span>视频阅读 · 第一分 P</span><ReaderNavigationSlot/><ReaderActionsSlot/><a className="button button-secondary" href={`https://www.bilibili.com/video/${query}/`} target="_blank" rel="noopener noreferrer">打开原视频 <ExternalLink size={15} /></a></div>
+    <div className="reading-nav"><Button variant="secondary" className="button button-secondary" onClick={onReturn}><ArrowLeft size={16} />返回列表</Button><span>视频阅读 · 第一分 P</span><ReaderNavigationSlot/><ReaderActionsSlot/><a className="button button-secondary reader-original-link" href={`https://www.bilibili.com/video/${query}/`} target="_blank" rel="noopener noreferrer" aria-label="打开原视频" title="打开原视频"><span className="visually-hidden">打开原视频</span><ExternalLink size={15} aria-hidden="true" /></a></div>
     {!valid ? <><h1 className="reading-title">视频阅读</h1><p role="alert" className="subtitle-error">阅读地址缺少正确的视频 BV 号，请返回列表选择视频。</p></> : <>
       <ReadingNotebook enabled={Boolean(notes || insights)} ai={insights} contentLabel="字幕"><div className="reader-primary">
         <div className="watch-details">{item ? <BilingualTitle heading contentId={item.id} text={item.title}/> : <h1 className="reading-video-title">{query}</h1>}

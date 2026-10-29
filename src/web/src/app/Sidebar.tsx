@@ -1,5 +1,5 @@
 import { Button } from '../components/ui'
-import { Compass, Headphones, Rss, Bookmark, Clock3, StickyNote, Download, Settings, PanelLeftClose, PanelLeftOpen, ChevronUp, ChevronDown, FileText, Play, Image, Filter, Newspaper, Circle } from 'lucide-react'
+import { Compass, Rss, Bookmark, Clock3, StickyNote, Download, Settings, PanelLeftClose, PanelLeftOpen, ChevronUp, ChevronDown, FileText, Play, Headphones, Image, Filter, Newspaper, Circle } from 'lucide-react'
 import type { SavedView } from '../shared/api/types'
 import type { View } from './navigation'
 import { BrandMark } from '../shared/ui/BrandMark'
@@ -7,8 +7,7 @@ import { BrandMark } from '../shared/ui/BrandMark'
 const groups = [
   { label: '浏览', items: [
     { view: 'discovery', label: '发现', Icon: Compass },
-    { view: 'podcasts', label: '播客', Icon: Headphones },
-    { view: 'subscriptions', label: '订阅', Icon: Rss },
+    { view: 'subscriptions', label: '订阅管理', Icon: Rss },
   ] },
   { label: '资料库', items: [
     { view: 'library', label: '收藏', Icon: Bookmark },

@@ -28,32 +28,36 @@ export const LocalVideoPlayer = forwardRef<LocalPlayerHandle, {
   const [seekError, setSeekError] = useState('')
   const [captionURL, setCaptionURL] = useState('')
   const source = sources.find(item => item.id === chosenID) ?? sources[0]
+  // Parent reader state changes frequently while a video is playing. Keep
+  // event callbacks fresh without making the source-loading effect restart.
+  const callbacks = useRef({ onPosition, onReady, onProgress, onPlaying, onEnded, onAudioStreamChange })
+  callbacks.current = { onPosition, onReady, onProgress, onPlaying, onEnded, onAudioStreamChange }
   useNativePlaybackClock(video, `${source?.id}:${attempt}`, onPosition)
 
   useEffect(() => {
     const node = video.current
     setReady(false); setPlaybackError(''); setSeekError('')
-    onReady(false); onPosition(null)
+    callbacks.current.onReady(false); callbacks.current.onPosition(null)
     engaged.current = false
-    onPlaying?.(false)
+    callbacks.current.onPlaying?.(false)
     // StrictMode may run cleanup/setup on the same DOM node during development.
     if (node && source && node.getAttribute('src') !== source.url) { node.src = source.url; node.load() }
     // Cached media may emit metadata before this passive effect initializes.
     if (node && source && node.readyState >= 1 && !node.error) {
       setReady(true)
-      onReady(true)
-      onPosition(node.currentTime)
-      try { onAudioStreamChange?.((node as HTMLVideoElement & { captureStream?: () => MediaStream }).captureStream?.() ?? null) } catch { onAudioStreamChange?.(null) }
+      callbacks.current.onReady(true)
+      callbacks.current.onPosition(node.currentTime)
+      try { callbacks.current.onAudioStreamChange?.((node as HTMLVideoElement & { captureStream?: () => MediaStream }).captureStream?.() ?? null) } catch { callbacks.current.onAudioStreamChange?.(null) }
     }
     if (node?.error && source) setPlaybackError(playbackFailure)
     return () => {
-      if (node && engaged.current && node.readyState >= 1 && !node.error) onProgress?.(node.currentTime, node.duration, true)
+      if (node && engaged.current && node.readyState >= 1 && !node.error) callbacks.current.onProgress?.(node.currentTime, node.duration, true)
       node?.pause()
       if (node) { node.removeAttribute('src'); node.load() }
-      onAudioStreamChange?.(null)
-      onReady(false); onPosition(null)
+      callbacks.current.onAudioStreamChange?.(null)
+      callbacks.current.onReady(false); callbacks.current.onPosition(null)
     }
-  }, [source?.id, attempt, onPosition, onReady, onProgress, onPlaying, onAudioStreamChange])
+  }, [source?.id, source?.url, attempt])
 
   useEffect(() => {
     if (!captions) { setCaptionURL(''); return }
@@ -80,10 +84,10 @@ export const LocalVideoPlayer = forwardRef<LocalPlayerHandle, {
     } catch { setSeekError('暂时无法跳转，请等待视频就绪后重试。'); return false }
   } }), [ready, onPosition, source?.id])
 
-  const report = () => { if (video.current && video.current.readyState >= 1) onPosition(video.current.currentTime) }
+  const report = () => { if (video.current && video.current.readyState >= 1) callbacks.current.onPosition(video.current.currentTime) }
   const checkpoint = (immediate = false) => {
     const node = video.current
-    if (node && engaged.current && node.readyState >= 1 && !node.error) onProgress?.(node.currentTime, node.duration, immediate)
+    if (node && engaged.current && node.readyState >= 1 && !node.error) callbacks.current.onProgress?.(node.currentTime, node.duration, immediate)
   }
   return <section className="local-player" aria-labelledby="local-player-title">
     <div className="player-heading"><h2 id="local-player-title"><Film size={18} aria-hidden="true" />本机视频</h2><div className="player-heading-actions">{source && <Button variant="quiet" iconOnly className="icon-button" aria-label="查看下载" title="查看下载" onClick={onDownloads}><ArrowDownToLine size={16}/></Button>}<Button variant="quiet" iconOnly className="icon-button" aria-label="重新检查本地视频" title="重新检查本地视频" onClick={onRefresh} disabled={loading}><RefreshCw size={16} /></Button></div></div>
@@ -92,7 +96,7 @@ export const LocalVideoPlayer = forwardRef<LocalPlayerHandle, {
     {source ? <>
       {sources.length > 1 && <label className="player-source-label">本地文件<Select aria-label="选择本地视频文件" value={source.id} onChange={event => setChosenID(event.target.value)}>{sources.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}</Select></label>}
       <div className="player-capture-stage">{overlay}
-      <video key={`${source.id}:${attempt}`} ref={video} className="local-video" aria-label="本地视频播放器" controls playsInline preload="metadata" src={source.url} onLoadedMetadata={() => { setReady(true); onReady(true); report(); try { onAudioStreamChange?.((video.current as (HTMLVideoElement & { captureStream?: () => MediaStream }) | null)?.captureStream?.() ?? null) } catch { onAudioStreamChange?.(null) } }} onTimeUpdate={() => { report(); checkpoint() }} onSeeking={() => { engaged.current = true; report() }} onSeeked={() => { report(); checkpoint(true) }} onPlay={() => { engaged.current = true; onPlaying?.(true); checkpoint(true) }} onPause={() => { onPlaying?.(false); checkpoint(true) }} onEnded={() => { onPlaying?.(false); report(); checkpoint(true); onEnded?.() }} onError={() => { setReady(false); onReady(false); onPosition(null); onPlaying?.(false); onAudioStreamChange?.(null); setPlaybackError(playbackFailure) }}>
+      <video key={`${source.id}:${attempt}`} ref={video} className="local-video" aria-label="本地视频播放器" controls playsInline preload="metadata" src={source.url} onLoadedMetadata={() => { setReady(true); callbacks.current.onReady(true); report(); try { callbacks.current.onAudioStreamChange?.((video.current as (HTMLVideoElement & { captureStream?: () => MediaStream }) | null)?.captureStream?.() ?? null) } catch { callbacks.current.onAudioStreamChange?.(null) } }} onTimeUpdate={() => { report(); checkpoint() }} onSeeking={() => { engaged.current = true; report() }} onSeeked={() => { report(); checkpoint(true) }} onPlay={() => { engaged.current = true; callbacks.current.onPlaying?.(true); checkpoint(true) }} onPause={() => { callbacks.current.onPlaying?.(false); checkpoint(true) }} onEnded={() => { callbacks.current.onPlaying?.(false); report(); checkpoint(true); callbacks.current.onEnded?.() }} onError={() => { setReady(false); callbacks.current.onReady(false); callbacks.current.onPosition(null); callbacks.current.onPlaying?.(false); callbacks.current.onAudioStreamChange?.(null); setPlaybackError(playbackFailure) }}>
         {captionURL && captions && <track key={captionURL} kind="captions" src={captionURL} srcLang={captions.language === 'ai-zh' ? 'zh' : captions.language} label={captions.label} default />}
         当前浏览器无法播放此视频，可在下载页取回文件。
       </video>

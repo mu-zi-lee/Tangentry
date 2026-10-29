@@ -38,7 +38,7 @@ test('builds topic and cursor parameters without exposing finite-batch controls'
 })
 
 test('maps source and reason to compact Chinese labels', () => {
-  expect(discoverySourceLabel('subscriptions')).toBe('订阅更新')
+  expect(discoverySourceLabel('subscriptions')).toBe('我的订阅')
   expect(discoverySourceLabel('bilibili')).toBe('B站推荐')
   expect(discoverySourceLabel('unknown')).toBe('unknown 推荐')
   expect(discoverySourceLabel('youtube', '少量随机探索')).toBe('陌生探索')

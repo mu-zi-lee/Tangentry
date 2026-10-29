@@ -1,5 +1,5 @@
 import { Button } from '../components/ui'
-import { Compass, Bookmark, Clock3, Download, Headphones, Rss, StickyNote } from 'lucide-react'
+import { Compass, Bookmark, Clock3, Download, Rss, StickyNote } from 'lucide-react'
 import { type ReactNode } from 'react'
 import type { SavedView } from '../shared/api/types'
 import type { View } from './navigation'
@@ -8,14 +8,13 @@ import { AppShell } from './AppShell'
 // Bottom navigation quick links
 const destinations = [
   { view: 'discovery', label: '发现', Icon: Compass },
-  { view: 'podcasts', label: '播客', Icon: Headphones },
-  { view: 'subscriptions', label: '订阅', Icon: Rss },
+  { view: 'subscriptions', label: '订阅管理', Icon: Rss },
   { view: 'library', label: '收藏', Icon: Bookmark },
   { view: 'history', label: '历史', Icon: Clock3 },
   { view: 'notes', label: '笔记', Icon: StickyNote },
   { view: 'downloads', label: '下载', Icon: Download },
 ] as const
-const quick = ['discovery', 'podcasts', 'subscriptions', 'library', 'downloads'] as const
+const quick = ['discovery', 'subscriptions', 'library', 'downloads'] as const
 
 export function ExperienceShell({ view, onNavigate, onNavigateSavedView, savedViews, onReorderSavedViews, onSearchQuery, onHome, activeDownloads, savedCount, onAdd, discoveryQuery, onDiscoveryQuery, resume, onResume, onDismissResume, children }: {
   view: View

@@ -7,6 +7,7 @@ import type { useSubscriptions } from './useSubscriptions'
 import type { useSubscriptionGroups } from './useSubscriptionGroups'
 import { SubscriptionSourceIcon } from './SubscriptionSourceIcon'
 import { toggleSelection } from './selectionRange'
+import { allSubscriptionsID } from './useSubscriptions'
 
 const collapseKey = 'tangentry-subscription-collapsed-groups'
 type Groups = ReturnType<typeof useSubscriptionGroups>
@@ -83,6 +84,11 @@ export function SubscriptionSources({state, groups, onSelect}: {state: ReturnTyp
     {groups.listError && <p className="subscription-group-feedback" role="alert">{groups.listError}<Button variant="quiet" className="text-button" onClick={reload}>重新加载分组</Button></p>}
     {groups.notice && <p className="subscription-group-feedback" role="status">{groups.notice}</p>}
     <nav aria-label="选择订阅来源">
+      <Button variant="quiet" className={`subscription-all-sources ${state.selectedId === allSubscriptionsID ? 'active' : ''}`} aria-current={state.selectedId === allSubscriptionsID ? 'true' : undefined} onClick={() => { state.select(allSubscriptionsID); onSelect?.() }}>
+        <span className="subscription-all-sources-icon" aria-hidden="true"><Folder size={16}/></span>
+        <span><strong>全部订阅</strong><small>所有来源的最新内容</small></span>
+        <b>{state.sources.length}</b>
+      </Button>
       {groups.groups.map(group => {
         const members = state.sources.filter(source => source.groupId === group.id)
         const visible = members.filter(source => matches(source, group.name))

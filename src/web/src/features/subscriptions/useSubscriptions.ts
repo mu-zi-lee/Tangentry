@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { APIError, request } from '../../shared/api/client'
-import type { SubscriptionDetail, SubscriptionSource } from '../../shared/api/types'
+import type { SubscriptionDetail, SubscriptionInboxPage, SubscriptionSource } from '../../shared/api/types'
 
 export type SubscriptionBatchProgress = {
   kind: 'update' | 'delete' | 'move' | 'refresh-policy'
@@ -12,15 +12,19 @@ export type SubscriptionBatchProgress = {
 }
 
 const selectionKey = 'tangentry-subscription-selection'
+export const allSubscriptionsID = '__all__'
 const message = (cause: unknown) => cause instanceof Error ? cause.message : '操作没有完成，请重试。'
 
 export function useSubscriptions(active = false) {
   const [sources, setSources] = useState<SubscriptionSource[]>([])
-  const [selectedId, setSelectedId] = useState(() => { try { return sessionStorage.getItem(selectionKey) ?? '' } catch { return '' } })
+  const [selectedId, setSelectedId] = useState(() => { try { return sessionStorage.getItem(selectionKey) ?? allSubscriptionsID } catch { return allSubscriptionsID } })
   const [detail, setDetail] = useState<SubscriptionDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [reading, setReading] = useState(false)
   const [detailVersion, setDetailVersion] = useState(0)
+  const [allItems, setAllItems] = useState<SubscriptionInboxPage['entries'][number]['item'][]>([])
+  const [allLoading, setAllLoading] = useState(false)
+  const [allError, setAllError] = useState('')
   const [listError, setListError] = useState('')
   const [detailError, setDetailError] = useState('')
   const [actionError, setActionError] = useState('')
@@ -30,6 +34,7 @@ export function useSubscriptions(active = false) {
   const [batch, setBatch] = useState<SubscriptionBatchProgress | null>(null)
   const listRequest = useRef<AbortController | null>(null)
   const detailRequest = useRef<AbortController | null>(null)
+  const allRequest = useRef<AbortController | null>(null)
   const mutation = useRef<AbortController | null>(null)
   const batchRequest = useRef<AbortController | null>(null)
   const activeId = useRef(selectedId)
@@ -57,7 +62,7 @@ export function useSubscriptions(active = false) {
       const result = await request<{ sources: SubscriptionSource[] }>('/subscriptions', { signal: controller.signal })
       if (controller.signal.aborted || (background && !isActive.current)) return
       setSources(result.sources)
-      if (!result.sources.some(source => source.id === activeId.current)) select(result.sources[0]?.id ?? '')
+      if (activeId.current !== allSubscriptionsID && !result.sources.some(source => source.id === activeId.current)) select(result.sources[0]?.id ?? '')
       if (!background) {
         // Restoring the selected source may already have started its first read.
         if (!initial || !detailRequest.current) setDetailVersion(current => current + 1)
@@ -98,8 +103,34 @@ export function useSubscriptions(active = false) {
     }
   }, [])
 
-  useEffect(() => { void reload(false, true); return () => { listRequest.current?.abort(); detailRequest.current?.abort(); mutation.current?.abort(); batchRequest.current?.abort() } }, [reload])
-  useEffect(() => { void loadDetail(selectedId) }, [selectedId, detailVersion, loadDetail])
+  const loadAll = useCallback(async () => {
+    allRequest.current?.abort()
+    const controller = new AbortController()
+    allRequest.current = controller
+    setAllLoading(true); setAllError('')
+    try {
+      const result = await request<{ page: SubscriptionInboxPage }>('/subscription-inbox?limit=50', { signal: controller.signal })
+      if (!controller.signal.aborted && activeId.current === allSubscriptionsID) setAllItems(result.page.entries.map(entry => entry.item))
+    } catch (cause) {
+      if (!controller.signal.aborted && activeId.current === allSubscriptionsID) setAllError(message(cause))
+    } finally {
+      if (allRequest.current === controller) allRequest.current = null
+      if (!controller.signal.aborted && activeId.current === allSubscriptionsID) setAllLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { void reload(false, true); return () => { listRequest.current?.abort(); detailRequest.current?.abort(); allRequest.current?.abort(); mutation.current?.abort(); batchRequest.current?.abort() } }, [reload])
+  useEffect(() => {
+    if (selectedId === allSubscriptionsID) {
+      detailRequest.current?.abort()
+      setDetail(null)
+      void loadAll()
+      return
+    }
+    allRequest.current?.abort()
+    setAllLoading(false)
+    void loadDetail(selectedId)
+  }, [selectedId, detailVersion, loadDetail, loadAll])
 
   useEffect(() => {
     const imported = () => { if (!mutation.current) void reload() }
@@ -265,5 +296,5 @@ export function useSubscriptions(active = false) {
     return batch.kind === 'update' ? batchUpdate(ids) : Promise.resolve(false)
   }
 
-  return { sources, selectedId, detail: detail?.source.id === selectedId ? detail : null, loading, reading, pending, batch, listError, detailError, actionError, updateError: updateErrors[selectedId] ?? '', notice, select, reload, reloadDetail: () => loadDetail(selectedId), create, rename, editAddress, update, remove, configureRefresh, batchUpdate, batchRemove, batchMove, batchConfigureRefresh, retryBatchFailed, setMembership, dissolveGroup }
+  return { sources, selectedId, allItems, allLoading, allError, detail: detail?.source.id === selectedId ? detail : null, loading, reading, pending, batch, listError, detailError, actionError, updateError: updateErrors[selectedId] ?? '', notice, select, reload, reloadDetail: () => selectedId === allSubscriptionsID ? loadAll() : loadDetail(selectedId), create, rename, editAddress, update, remove, configureRefresh, batchUpdate, batchRemove, batchMove, batchConfigureRefresh, retryBatchFailed, setMembership, dissolveGroup }
 }

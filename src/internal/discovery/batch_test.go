@@ -117,6 +117,21 @@ func TestBatchPreservesPlatformErrorDetails(t *testing.T) {
 	}
 }
 
+func TestBatchCanRequestLocalSubscriptionsOnly(t *testing.T) {
+	service := NewBatchService(batchProvider{feeds: map[string]Feed{
+		"bilibili": {Items: []content.Item{batchItem("bilibili", "remote", "推荐", "作者", 2)}},
+	}}, func(context.Context) (Feed, error) {
+		return Feed{Items: []content.Item{batchItem("rss", "local", "我的订阅", "播客", 3)}}, nil
+	}, []string{"bilibili"})
+	response, err := service.Create(context.Background(), BatchRequest{Source: "subscriptions", Size: 10})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(response.Items) != 1 || response.Items[0].Source != "subscriptions" {
+		t.Fatalf("subscriptions-only batch = %#v", response.Items)
+	}
+}
+
 func TestBatchCursorReadsPersistedSnapshotAndEnds(t *testing.T) {
 	snapshots := &batchSnapshots{}
 	service := NewBatchService(batchProvider{feeds: map[string]Feed{"bilibili": {Items: []content.Item{
