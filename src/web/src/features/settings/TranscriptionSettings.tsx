@@ -1,4 +1,4 @@
-import { Cloud, Cpu, RefreshCw, Save } from 'lucide-react'
+import { FolderOpen, RefreshCw, Save } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { request } from '../../shared/api/client'
 import { listOrEmpty } from '../../shared/api/list'
@@ -6,6 +6,9 @@ import { WhisperModels } from './WhisperModels'
 import { PathInput } from './PathInput'
 import { SettingsTask } from './ui/SettingsActionPage'
 import { getInterfacePreference, setInterfacePreference } from '../../shared/preferences/interfacePreferences'
+import { Dialog } from '../../components/ui/dialog/Dialog'
+import { useCapabilities } from '../../shared/api/desktop'
+import { SettingsRow } from './ui/SettingsRow'
 
 type Backend = 'whisper.cpp' | 'faster-whisper' | 'qwen3-asr' | 'groq' | 'cloudflare' | 'siliconflow' | 'mai'
 const engineGroups: { label: string; hint: string; options: { value: Backend; label: string }[] }[] = [
@@ -34,7 +37,11 @@ interface Status { ready: boolean; missing: string[]; config: Config; models?: M
 function normalizedStatus(value: Status): Status {
   return {...value,missing:listOrEmpty(value.missing),models:listOrEmpty(value.models),config:{...value.config,backend:value.config.backend || 'whisper.cpp',python:value.config.python || 'python3'}}
 }
-export function TranscriptionSettings() {
+export function TranscriptionSettings({ active = true }: { active?: boolean }) {
+  const { pathPicker } = useCapabilities()
+  const [advancedOpen, setAdvancedOpen] = useState(false)
+  const [modelDirectory, setModelDirectory] = useState('')
+  const [movingModels, setMovingModels] = useState(false)
   const localDrafts = useRef<Partial<Record<Backend, LocalDraft>>>({})
   const [loadRevision, setLoadRevision] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -45,8 +52,10 @@ export function TranscriptionSettings() {
   const [siliconflowKey, setSiliconflowKey] = useState(''), [clearSiliconflow, setClearSiliconflow] = useState(false)
   const [maiCookie, setMAICookie] = useState(''), [clearMAI, setClearMAI] = useState(false)
   const [automaticSubtitles, setAutomaticSubtitles] = useState(true)
+  const [automaticPending, setAutomaticPending] = useState(false)
   const cloud = config.backend === 'groq' || config.backend === 'cloudflare' || config.backend === 'siliconflow' || config.backend === 'mai'
   useEffect(() => {
+    if (!active) return
     const controller = new AbortController()
     setLoading(true); setError('')
     void request<Status>('/transcription/settings', {signal:controller.signal}).then(value=>{
@@ -56,10 +65,25 @@ export function TranscriptionSettings() {
       if (!controller.signal.aborted) setError(cause instanceof Error ? cause.message : '配置暂不可用。')
     }).finally(()=>{if (!controller.signal.aborted) setLoading(false)})
     return ()=>controller.abort()
-  }, [loadRevision])
+  }, [active, loadRevision])
   useEffect(() => {
+    if (!active) return
     void getInterfacePreference('automatic_subtitles').then(value => setAutomaticSubtitles(value.value !== 'false')).catch(() => {})
-  }, [])
+  }, [active])
+  useEffect(() => {
+    if (!active) return
+    const controller = new AbortController()
+    void request<{ directory: string }>('/desktop/model-directory', { signal: controller.signal }).then(value => setModelDirectory(value.directory)).catch(() => {})
+    return () => controller.abort()
+  }, [active])
+  async function moveModels() {
+    setMovingModels(true); setError('')
+    try {
+      const value = await request<{ directory: string; cancelled: boolean }>('/desktop/model-directory', { method: 'POST' })
+      if (!value.cancelled) { setModelDirectory(value.directory); setLoadRevision(value => value + 1) }
+    } catch (cause) { setError(cause instanceof Error ? cause.message : '模型迁移未完成。') }
+    finally { setMovingModels(false) }
+  }
   async function save() {
     setPending(true); setError(''); setNotice('')
     try { const response = await request<Status>('/transcription/settings', { method:'PUT',body:JSON.stringify({...config, ...(clearGroq || groqKey.trim() ? {groqApiKey:clearGroq ? '' : groqKey.trim()} : {}), ...(clearCloudflare || cloudflareToken.trim() ? {cloudflareApiToken:clearCloudflare ? '' : cloudflareToken.trim()} : {}), ...(clearSiliconflow || siliconflowKey.trim() ? {siliconflowApiKey:clearSiliconflow ? '' : siliconflowKey.trim()} : {}), ...(clearMAI || maiCookie.trim() ? {maiCookie:clearMAI ? '' : maiCookie.trim()} : {})}) }); const value=normalizedStatus(response); setStatus(value); setConfig(value.config); setGroqKey(''); setCloudflareToken(''); setSiliconflowKey(''); setMAICookie(''); setClearMAI(false); setClearGroq(false); setClearCloudflare(false); setClearSiliconflow(false); setNotice('转录配置已保存，下一次转录立即生效。') }
@@ -82,20 +106,37 @@ export function TranscriptionSettings() {
     selectBackend(backend)
     setNotice('引擎已切换，保存后生效。')
   }
-  return <SettingsTask title={cloud ? '云端转录' : '本机转录'} description={cloud ? '确认后上传，额度以服务商为准。' : '音频留在本机，已有字幕优先。'} actions={<span className="settings-inline-status">{dirty ? '未保存更改' : status?.ready ? '已就绪' : '尚未就绪'}</span>}>
-    <label className="transcription-automatic-toggle"><input type="checkbox" checked={automaticSubtitles} onChange={event => { const value = event.target.checked; setAutomaticSubtitles(value); void setInterfacePreference('automatic_subtitles', String(value)).catch(() => setAutomaticSubtitles(!value)) }} /><span><strong>播放时自动生成字幕</strong><small>没有有效平台字幕时启动本机转录；不会自动上传音频。</small></span></label>
+  return <>
+    <SettingsTask title="识别方式">
+      <div className="settings-list-card">
+        <SettingsRow setting="asr-engine" title="转录引擎" description={cloud ? '使用所选云端服务，上传音频前会征求确认' : '在本机运行，音频不离开设备'}>
+          <div className="settings-choice-row" role="group" aria-label="转录引擎">{engineGroups.map(group => <button type="button" key={group.label} className={(group.label === '云端') === cloud ? 'active' : ''} aria-pressed={(group.label === '云端') === cloud} disabled={!status || pending} onClick={() => { if ((group.label === '云端') !== cloud) changeBackend(group.options[0].value) }}>{group.label}</button>)}</div>
+        </SettingsRow>
+        <SettingsRow title={cloud ? '转录服务' : '本机引擎'}>
+          <select aria-label={cloud ? '转录服务' : '本机引擎'} value={config.backend} disabled={!status || pending} onChange={event => changeBackend(event.target.value as Backend)}>{engineGroups[cloud ? 1 : 0].options.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select>
+        </SettingsRow>
+        <SettingsRow title="识别语言"><select aria-label="识别语言" value={config.language} disabled={!status || pending} onChange={event => setConfig(value => ({ ...value, language: event.target.value }))}>{[['auto', '自动检测'], ['zh', '中文'], ['en', '英语'], ['ja', '日语'], ['ko', '韩语']].map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></SettingsRow>
+        <SettingsRow title={cloud ? '服务凭据' : '运行环境'} description={status?.ready ? '已就绪' : status ? `未检测到：${status.missing.join('、')}` : '正在读取…'}>
+          <button type="button" className="button button-secondary" disabled={!status || pending} onClick={() => setAdvancedOpen(true)}>{cloud ? '配置' : '高级设置'}</button>
+        </SettingsRow>
+        <SettingsRow title="播放时自动生成字幕" description="没有有效平台字幕时启动本机转录，不会自动上传音频。">
+          <input className="settings-switch" role="switch" aria-label="播放时自动生成字幕" type="checkbox" checked={automaticSubtitles} disabled={automaticPending} onChange={event => {
+            const value = event.target.checked
+            setAutomaticSubtitles(value); setAutomaticPending(true)
+            void setInterfacePreference('automatic_subtitles', String(value)).catch(() => { setAutomaticSubtitles(!value); setError('自动字幕设置未保存，请重试。') }).finally(() => setAutomaticPending(false))
+          }}/>
+        </SettingsRow>
+      </div>
+    </SettingsTask>
     {!status && (loading ? <p className="field-hint" role="status">正在读取转录设置…</p> : <button type="button" className="text-button" onClick={()=>setLoadRevision(value=>value+1)}><RefreshCw size={14}/>重试</button>)}
+    {active && !cloud && status && <SettingsTask title="本机模型" description={engineGroups[0].options.find(option => option.value === config.backend)?.label}>
+      <WhisperModels active={active} configurationPending={pending || movingModels} backend={config.backend} selectedModel={config.model} selectedAligner={config.backend==='qwen3-asr'?config.qwenAligner:''} refreshKey={`${status.config.python}:${modelDirectory}`} onInstalled={() => { void request<Status>('/transcription/settings').then(value => setStatus(normalizedStatus(value))).catch(() => setError('模型列表刷新失败，请重试。')) }} onChoose={(path,id) => { setConfig(value=>({...value,...(id==='qwen3-aligner-0.6b'?{qwenAligner:path}:{model:path})})); setNotice('模型已选择，保存后生效。') }} directoryRow={<SettingsRow setting="model-directory" title="模型目录" description={<span className="settings-mono">{modelDirectory || '由运行 Tangentry 的设备管理'}</span>}>{pathPicker && <button type="button" className="button button-secondary" disabled={movingModels || pending} onClick={() => void moveModels()}><FolderOpen size={14}/>{movingModels ? '正在迁移…' : '更改'}</button>}</SettingsRow>}/>
+    </SettingsTask>}
+    <div className="settings-savebar"><span className="field-hint">{dirty ? '更改将在保存后生效' : status?.ready ? '已就绪' : '保存后检查运行环境'}</span><button type="button" className="button button-primary" disabled={!status || pending || !dirty} onClick={() => void save()}><Save size={15}/>{pending ? '正在保存…' : '保存并检查'}</button></div>
+    {error && <p className="settings-feedback" role="alert">{error}</p>}{notice && <p className="settings-feedback" role="status">{notice}</p>}
+    <Dialog open={advancedOpen} title={cloud ? '云端服务配置' : '本机识别配置'} className="settings-dialog transcription-dialog" onClose={() => setAdvancedOpen(false)}>
     <form className="transcription-config" onSubmit={event=>{event.preventDefault();void save()}}><fieldset disabled={!status || pending} style={{display:'contents'}}>
-      <fieldset className="settings-form-section transcription-engines" aria-label="转录引擎"><legend>识别方式</legend>
-        {engineGroups.map(group=><div className="transcription-engine-group" key={group.label}>
-          <div className="transcription-engine-caption">{group.label === '本机' ? <Cpu size={16} aria-hidden="true"/> : <Cloud size={16} aria-hidden="true"/>}<strong>{group.label}</strong><span>{group.hint}</span></div>
-          <div className="layout-options">{group.options.map(option=><label key={option.value}>
-            <input type="radio" name="transcription-engine" value={option.value} checked={config.backend===option.value} onChange={()=>changeBackend(option.value)}/>
-            <span>{option.label}</span>
-          </label>)}</div>
-        </div>)}
-      </fieldset>
-      <div className="settings-form-section transcription-parameters"><h3>{cloud ? '云端服务配置' : '本机识别配置'}</h3><div className="settings-form-fields">
+      <div className="settings-form-fields">
       {config.backend==='mai' && <>
         <label>Microsoft Playground Cookie<input type="password" autoComplete="new-password" aria-label="Microsoft Playground Cookie" value={maiCookie} disabled={pending || clearMAI} maxLength={16384} placeholder={status?.maiCookieConfigured ? '已保存，留空保留' : '仅 playground.microsoft.ai 的登录 Cookie'} onChange={event=>setMAICookie(event.target.value)}/></label>
         {status?.maiCookieConfigured && <label className="transcription-clear-key"><input type="checkbox" checked={clearMAI} disabled={pending} onChange={event=>setClearMAI(event.target.checked)}/>清除 Microsoft 登录会话</label>}
@@ -135,15 +176,10 @@ export function TranscriptionSettings() {
       {config.backend==='faster-whisper' ? <PathInput label="Python 环境路径" ariaLabel="faster-whisper Python 路径" value={config.python} disabled={pending} kind="python" onChange={python=>setConfig(value=>({...value,python}))} placeholder="/path/to/venv/bin/python"/> : <PathInput label="Whisper 程序路径" value={config.binary} disabled={pending} kind="whisper-binary" onChange={binary=>setConfig(value=>({...value,binary}))} placeholder="whisper-cli"/>}
       <PathInput label={config.backend==='faster-whisper'?'CTranslate2 模型目录':'Whisper 模型路径'} ariaLabel="Whisper 模型路径" value={config.model} disabled={pending} kind={config.backend==='faster-whisper'?'model-directory':'whisper-model'} onChange={model=>setConfig(value=>({...value,model}))} placeholder={config.backend==='faster-whisper'?'/path/to/faster-base':'/path/to/ggml-base.bin'}/>
       </>}
-      <fieldset className="layout-preference transcription-language"><legend>音频语言</legend><div className="layout-options">
-        {([{value:'auto',label:'自动'},{value:'zh',label:'中文'},{value:'en',label:'英语'},{value:'ja',label:'日语'},{value:'ko',label:'韩语'}] as const).map(option=><label key={option.value}><input type="radio" name="transcription-language" value={option.value} checked={config.language===option.value} disabled={pending} onChange={()=>setConfig(value=>({...value,language:option.value}))}/><span>{option.label}</span></label>)}
-      </div></fieldset>
-      </div></div>
+      </div>
       <div className="settings-savebar"><span className="field-hint">{dirty ? '更改将在保存后生效' : '保存后检查运行环境'}</span><button type="submit" className="button button-primary" disabled={pending || (!cloud && (config.backend==='qwen3-asr' || config.backend==='faster-whisper' ? !config.python : (!config.model || !config.binary)))}><Save size={15}/>{pending?'正在保存…':'保存并检查'}</button></div>
     </fieldset></form>{dirty ? <p className="field-hint" role="status">保存后检查，当前转录不受影响。</p> : status && !status.ready ? <p className="field-hint">未检测到：{status.missing.join('、')}</p> : status?.modelDownload && <p className="field-hint">识别模型将在首次转录时下载（{status.modelDownload}）。</p>}{error && <p className="subtitle-error" role="alert">{error}</p>}{notice && <p className="field-hint" role="status">{notice}</p>}
     <p className="field-hint">{cloud ? '登录信息仅存本机，请求时发送给所选服务；失败后不会自动重试或切换服务。' : config.backend==='qwen3-asr' ? '字幕时间来自 Qwen 强制对齐器；下载与推理均在本机手动管理。' : '默认识别中文，生成的中文字幕统一为简体。下拉列表只显示已安装模型；下载与转录分别由你手动开始，切换模型保存后生效。'}</p>
-    {!cloud && status &&
-    <WhisperModels configurationPending={pending} backend={config.backend} selectedModel={config.model} selectedAligner={config.backend==='qwen3-asr'?config.qwenAligner:''} refreshKey={status.config.python} onInstalled={() => { void request<Status>('/transcription/settings').then(value => setStatus(normalizedStatus(value))).catch(() => setError('模型列表刷新失败，请重新打开工具设置。')) }} onChoose={(path,id) => { setConfig(value=>({...value,...(id==='qwen3-aligner-0.6b'?{qwenAligner:path}:{model:path})})); setNotice('模型已选择，保存后生效。') }}/>
-    }
-  </SettingsTask>
+    </Dialog>
+  </>
 }

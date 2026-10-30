@@ -196,7 +196,7 @@ console.log(JSON.stringify({version:window.__tangentryDouyinObserverVersion,fetc
 		Fetch   bool `json:"fetch"`
 		XHR     bool `json:"xhr"`
 	}
-	if err := json.Unmarshal(output, &result); err != nil || result.Version != 2 || !result.Fetch || !result.XHR {
+	if err := json.Unmarshal(output, &result); err != nil || result.Version != 3 || !result.Fetch || !result.XHR {
 		t.Fatalf("legacy observer flag prevented install: %+v err=%v output=%s", result, err, output)
 	}
 }
@@ -333,7 +333,7 @@ global.location={href:` + string(encodedURL) + `,hostname:new URL(` + string(enc
 global.TextEncoder=class{encode(text){return new Uint8Array(text==='__OVERSIZED_RENDER_DATA__'?4*1024*1024+1:Buffer.byteLength(text));}};
 const video={currentSrc:'https://v1.douyinvod.com/video.mp4',getAttribute(name){return name==='src'?'video.mp4':null;},querySelectorAll(){return [{getAttribute(){return 'source.mp4';}}];}};
 const script={textContent:` + string(encodedData) + `};
-global.document={title:'fixture',readyState:'complete',body:{innerText:'fixture'},querySelectorAll(selector){if(selector==='video')return [video];return [script];}};
+global.document={title:'fixture',readyState:'complete',body:{innerText:'fixture'},querySelectorAll(selector){if(selector==='video')return [video];if(selector.startsWith('script'))return [script];return [];}};
 console.log(JSON.stringify(eval(` + string(encodedScript) + `)));`
 	command := exec.Command(node, "-e", harness)
 	output, err := command.CombinedOutput()
@@ -345,6 +345,67 @@ console.log(JSON.stringify(eval(` + string(encodedScript) + `)));`
 		t.Fatalf("decode DOM projection: %v", err)
 	}
 	return result
+}
+
+func TestDouyinPageRestrictionIgnoresContentAndDetectsVisibleChallenges(t *testing.T) {
+	node, err := exec.LookPath("node")
+	if err != nil {
+		t.Skip("node is unavailable for isolated page state fixture")
+	}
+	scripts, _ := json.Marshal([]string{douyinPageStateScript, douyinFeedReadScript, douyinFeedReadScriptForMedia("6961737553342991651"), douyinMediaReadScript("6961737553342991651"), douyinDOMMediaScript("6961737553342991651"), douyinDomReadScript})
+	harness := `
+const scripts=` + string(scripts) + `;
+function run(url,title,text,challenge){
+  global.location={href:url,hostname:new URL(url).hostname};
+  global.window={__tangentryDouyinFeed:[],__tangentryDouyinMedia:[]};
+  global.XMLHttpRequest={prototype:{}};
+  global.performance={getEntriesByType(){return [];}};
+  const node={getBoundingClientRect(){return {width:300,height:challenge==='hidden'?0:200};}};
+  global.getComputedStyle=()=>({display:'block',visibility:'visible',opacity:'1'});
+  global.document={title,readyState:'complete',body:{innerText:text},querySelectorAll(selector){return selector.startsWith('#captcha')&&challenge?[node]:[];}};
+  return scripts.map(script=>eval(script).restricted);
+}
+const url='https://www.douyin.com/video/6961737553342991651';
+console.log(JSON.stringify({
+  content:run(url,'验证这个登录方法是否可行 - 抖音','登录 发现 视频 登录后体验更多 captcha verify challenge',null),
+  hidden:run(url,'普通视频','登录','hidden'),
+  challenge:run(url,'普通视频','请完成验证','visible'),
+  route:run('https://www.douyin.com/passport/login','抖音','',null),
+  title:run(url,'安全验证 - 抖音','',null)
+}));`
+	output, err := exec.Command(node, "-e", harness).CombinedOutput()
+	if err != nil {
+		t.Fatalf("page state fixture failed: %s", strings.TrimSpace(string(output)))
+	}
+	var result map[string][]bool
+	if err := json.Unmarshal(output, &result); err != nil {
+		t.Fatal(err)
+	}
+	for name, values := range result {
+		want := name != "content" && name != "hidden"
+		if len(values) != 6 {
+			t.Fatalf("%s: not all page readers were checked: %v", name, values)
+		}
+		for index, restricted := range values {
+			if restricted != want {
+				t.Errorf("%s reader %d restricted=%v, want %v", name, index, restricted, want)
+			}
+		}
+	}
+}
+
+func TestDouyinObserverIgnoresVerificationWordsInSuccessfulJSON(t *testing.T) {
+	payload := `{"status_code":0,"aweme_detail":{"aweme_id":"6961737553342991651","desc":"登录 验证 captcha challenge verify passport","video":{"play_addr":{"url_list":["https://v1.douyinvod.com/video.mp4"]}}}}`
+	result := runDouyinCaptureObserverTest(t, payload, douyinObserverFixture{})
+	for name, captures := range map[string][]platformfetch.VideoMediaCapture{"fetch": result.Fetch, "xhr": result.XHR} {
+		if len(captures) != 1 || captures[0].Restricted || len(captures[0].Candidates) != 1 {
+			t.Fatalf("%s classified ordinary video JSON as verification: %+v", name, captures)
+		}
+	}
+	restricted := runDouyinCaptureObserverTest(t, `{"status_code":8,"status_msg":"请完成安全验证"}`, douyinObserverFixture{})
+	if len(restricted.Fetch) != 1 || !restricted.Fetch[0].Restricted || len(restricted.XHR) != 1 || !restricted.XHR[0].Restricted {
+		t.Fatalf("explicit verification response was not blocked: %+v", restricted)
+	}
 }
 
 func TestPlatformPageWindowPositionUsesAllDisplayBounds(t *testing.T) {

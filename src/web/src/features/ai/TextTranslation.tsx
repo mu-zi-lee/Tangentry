@@ -6,15 +6,17 @@ import { useSubtitleTranslation } from './useSubtitleTranslation'
 import { isChineseText } from '../../shared/text/chineseText'
 import type { CardTextRendererProps } from '../../shared/ui/CardText'
 import './ai.css'
+import { useTranslationLanguage } from './useTranslationLanguage'
 
 let cardTranslationQueue: Promise<void> = Promise.resolve()
 
 export function useTextTranslation(contentId: string, texts: string[], source: 'title' | 'article', enabled = true) {
+  const { language } = useTranslationLanguage()
   const track = useMemo(() => enabled && contentId && texts.length ? {
     language: `text-${source}`, label: source, automatic: false,
     cues: texts.map((text, index) => ({ start: index, end: index + 1, text })),
   } : undefined, [contentId, texts, source, enabled])
-  return useSubtitleTranslation(contentId, track, source)
+  return useSubtitleTranslation(contentId, track, source, language)
 }
 
 export function TextTranslationControl({ translation, label, iconOnly = false }: { translation: ReturnType<typeof useTextTranslation>; label: string; iconOnly?: boolean }) {
@@ -34,7 +36,7 @@ export function TextTranslationControl({ translation, label, iconOnly = false }:
       {pending ? <X size={14}/> : <Languages size={14}/>}{!iconOnly && (pending ? `取消翻译 ${done}/${inspection?.result.total ?? 0}` : action)}
     </Button>
     {done > 0 && !complete && <Button variant="quiet" iconOnly className="icon-button translation-visibility" aria-label={visibilityAction} title={visibilityAction} aria-pressed={translation.show} onClick={() => translation.setShow(!translation.show)}>{translation.show ? <EyeOff size={14}/> : <Eye size={14}/>}</Button>}
-    {needsSettings && <a href="/tools#translation">配置 AI</a>}
+    {needsSettings && <a href="/tools#ai/text">配置 AI</a>}
     {pending && iconOnly && <span role="status">{done}/{inspection?.result.total ?? 0}</span>}
     {!pending && notice && <span role="status">{notice}</span>}
     {error && <span role="alert">{error}</span>}

@@ -4,7 +4,7 @@ import { ExternalLink, LoaderCircle, LogIn, Upload } from 'lucide-react'
 import { request } from '../../shared/api/client'
 
 type Session = { id: string; url?: string; code?: string; status: string; expiresAt: number; interval: number }
-export function LinuxdoLogin({ onSuccess, onImportCookie }: { onSuccess: () => void; onImportCookie: () => void }) {
+export function LinuxdoLogin({ onSuccess, onImportCookie, active = true }: { onSuccess: () => void; onImportCookie: () => void; active?: boolean }) {
   const [session, setSession] = useState<Session | null>(null)
   const [open, setOpen] = useState(false)
   const [pending, setPending] = useState(false)
@@ -20,7 +20,7 @@ export function LinuxdoLogin({ onSuccess, onImportCookie }: { onSuccess: () => v
   }
   useEffect(() => () => { startRequest.current?.abort(); discard() }, [])
   useEffect(() => {
-    if (!open || !session || session.status !== 'waiting') return
+    if (!active || !open || !session || session.status !== 'waiting') return
     const controller = new AbortController()
     let timer: ReturnType<typeof setTimeout>
     async function poll() {
@@ -42,7 +42,7 @@ export function LinuxdoLogin({ onSuccess, onImportCookie }: { onSuccess: () => v
     }
     timer = setTimeout(poll, Math.max(session.interval, 5) * 1000)
     return () => { controller.abort(); clearTimeout(timer) }
-  }, [open, session?.id, session?.status, session?.interval])
+  }, [active, open, session?.id, session?.status, session?.interval])
   async function start(selected: 'device' | 'browser' = 'device') {
     if (startRequest.current) return
     discard(); setSession(null); setCallback(''); setMode(selected); setOpen(true); setError(''); setPending(true)

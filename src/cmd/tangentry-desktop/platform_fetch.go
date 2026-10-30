@@ -131,7 +131,7 @@ func concealPlatformPageWindow(window *mygo.Window, planned mygo.Rectangle) {
 }
 
 const douyinFeedCaptureScript = `(function(){
-  const observerVersion=2;
+  const observerVersion=3;
   if (window.__tangentryDouyinObserverVersion===observerVersion && window.fetch===window.__tangentryDouyinFetchWrapper && XMLHttpRequest.prototype.send===window.__tangentryDouyinXHRSend) return;
   window.__tangentryDouyinObserverVersion=observerVersion;
   window.__tangentryDouyinFeedInstalled=true;
@@ -186,7 +186,7 @@ const douyinFeedCaptureScript = `(function(){
     const resolvedURL=absolute(url), target=targetID(), parsed=mediaBody(body,target), queryID=(()=>{ try { const params=new URL(resolvedURL).searchParams; for(const key of ['aweme_id','awemeId','item_id','itemId','video_id','videoId']) { const id=idOfAny(params.get(key)); if(id)return id; } return ''; } catch (_) { return ''; } })();
     const matches=parsed.candidates.slice(0,32);
     const path=(()=>{ try { const u=new URL(resolvedURL); return u.hostname.toLowerCase()+u.pathname; } catch (_) { return ''; } })();
-    const restricted=parsed.restricted||/login|passport|verify|captcha|challenge|sec_|acrawler/i.test(path)||(typeof body==='string'&&/login|登录|captcha|验证码|verify_center|verify_page|slide_verify|challenge-platform|cf-chl-|just a moment/i.test(body.slice(0,4096)));
+    const restricted=parsed.restricted||/\/(?:login|passport|verify|captcha|challenge|acrawler)(?:\/|$)/i.test(path)||(!jsonType(contentType)&&typeof body==='string'&&/<(?:html|!doctype)|verify_center|verify_page|slide_verify|challenge-platform|cf-chl-/i.test(body.slice(0,4096))&&/captcha|验证码|安全验证|verify_center|verify_page|slide_verify|challenge-platform|cf-chl-|just a moment/i.test(body.slice(0,4096)));
     const resolvedReason=reason || (tooLarge?'response_too_large':!jsonType(contentType)?'non_json':parsed.invalidJSON?'invalid_json':'');
     const responseReceived=hasResponse&&Number(status)>0;
     const responseBytes=observedBytes!=null?observedBytes:body!==null&&body!==undefined?byteLength(body):null;
@@ -238,14 +238,24 @@ const douyinDomScrollScript = `(function(){ window.scrollBy(0, Math.max(480, Mat
 
 const douyinRecommendNextScript = `(function(){ const target=document.activeElement || document.body || document.documentElement; target.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown',code:'ArrowDown',keyCode:40,which:40,bubbles:true})); target.dispatchEvent(new WheelEvent('wheel',{deltaY:Math.max(480,Math.floor(window.innerHeight*0.85)),bubbles:true})); return {pageUrl:location.href,title:document.title||'',ready:document.readyState}; })();`
 
-const douyinFeedReadScript = `(function(){ const url=location.href,title=document.title||'',text=(document.body&&(document.body.innerText||document.body.textContent)||'').slice(0,4096); return {pageUrl:url,title:title,ready:document.readyState,restricted:/login|登录|captcha|验证码|验证|verify|challenge|passport|risk[ -]?control|风控|滑块|人机|just a moment/i.test(url+' '+title+' '+text),responses:(window.__tangentryDouyinFeed||[]).splice(0, 32),media:[],fetchHookInstalled:window.fetch===window.__tangentryDouyinFetchWrapper,xhrHookInstalled:XMLHttpRequest.prototype.send===window.__tangentryDouyinXHRSend}; })();`
+// Ordinary pages contain login buttons and user-written verification words.
+// Only a dedicated route/title or visible challenge UI blocks media extraction.
+const douyinPageRestrictedExpression = `(function(){
+  const url=new URL(location.href),title=(document.title||'').trim();
+  if (/^(?:login|passport|verify|captcha|challenge|verifycenter)\./i.test(url.hostname)||/\/(?:login|passport|verify|captcha|challenge|verifycenter|acrawler)(?:\/|$)/i.test(url.pathname)) return true;
+  if (/^(?:抖音[ -]*)?(?:安全验证|访问验证|身份验证|人机验证|验证中心|验证码|登录|登录抖音|扫码登录)(?:[ |_-]*(?:抖音|抖音安全中心))?$|^(?:captcha|security verification|verify your identity|just a moment)[.!…\s]*$/i.test(title)) return true;
+  const visible=node=>{const rect=node.getBoundingClientRect(),style=getComputedStyle(node);return rect.width>0&&rect.height>0&&style.display!=='none'&&style.visibility!=='hidden'&&style.opacity!=='0';};
+  return Array.from(document.querySelectorAll('#captcha_container,#captcha-verify-container,.captcha_verify_container,.captcha-verify-container,.secsdk-captcha-drag-wrapper,[data-e2e="verify-dialog"],iframe[src*="/captcha/"],iframe[src*="/verify/"]')).some(visible);
+})()`
+
+const douyinFeedReadScript = `(function(){ const url=location.href,title=document.title||''; return {pageUrl:url,title:title,ready:document.readyState,restricted:` + douyinPageRestrictedExpression + `,responses:(window.__tangentryDouyinFeed||[]).splice(0, 32),media:[],fetchHookInstalled:window.fetch===window.__tangentryDouyinFetchWrapper,xhrHookInstalled:XMLHttpRequest.prototype.send===window.__tangentryDouyinXHRSend}; })();`
 
 func douyinFeedReadScriptForMedia(id string) string {
 	encoded, _ := json.Marshal(id)
-	return `(function(){const target=` + string(encoded) + `,url=location.href,title=document.title||'',text=(document.body&&(document.body.innerText||document.body.textContent)||'').slice(0,4096);const media=(window.__tangentryDouyinMedia||[]).splice(0,8).map(value=>{const candidates=(value.candidates||[]).filter(candidate=>candidate.id===target);return Object.assign({},value,{targetMatchCount:candidates.length||(value.requestID===target||value.matchedIDs&&value.matchedIDs.includes(target)?1:0),matchedIDs:(value.matchedIDs||[]).filter(id=>id===target),candidates:candidates});});return {pageUrl:url,title:title,ready:document.readyState,restricted:/login|登录|captcha|验证码|验证|verify|challenge|passport|risk[ -]?control|风控|滑块|人机|just a moment/i.test(url+' '+title+' '+text),responses:(window.__tangentryDouyinFeed||[]).splice(0, 32),media:media,fetchHookInstalled:window.fetch===window.__tangentryDouyinFetchWrapper,xhrHookInstalled:XMLHttpRequest.prototype.send===window.__tangentryDouyinXHRSend};})();`
+	return `(function(){const target=` + string(encoded) + `,url=location.href,title=document.title||'';const media=(window.__tangentryDouyinMedia||[]).splice(0,8).map(value=>{const candidates=(value.candidates||[]).filter(candidate=>candidate.id===target);return Object.assign({},value,{targetMatchCount:candidates.length||(value.requestID===target||value.matchedIDs&&value.matchedIDs.includes(target)?1:0),matchedIDs:(value.matchedIDs||[]).filter(id=>id===target),candidates:candidates});});return {pageUrl:url,title:title,ready:document.readyState,restricted:` + douyinPageRestrictedExpression + `,responses:(window.__tangentryDouyinFeed||[]).splice(0, 32),media:media,fetchHookInstalled:window.fetch===window.__tangentryDouyinFetchWrapper,xhrHookInstalled:XMLHttpRequest.prototype.send===window.__tangentryDouyinXHRSend};})();`
 }
 
-const douyinPageStateScript = `(function(){const url=location.href,title=document.title||'',text=(document.body&&(document.body.innerText||document.body.textContent)||'').slice(0,4096);return {url:url,title:title,ready:document.readyState,restricted:/login|登录|captcha|验证码|验证|verify|challenge|passport|risk[ -]?control|风控|滑块|人机|just a moment/i.test(url+' '+title+' '+text),douyin:/^https:\/\/(?:www\.)?douyin\.com\//i.test(url)};})();`
+const douyinPageStateScript = `(function(){const url=location.href,title=document.title||'';return {url:url,title:title,ready:document.readyState,restricted:` + douyinPageRestrictedExpression + `,douyin:/^https:\/\/(?:www\.)?douyin\.com\//i.test(url)};})();`
 
 const douyinMediaClearScript = `(function(){ if(window.__tangentryDouyinMedia) window.__tangentryDouyinMedia.splice(0); if(window.__tangentryDouyinFeed) window.__tangentryDouyinFeed.splice(0); return true; })();`
 
@@ -277,8 +287,7 @@ func douyinMediaReadScript(id string) string {
 	return `(function(){
   const target=` + string(encoded) + `;
   const pageURL=(()=>{try{const u=new URL(location.href);return u.hostname.toLowerCase()+u.pathname;}catch(_){return '';}})();
-  const title=document.title||'', pageText=(document.body&&(document.body.innerText||document.body.textContent)||'').slice(0,4096);
-  const restricted=/login|登录|captcha|验证码|验证|verify|challenge|passport|risk[ -]?control|风控|滑块|人机|just a moment/i.test(pageURL+' '+title+' '+pageText);
+  const restricted=` + douyinPageRestrictedExpression + `;
   const observed=(window.__tangentryDouyinMedia||[]).splice(0,8),captures=observed.filter(value=>value.requestID===target||value.matchedIDs&&value.matchedIDs.includes(target)||/\/aweme\/(?:v1|v2)\/[^?]*(?:detail|post|related|feed)/i.test(value.path||'')).map(value=>{const candidates=(value.candidates||[]).filter(candidate=>candidate.id===target);return Object.assign({},value,{targetMatchCount:candidates.length||(value.requestID===target||value.matchedIDs&&value.matchedIDs.includes(target)?1:0),matchedIDs:(value.matchedIDs||[]).filter(id=>id===target),candidates:candidates});}),eligible=observed.filter(value=>value.requestID===target||value.matchedIDs&&value.matchedIDs.includes(target)||/\/aweme\/(?:v1|v2)\/[^?]*(?:detail|post|related|feed)/i.test(value.path||'')),latest=eligible.length?Object.assign({},eligible[eligible.length-1],{candidates:[]}):null;
   return {pageURL:pageURL,readyState:document.readyState,isDouyinContext:/^(?:[^.]+\.)*douyin\.com$/i.test(new URL(location.href).hostname),restricted:restricted,fetchHookInstalled:window.fetch===window.__tangentryDouyinFetchWrapper,xhrHookInstalled:XMLHttpRequest.prototype.send===window.__tangentryDouyinXHRSend,captures:captures,latest:latest};
 })();`
@@ -449,8 +458,8 @@ func douyinDOMMediaScript(id string) string {
   add(target,direct);
   const scripts=Array.from(document.querySelectorAll('script#RENDER_DATA,script#__NEXT_DATA__,script[id*="RENDER_DATA"]')).slice(0,4);let tooLarge=false,bytesRead=0;
   for(const script of scripts){const body=script.textContent||'',bytes=new TextEncoder().encode(body).length;if(bytesRead+bytes>` + limit + `){tooLarge=true;break;}bytesRead+=bytes;try{let value;try{value=JSON.parse(body);}catch(_){value=JSON.parse(decodeURIComponent(body));}walk(value,0);}catch(_){}}
-  const host=new URL(location.href).hostname.toLowerCase(), title=document.title||'', pageText=(document.body&&(document.body.innerText||document.body.textContent)||'').slice(0,4096);
-  const restricted=!/^(?:[^.]+\.)*douyin\.com$/i.test(host)||/login|登录|captcha|验证码|验证|verify|challenge|passport|risk[ -]?control|风控|滑块|人机|just a moment/i.test(pageURL+' '+title+' '+pageText);
+  const host=new URL(location.href).hostname.toLowerCase();
+  const restricted=!/^(?:[^.]+\.)*douyin\.com$/i.test(host)||` + douyinPageRestrictedExpression + `;
 	return {pageURL:pageURL,readyState:document.readyState,isDouyinContext:/^(?:[^.]+\.)*douyin\.com$/i.test(host),restricted:restricted,tooLarge:tooLarge,responseBytes:bytesRead,videoCount:videos.length,videoSourceCount:direct.length,candidates:candidates.slice(0,32)};
 })();`
 }
@@ -478,7 +487,7 @@ const douyinDomReadScript = `(function(){
     cards.push({id:id, url:url.split('?')[0], thumbnailURL:imageFrom(node), title:title, author:author, likeCount:countOf(likeText), duration:duration}); seen.add(id);
   }
   const resources = performance.getEntriesByType('resource').filter(entry => /\/aweme\//i.test(entry.name)).map(entry => { try { return {path:new URL(entry.name).pathname, initiatorType:String(entry.initiatorType || '')}; } catch (_) { return null; } }).filter(Boolean);
-  const restricted=/login|登录|captcha|验证码|验证|verify|challenge|passport|risk[ -]?control|风控|滑块|人机|just a moment/i.test(location.href+' '+(document.title||'')+' '+text(document.body).slice(0,4096));
+  const restricted=` + douyinPageRestrictedExpression + `;
   return {pageUrl:location.href, title:document.title || '', ready:document.readyState, restricted:restricted, cards:cards, responses:(window.__tangentryDouyinFeed || []).splice(0, 32), resources:resources, fetchHookInstalled:window.fetch === window.__tangentryDouyinFetchWrapper, xhrHookInstalled:XMLHttpRequest.prototype.send === window.__tangentryDouyinXHRSend, domDiagnostics:{url:location.href,videoLinkCount:links.length,candidateSelectorHits:candidateSelectorHits,cardsRead:cards.length}};
 })();`
 
@@ -853,7 +862,7 @@ func (b *platformPageBridge) ResolveVideoMedia(ctx context.Context, id string) (
 				diagnostics = append(diagnostics, platformfetch.VideoMediaDiagnostic{Stage: "webview_feed_fallback", Outcome: "exception", Reason: "javascript_error", PageURL: safePageURL(session.window.Page().URL()), IsDouyinContext: boolPtr(isDouyinPageContext(session.window.Page().URL()))})
 				return platformfetch.VideoMediaResponse{}, platformfetch.WrapVideoMediaError(stateErr, diagnostics...)
 			}
-			if currentState.Restricted || !currentState.Douyin || !douyinMediaFallbackAllowed(currentState.URL, false) || looksLikeLoginOrChallenge(currentState.Title) {
+			if currentState.Restricted || !currentState.Douyin || !douyinMediaFallbackAllowed(currentState.URL, false) {
 				diagnostics = append(diagnostics, platformfetch.VideoMediaDiagnostic{Stage: "webview_feed_fallback", Outcome: "restricted", Reason: "business_verification", PageURL: safePageURL(currentState.URL), PageReadyState: stringPtr(currentState.Ready), IsDouyinContext: boolPtr(currentState.Douyin)})
 				return platformfetch.VideoMediaResponse{Restricted: true, PageURL: safeCaptureURL(currentState.URL), Diagnostics: diagnostics}, nil
 			}
@@ -869,7 +878,7 @@ func (b *platformPageBridge) ResolveVideoMedia(ctx context.Context, id string) (
 				return platformfetch.VideoMediaResponse{}, platformfetch.WrapVideoMediaError(ctx.Err(), diagnostics...)
 			}
 			if feedErr == nil {
-				if feed.Restricted || !douyinMediaFallbackAllowed(feed.PageURL, false) || looksLikeLoginOrChallenge(feed.Title) {
+				if feed.Restricted || !douyinMediaFallbackAllowed(feed.PageURL, false) {
 					diagnostics = append(diagnostics, platformfetch.VideoMediaDiagnostic{Stage: "webview_feed_fallback", Outcome: "restricted", Reason: "business_verification", PageURL: safePageURL(feed.PageURL), PageReadyState: &feed.Ready, IsDouyinContext: boolPtr(isDouyinPageContext(feed.PageURL))})
 					return platformfetch.VideoMediaResponse{Restricted: true, PageURL: safeCaptureURL(feed.PageURL), Diagnostics: diagnostics}, nil
 				}
@@ -905,7 +914,7 @@ func (b *platformPageBridge) ResolveVideoMedia(ctx context.Context, id string) (
 					diagnostics = append(diagnostics, platformfetch.VideoMediaDiagnostic{Stage: "webview_feed_fallback", Outcome: "exception", Reason: "javascript_error", PageURL: safePageURL(session.window.Page().URL()), IsDouyinContext: boolPtr(isDouyinPageContext(session.window.Page().URL()))})
 					return platformfetch.VideoMediaResponse{}, platformfetch.WrapVideoMediaError(stateErr, diagnostics...)
 				}
-				if !pageState.Douyin || pageState.Restricted || looksLikeLoginOrChallenge(pageState.Title) || !douyinMediaFallbackAllowed(pageState.URL, false) {
+				if !pageState.Douyin || pageState.Restricted || !douyinMediaFallbackAllowed(pageState.URL, false) {
 					diagnostics = append(diagnostics, platformfetch.VideoMediaDiagnostic{Stage: "webview_feed_fallback", Outcome: "restricted", Reason: "business_verification", PageURL: safePageURL(pageState.URL), PageReadyState: stringPtr(pageState.Ready), IsDouyinContext: boolPtr(pageState.Douyin)})
 					return platformfetch.VideoMediaResponse{Restricted: true, PageURL: safeCaptureURL(pageState.URL), Diagnostics: diagnostics}, nil
 				}
@@ -998,16 +1007,6 @@ func stringPtr(value string) *string {
 		return nil
 	}
 	return &value
-}
-
-func looksLikeLoginOrChallenge(value string) bool {
-	lower := strings.ToLower(value)
-	for _, marker := range []string{"login", "登录", "verify", "验证", "captcha", "challenge", "风控", "passport", "滑块", "just a moment"} {
-		if strings.Contains(lower, marker) {
-			return true
-		}
-	}
-	return false
 }
 
 func looksLikeVerificationURL(raw string) bool {
@@ -1189,7 +1188,7 @@ func (b *platformPageBridge) captureFeedLocked(captureCtx context.Context, sessi
 		if stateErr != nil {
 			return platformfetch.FeedCaptureResponse{}, stateErr
 		}
-		if pageState.Restricted || !pageState.Douyin || looksLikeLoginOrChallenge(pageState.Title) || looksLikeVerificationURL(pageState.URL) {
+		if pageState.Restricted || !pageState.Douyin || looksLikeVerificationURL(pageState.URL) {
 			return platformfetch.FeedCaptureResponse{PageURL: pageState.URL, Title: pageState.Title, Ready: pageState.Ready, Restricted: true}, nil
 		}
 	}
@@ -1271,7 +1270,7 @@ func (b *platformPageBridge) captureFeedLocked(captureCtx context.Context, sessi
 				if stateErr != nil {
 					return platformfetch.FeedCaptureResponse{}, stateErr
 				}
-				if !pageState.Douyin || pageState.Restricted || looksLikeLoginOrChallenge(pageState.Title) || looksLikeVerificationURL(pageState.URL) {
+				if !pageState.Douyin || pageState.Restricted || looksLikeVerificationURL(pageState.URL) {
 					return platformfetch.FeedCaptureResponse{PageURL: pageState.URL, Title: pageState.Title, Ready: pageState.Ready, Restricted: true}, nil
 				}
 				for i := 0; i < pages; i++ {
@@ -1323,7 +1322,7 @@ func (b *platformPageBridge) captureFeedLocked(captureCtx context.Context, sessi
 	if target != "" {
 		mediaCaptures = result.Media
 	}
-	return platformfetch.FeedCaptureResponse{Responses: responses, FeedCards: result.FeedCards, FeedHasMore: result.FeedHasMore, FeedParsed: result.FeedParsed, DOMCards: result.Cards, PageURL: pageURL, Title: result.Title, Ready: result.Ready, ResourcePaths: result.ResourcePaths, InitiatorTypes: result.InitiatorTypes, FetchHookInstalled: result.FetchHookInstalled, XHRHookInstalled: result.XHRHookInstalled, MediaCaptures: mediaCaptures, Restricted: result.Restricted || looksLikeVerificationURL(pageURL) || looksLikeLoginOrChallenge(result.Title), DOM: result.DOM}, nil
+	return platformfetch.FeedCaptureResponse{Responses: responses, FeedCards: result.FeedCards, FeedHasMore: result.FeedHasMore, FeedParsed: result.FeedParsed, DOMCards: result.Cards, PageURL: pageURL, Title: result.Title, Ready: result.Ready, ResourcePaths: result.ResourcePaths, InitiatorTypes: result.InitiatorTypes, FetchHookInstalled: result.FetchHookInstalled, XHRHookInstalled: result.XHRHookInstalled, MediaCaptures: mediaCaptures, Restricted: result.Restricted || looksLikeVerificationURL(pageURL), DOM: result.DOM}, nil
 }
 
 type douyinCaptureCounts struct {

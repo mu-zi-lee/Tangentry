@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useId, type ReactNode } from 'react'
 
 export function SettingsActionPage({
   title,
@@ -8,7 +8,6 @@ export function SettingsActionPage({
   children,
   className = '',
 }: {
-  eyebrow: string
   title: string
   description: string
   status?: ReactNode
@@ -16,10 +15,11 @@ export function SettingsActionPage({
   children: ReactNode
   className?: string
 }) {
-  return <section className={`settings-action-page ${className}`.trim()} aria-labelledby="settings-action-title">
+  const titleId = useId()
+  return <section className={`settings-action-page ${className}`.trim()} aria-labelledby={titleId}>
     <header className="settings-action-head">
       <div>
-        <h2 id="settings-action-title">{title}</h2>
+        <h1 id={titleId}>{title}</h1>
         <p>{description}</p>
       </div>
       {(status || actions) && <div className="settings-action-head-actions">{status && <span className="settings-inline-status">{status}</span>}{actions}</div>}
@@ -36,11 +36,7 @@ export function SettingsTask({ title, description, children, actions, className 
   className?: string
 }) {
   return <section className={`settings-task ${className}`.trim()}>
-    {(title || description || actions) && <div className="settings-task-head">{(title || description) && <div>{title && <h3>{title}</h3>}{description && <p>{description}</p>}</div>}{actions && <div className="settings-task-actions">{actions}</div>}</div>}
+    {(title || description || actions) && <div className="settings-task-head">{(title || description) && <div>{title && <h2>{title}</h2>}{description && <p>{description}</p>}</div>}{actions && <div className="settings-task-actions">{actions}</div>}</div>}
     <div className="settings-task-content">{children}</div>
   </section>
-}
-
-export function SettingsActionBar({ children }: { children: ReactNode }) {
-  return <div className="settings-action-bar">{children}</div>
 }

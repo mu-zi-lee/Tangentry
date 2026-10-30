@@ -20,6 +20,8 @@ type Item struct {
 	LikeCount       int            `json:"likeCount,omitempty"`
 	URL             string         `json:"url"`
 	ThumbnailURL    string         `json:"thumbnailUrl"`
+	ThumbnailWidth  int            `json:"thumbnailWidth,omitempty"`
+	ThumbnailHeight int            `json:"thumbnailHeight,omitempty"`
 	Description     string         `json:"description"`
 	PreviewText     string         `json:"previewText,omitempty"`
 	DurationSeconds int            `json:"durationSeconds"`

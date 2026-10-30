@@ -169,7 +169,7 @@ export function DownloadsPage({ downloads, onRead, intent }: { downloads: Downlo
     </details>
   </section>
   return <div className="download-workspace">
-    <PageHeader className="download-heading" title="下载资料库" summary={activeCount ? `${activeCount} 个任务正在处理` : '保存视频、音频和字幕，随时离线播放与阅读。'} actions={<a className="button button-secondary" href="/tools#storage" aria-label="下载与存储设置" title="下载与存储设置"><Folder size={15}/>存储位置</a>}/>
+    <PageHeader className="download-heading" title="下载资料库" summary={activeCount ? `${activeCount} 个任务正在处理` : '保存视频、音频和字幕，随时离线播放与阅读。'} actions={<a className="button button-secondary" href="/tools#data-storage" aria-label="下载与存储设置" title="下载与存储设置"><Folder size={15}/>存储位置</a>}/>
     <section className="download-composer" aria-label="新建下载">
       <div className="download-composer-head">
         <span className={`download-tool-status ${downloads.tools?.downloadReady ? 'is-ready' : ''}`}><span aria-hidden="true"/>{downloads.tools?.downloadReady ? '下载工具已就绪' : downloads.loading ? '检查下载工具…' : '下载工具未就绪'}</span>
@@ -179,7 +179,7 @@ export function DownloadsPage({ downloads, onRead, intent }: { downloads: Downlo
         <Button variant="primary" className="button button-primary" disabled={!url.trim() || downloads.inspecting || !downloads.tools?.tools.some(tool => tool.name === 'yt-dlp' && tool.available)}>{downloads.inspecting ? <LoaderCircle className="spin" size={16} /> : <ArrowDownToLine size={16} />}{downloads.inspecting ? '获取中…' : '获取信息'}</Button>
       </form>
       {downloads.infoError && <div className="error-panel" role="alert"><p>{downloads.infoError}</p><Button variant="secondary" className="button button-secondary" disabled={downloads.inspecting} onClick={() => void downloads.inspect(url)}><RefreshCw size={15} />重试</Button></div>}
-      {!downloads.loading && !downloads.tools?.downloadReady && <p className="inline-feedback"><CircleHelp size={17} />下载工具尚未准备好。<a href="/tools#storage">检查工具设置</a></p>}
+      {!downloads.loading && !downloads.tools?.downloadReady && <p className="inline-feedback"><CircleHelp size={17} />下载工具尚未准备好。<a href="/tools#system">检查工具设置</a></p>}
       {info && <div className="download-workbench">
         <section className="download-media" aria-label="媒体信息">
           <div className="download-preview">

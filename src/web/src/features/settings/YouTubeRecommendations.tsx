@@ -5,6 +5,7 @@ import { request } from '../../shared/api/client'
 import { listOrEmpty } from '../../shared/api/list'
 import type { Feed, ToolReport } from '../../shared/api/types'
 import { SettingsTask } from './ui/SettingsActionPage'
+import { SettingsRow, SettingsStatus } from './ui/SettingsRow'
 
 export function YouTubeRecommendations({ tools, onFeed, onDiscover }: {
   tools: ToolReport | null
@@ -40,12 +41,12 @@ export function YouTubeRecommendations({ tools, onFeed, onDiscover }: {
       }
     }
   }
-  return <SettingsTask title="来源检测" description="使用已保存的 YouTube 账号读取推荐。" actions={<span className="settings-inline-status">{runtime?.available ? '可以检测' : '未安装工具'}</span>}>
-    <div className="recommendation-check-actions">
+  return <SettingsTask title="推荐来源">
+    <div className="settings-list-card"><SettingsRow setting="recommendation-source" title="YouTube 推荐" description={runtime?.version ? `通过 ${runtime.version} 读取已登录账号的首页推荐` : '使用已保存的 YouTube 账号读取首页推荐'}>
+      <SettingsStatus tone={runtime?.available ? 'positive' : 'warning'}>{runtime?.available ? '工具已就绪' : '工具未就绪'}</SettingsStatus>
       <Button variant="secondary" aria-label="检测推荐连接" className="button button-secondary" disabled={pending || !runtime?.available} onClick={() => void check()}>{pending ? <LoaderCircle size={14} className="spin"/> : <RefreshCw size={14}/>}测试推荐</Button>
       {pending && <Button variant="quiet" iconOnly className="icon-button" aria-label="取消检测" title="取消检测" onClick={cancel}><X size={16}/></Button>}
-      {runtime?.version && <span className="field-hint">{runtime.version}</span>}
-    </div>
+    </SettingsRow></div>
     {result && <p className="settings-feedback" role="status">{result}</p>}
     {result && <Button variant="quiet" className="text-button" onClick={onDiscover}>查看内容<ArrowUpRight size={14} aria-hidden="true"/></Button>}
     {error && <p className="settings-feedback" role="alert">{error}</p>}

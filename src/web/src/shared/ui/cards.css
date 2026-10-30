@@ -7,7 +7,7 @@
 .content-container, .subscription-results, .podcast-section { container-type: inline-size; container-name: cards; }
 :root :is(.modern-gallery, .mixed-gallery) {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--card-min, 248px)), 1fr));
-  grid-auto-rows: 1px; grid-auto-flow: row dense; align-items: start; column-gap: var(--card-gap, 18px); row-gap: 0;
+  grid-auto-rows: 1px; grid-auto-flow: row; align-items: start; column-gap: var(--card-gap, 18px); row-gap: 0;
 }
 :root :is(.modern-gallery, .mixed-gallery)[data-masonry='false'] { grid-auto-rows: auto; grid-auto-flow: row; row-gap: calc(var(--card-gap, 18px) + 2px); }
 :root :is(.modern-gallery, .mixed-gallery) > * { min-width: 0; margin: 0; }
@@ -25,10 +25,9 @@
 }
 
 /* Cover height stays independent of the number and width of gallery columns. */
-:root :is(.modern-card.card-video, .modern-card.card-article, .modern-card.card-pdf, .modern-card.card-image) .modern-card-thumbnail {
+:root :is(.modern-card.card-video, .modern-card.card-article, .modern-card.card-pdf) .modern-card-thumbnail {
   height: var(--card-cover-height, 160px); min-height: 0; max-height: none; aspect-ratio: auto; flex-shrink: 0;
 }
-:root .modern-card.card-image .modern-card-thumbnail img { height: 100%; max-height: none; object-fit: cover; }
 
 /* ---------- Gallery card surface ---------- */
 .modern-card {
@@ -130,11 +129,10 @@
 }
 @media (hover: none) { .discovery-feedback-menu { opacity: 1; } }
 
-/* Image notes: portrait media, text kept short. */
-.card-image .modern-card-thumbnail { aspect-ratio: auto; min-height: 140px; max-height: 420px; }
-.card-image .modern-card-thumbnail img { height: auto; max-height: 420px; }
-:is(.modern-gallery, .mixed-gallery)[data-media='image'] .card-image .modern-card-thumbnail { aspect-ratio: 4 / 5; max-height: none; }
-:is(.modern-gallery, .mixed-gallery)[data-media='image'] .card-image .modern-card-thumbnail img { height: 100%; max-height: none; }
+/* Image notes retain the cover's own proportions in mixed and image feeds. */
+.card-image .modern-card-thumbnail { height: auto; min-height: 0; max-height: none; aspect-ratio: auto; flex-shrink: 0; }
+.card-image .modern-card-thumbnail img { height: auto; max-height: none; object-fit: contain; }
+.card-image .thumbnail-placeholder { aspect-ratio: 1; height: auto; }
 .card-image-count { top: 8px; bottom: auto; }
 
 /* PDF: a document tile rather than a photo. */

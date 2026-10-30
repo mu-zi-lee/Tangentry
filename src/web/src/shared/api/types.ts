@@ -67,6 +67,8 @@ export interface ContentItem {
   likeCount?: number
   url: string
   thumbnailUrl: string
+  thumbnailWidth?: number
+  thumbnailHeight?: number
   description: string
   previewText?: string
   durationSeconds: number

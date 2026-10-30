@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 export type UIFont = 'system' | 'inter' | 'noto'
-export type ReadingFont = 'system' | 'wenkai' | 'noto'
+export type ReadingFont = 'system' | 'wenkai' | 'noto' | 'serif'
 export type ReadingSize = 'small' | 'medium' | 'large'
 export type ReadingLineHeight = 'compact' | 'comfortable' | 'relaxed'
 
@@ -10,11 +10,12 @@ export interface FontSettings {
   reading: ReadingFont
   size: ReadingSize
   lineHeight: ReadingLineHeight
+  fontSize?: number
 }
 
 export const defaultFontSettings: FontSettings = {
   ui: 'inter',
-  reading: 'wenkai',
+  reading: 'serif',
   size: 'medium',
   lineHeight: 'comfortable',
 }
@@ -29,6 +30,7 @@ export const uiFontStacks: Record<UIFont, string> = {
 }
 
 export const readingFontStacks: Record<ReadingFont, string> = {
+  serif: "Georgia, 'Songti SC', 'Noto Serif SC', serif",
   system: "'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Segoe UI', 'Microsoft YaHei', 'Noto Sans SC', sans-serif",
   wenkai: "'Inter', 'LXGW WenKai Screen', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif",
   noto: "'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif",
@@ -51,9 +53,10 @@ export function validateFontSettings(value: unknown): FontSettings {
   const raw = (value && typeof value === 'object' ? value : {}) as Partial<FontSettings>
   return {
     ui: option(raw.ui, uiFontStacks, defaultFontSettings.ui),
-    reading: option(raw.reading, readingFontStacks, defaultFontSettings.reading),
+    reading: raw.reading === 'wenkai' ? 'serif' : option(raw.reading, readingFontStacks, defaultFontSettings.reading),
     size: option(raw.size, readingSizes, defaultFontSettings.size),
     lineHeight: option(raw.lineHeight, readingLineHeights, defaultFontSettings.lineHeight),
+    ...(typeof raw.fontSize === 'number' && Number.isFinite(raw.fontSize) ? { fontSize: Math.min(22, Math.max(14, Math.round(raw.fontSize))) } : {}),
   }
 }
 
@@ -76,7 +79,7 @@ export function applyFontSettings(value: FontSettings, root: HTMLElement = docum
   root.style.setProperty('--font-ui', uiFontStacks[settings.ui])
   root.style.setProperty('--font-display', uiFontStacks[settings.ui])
   root.style.setProperty('--font-reading', readingFontStacks[settings.reading])
-  root.style.setProperty('--font-reading-size', readingSizes[settings.size])
+  root.style.setProperty('--font-reading-size', `${settings.fontSize ?? Number.parseInt(readingSizes[settings.size], 10)}px`)
   root.style.setProperty('--font-reading-line-height', readingLineHeights[settings.lineHeight])
   root.dataset.fontUi = settings.ui
   root.dataset.fontReading = settings.reading

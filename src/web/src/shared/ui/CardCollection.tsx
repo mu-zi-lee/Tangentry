@@ -8,10 +8,6 @@ export function cardSizeChanged(previous: CardSize | undefined, width: number, h
   return !previous || previous.width !== width || previous.height !== height
 }
 
-export function masonryIntrinsicSize(height: number) {
-  return `auto ${Math.max(0, Math.ceil(height))}px`
-}
-
 export function masonryNeedsMeasurement(cardCount: number, measuredCount: number, spacingChanged: boolean) {
   return spacingChanged || measuredCount < cardCount
 }
@@ -39,13 +35,10 @@ export function CardCollection({ children, masonry = true, rowGap = 16, ...props
   useLayoutEffect(() => {
     const node = collection.current
     if (!node) return
-    const scrollTop = window.scrollY
     const cards = Array.from(node.children) as HTMLElement[]
     if (!masonry) {
       cards.forEach(card => {
         card.style.removeProperty('grid-row-end')
-        card.style.removeProperty('content-visibility')
-        card.style.removeProperty('contain-intrinsic-size')
       })
       return
     }
@@ -56,7 +49,6 @@ export function CardCollection({ children, masonry = true, rowGap = 16, ...props
     const spacingChanged = spacingRef.current !== spacing
     spacingRef.current = spacing
     if (spacingChanged) measurements.current = new WeakMap<HTMLElement, CardSize>()
-    const hasMeasurements = !spacingChanged && cards.length > 0 && cards.every(card => measurements.current.has(card))
     const measuredCount = cards.filter(card => measurements.current.has(card) && card.style.gridRowEnd).length
     const shouldMeasure = masonryNeedsMeasurement(cards.length, measuredCount, spacingChanged)
     const resize = (entries: ResizeBoxEntry[]) => {
@@ -75,10 +67,6 @@ export function CardCollection({ children, masonry = true, rowGap = 16, ...props
       for (const { card, width, height } of updates) {
         measurements.current.set(card, { width, height })
         card.style.gridRowEnd = `span ${masonrySpan(height, spacing)}`
-        if (hasMeasurements) {
-          card.style.contentVisibility = 'auto'
-          card.style.containIntrinsicSize = masonryIntrinsicSize(height)
-        }
       }
     }
     // Activity hides and later reveals the collection by restarting effects while
@@ -89,36 +77,12 @@ export function CardCollection({ children, masonry = true, rowGap = 16, ...props
       ? cards.filter(card => spacingChanged || !measurements.current.has(card) || !card.style.gridRowEnd)
       : []
     if (cardsToMeasure.length) resize(cardsToMeasure.map(target => ({ target })))
-    if (Math.abs(window.scrollY - scrollTop) > 1) window.scrollTo({ top: scrollTop, behavior: 'auto' })
     const observer = new ResizeObserver(resize)
-    const applyIntrinsicStyles = () => {
-      if (hasMeasurements || !shouldMeasure) return
-      for (const card of cards) {
-        const measurement = measurements.current.get(card)
-        if (!measurement) continue
-        card.style.contentVisibility = 'auto'
-        card.style.containIntrinsicSize = masonryIntrinsicSize(measurement.height)
-      }
-    }
-    let cancelObserve: () => void
-    if (!hasMeasurements) {
-      const idle = 'requestIdleCallback' in window
-        ? window.requestIdleCallback(() => { applyIntrinsicStyles(); cards.forEach(card => observer.observe(card)) })
-        : setTimeout(() => { applyIntrinsicStyles(); cards.forEach(card => observer.observe(card)) }, 0)
-      cancelObserve = () => {
-        if ('cancelIdleCallback' in window) window.cancelIdleCallback(idle as number)
-        else clearTimeout(idle)
-      }
-    } else if ('requestIdleCallback' in window) {
-      const idle = window.requestIdleCallback(() => cards.forEach(card => observer.observe(card)))
-      cancelObserve = () => window.cancelIdleCallback(idle)
-    } else {
-      const timeout = setTimeout(() => cards.forEach(card => observer.observe(card)), 0)
-      cancelObserve = () => clearTimeout(timeout)
-    }
+    // Measuring a content-visibility placeholder makes grid spans oscillate as
+    // cards enter the viewport. Keep the measured card box in layout instead.
+    cards.forEach(card => observer.observe(card))
     return () => {
       observer.disconnect()
-      cancelObserve()
       // Preserve track spans across React updates: collapsing the grid even
       // briefly clamps the document's scroll position before we can remeasure.
     }

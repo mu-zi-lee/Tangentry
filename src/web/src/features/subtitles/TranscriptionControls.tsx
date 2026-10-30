@@ -60,7 +60,7 @@ export function TranscriptionControls({ contentId, onComplete, video = false }: 
     {cloud && !busy && <label className="field-hint transcription-upload-consent"><Checkbox type="checkbox" checked={uploadConsent} onChange={event=>setUploadConsent(event.target.checked)}/>允许将本次音频上传至 {provider} 转录；长音频逐段处理，可能消耗额度。</label>}
     {cloud && <p className="field-hint">已完成片段保存在本机，再次启动时优先复用。</p>}
     {activeBackend==='siliconflow' && <p className="field-hint">生成的是片段字幕，按切分范围跳转，时间并非逐句对齐；已有精确字幕会保留。</p>}
-    {ready === false && <p className="field-hint">请先在<a href="/tools#transcription">字幕转录设置</a>配置转录引擎、模型或云端凭证。</p>}
+    {ready === false && <p className="field-hint">请先在<a href="/tools#ai/asr">字幕转录设置</a>配置转录引擎、模型或云端凭证。</p>}
     {job && finished(job) && <p className="field-hint" role="status">{job.state === 'failed' && job.failedStage && failureStages[job.failedStage] ? `${failureStages[job.failedStage]}：` : ''}{job.error || stages[job.state]}</p>}
     {error && <p className="subtitle-error" role="alert">{error}<Button variant="secondary" className="button button-secondary" onClick={() => { setError(''); setAttempt(value => value + 1) }}>重试读取状态</Button></p>}
   </div>

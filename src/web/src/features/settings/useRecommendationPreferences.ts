@@ -11,7 +11,7 @@ function preferences(response: Response): Preferences {
   return Object.fromEntries(response.sources.map(value => [value.source, value.enabled])) as Preferences
 }
 
-export function useRecommendationPreferences() {
+export function useRecommendationPreferences(active = true) {
   const [values, setValues] = useState<Preferences | null>(null)
   const [error, setError] = useState('')
   const [pending, setPending] = useState('')
@@ -28,14 +28,14 @@ export function useRecommendationPreferences() {
     }
   }, [])
   useEffect(() => {
-    void reload()
+    if (active) void reload()
     const update = (event: Event) => {
       read.current?.abort()
       setValues((event as CustomEvent<Preferences>).detail); setError('')
     }
     window.addEventListener(changed, update)
     return () => { read.current?.abort(); write.current?.abort(); window.removeEventListener(changed, update) }
-  }, [reload])
+  }, [active, reload])
   async function save(source: RecommendationPlatform, enabled: boolean) {
     if (write.current || !values) return
     const previous = values

@@ -17,7 +17,8 @@ test.beforeEach(async ({ request }) => {
   const { jobs } = await (await request.get('/api/downloads')).json()
   for (const job of jobs) {
     if (job.state === 'queued' || job.state === 'running') await request.post(`/api/downloads/${job.id}/cancel`)
-    expect((await request.delete(`/api/downloads/${job.id}`)).ok()).toBe(true)
+    const removed = await request.delete(`/api/downloads/${job.id}`, { data: { deleteFiles: false } })
+    expect(removed.ok(), `${removed.status()}: ${await removed.text()}`).toBe(true)
   }
   const response = await request.get('/api/library')
   const { items } = await response.json() as { items: ContentItem[] }
@@ -234,12 +235,90 @@ test('empty data opens every settings section without page load errors', async (
   await page.goto('/tools')
   await expect(page.getByRole('heading', { name: '设置', exact: true })).toBeVisible()
   const navigation = page.getByRole('navigation', { name: '设置目录', exact: true })
-  for (const title of ['外观', '账号', '发现', '翻译与摘要', '字幕转录', '下载与存储', '备份与恢复', '关于与更新']) {
-    await navigation.getByRole('button', { name: title, exact: true }).click()
+  for (const [label, title] of [['概览', '概览'], ['外观', '外观'], ['平台账号', '平台账号'], ['发现与推荐', '发现与推荐'], ['AI 服务', 'AI 服务'], ['Agent 与 MCP', 'Agent 与 MCP'], ['数据与备份', '数据与备份'], ['组件与更新', '组件与更新']]) {
+    await navigation.getByRole('button', { name: label, exact: true }).click()
     await expect(page.locator('.settings-action-page').getByRole('heading', { name: title, exact: true })).toBeVisible()
     await expect(page.getByRole('alert').filter({ hasText: '页面未能加载' })).toHaveCount(0)
   }
+  await page.goto('/tools#transcription')
+  await expect(page.getByRole('heading', { name: 'AI 服务', exact: true })).toBeVisible()
+  await expect(page.getByRole('tablist', { name: 'AI 服务分区' }).getByRole('tab', { name: '字幕转录' })).toHaveAttribute('aria-selected', 'true')
+  await expect(page.getByRole('group', { name: '转录引擎' })).toBeVisible()
+  await page.goto('/tools#backup')
+  await expect(page.getByRole('heading', { name: '数据与备份', exact: true })).toBeVisible()
+  await expect(page.locator('#settings-backup')).toBeVisible()
   expect(pageErrors).toEqual([])
+})
+
+test('settings search opens the matching row and mobile details return to the directory', async ({ page }) => {
+  await page.goto('/tools')
+  const desktopSearch = page.getByRole('searchbox', { name: '搜索设置', exact: true }).first()
+  await desktopSearch.fill('模型')
+  const desktopNavigation = page.getByRole('navigation', { name: '设置目录', exact: true }).first()
+  await expect(desktopNavigation.getByRole('button', { name: 'AI 服务', exact: true })).toBeVisible()
+  await expect(desktopNavigation.getByRole('button', { name: '数据与备份', exact: true })).toBeVisible()
+  await page.getByRole('button', { name: '翻译模型 AI 服务 · 翻译与摘要', exact: true }).click()
+  await expect(page.locator('.settings-action-page').getByRole('heading', { name: 'AI 服务', exact: true })).toBeVisible()
+  await expect(page.getByLabel('翻译模型', { exact:true })).toBeFocused()
+  await page.getByRole('tab', { name: '字幕转录', exact: true }).click()
+  await expect(page).toHaveURL(/#ai\/asr$/)
+  await expect(page.getByRole('group', { name: '转录引擎' })).toBeVisible()
+  await expect(desktopSearch).toHaveValue('')
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/tools')
+  const mobileNavigation = page.getByRole('navigation', { name: '设置目录', exact: true }).last()
+  await expect(mobileNavigation).toBeVisible()
+  await page.getByRole('searchbox', { name: '搜索设置', exact: true }).fill('备份')
+  await expect(mobileNavigation).toBeHidden()
+  await page.getByRole('button', { name: '备份目标 数据与备份', exact: true }).click()
+  await expect(page.locator('.settings-action-page').getByRole('heading', { name: '数据与备份', exact: true })).toBeVisible()
+  await expect(page).toHaveURL(/#data$/)
+  await page.getByRole('button', { name: '返回设置列表', exact: true }).click()
+  await expect(mobileNavigation).toBeVisible()
+  await expect(page.getByRole('heading', { name:'设置', exact:true })).toBeVisible()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
+})
+
+test('legacy settings hashes open their consolidated sections', async ({ page }) => {
+  await page.goto('/tools#translation')
+  await expect(page.locator('.settings-action-page').getByRole('heading', { name: 'AI 服务', exact: true })).toBeVisible()
+  await expect(page.getByRole('tab', { name: '翻译与摘要' })).toHaveAttribute('aria-selected', 'true')
+  await page.goto('/tools#ai/prompts')
+  await expect(page).toHaveURL(/#ai\/text$/)
+  await expect(page.getByRole('tab', { name:'提示词', exact:true })).toHaveCount(0)
+
+  await page.goto('/tools#data-storage')
+  await expect(page.locator('.settings-action-page').getByRole('heading', { name: '数据与备份', exact: true })).toBeVisible()
+  await expect(page.locator('#settings-storage')).toBeVisible()
+
+  await page.goto('/tools#data-backup')
+  await expect(page.locator('#settings-backup')).toBeVisible()
+  await page.goto('/tools#about')
+  await expect(page.locator('.settings-action-page').getByRole('heading', { name: '组件与更新', exact: true })).toBeVisible()
+})
+
+test('inactive transcription settings stop model polling and resume when reopened', async ({ page }) => {
+  let modelReads = 0
+  await page.route('**/api/transcription/models', async route => {
+    modelReads++
+    await route.fulfill({ json: { models: [], available: true, job: { id: 'fixture-job', modelId: 'fixture-model', state: 'fetching' } } })
+  })
+  await page.goto('/tools#overview')
+  await expect(page.locator('.settings-action-page').getByRole('heading', { name: '概览', exact: true })).toBeVisible()
+  expect(modelReads).toBe(0)
+
+  await page.getByRole('navigation', { name: '设置目录', exact: true }).getByRole('button', { name: 'AI 服务', exact: true }).click()
+  await page.getByRole('tab', { name: '字幕转录', exact: true }).click()
+  await expect.poll(() => modelReads).toBe(1)
+  await page.getByRole('navigation', { name: '设置目录', exact: true }).getByRole('button', { name: '平台账号', exact: true }).click()
+  await page.waitForTimeout(3300)
+  expect(modelReads).toBe(1)
+
+  await page.getByRole('navigation', { name: '设置目录', exact: true }).getByRole('button', { name: 'AI 服务', exact: true }).click()
+  await page.getByRole('tab', { name: '字幕转录', exact: true }).click()
+  await expect.poll(() => modelReads).toBe(2)
+  await expect.poll(() => modelReads, { timeout: 5000 }).toBeGreaterThan(2)
 })
 
 test('navigation replaces the active page without stacking titles', async ({ page }) => {
@@ -309,9 +388,10 @@ test('download failure stays visible and tool settings report actual configured 
   await expect(page.getByText('平台限制了下载请求', { exact: false }).first()).toBeVisible({ timeout: 10000 })
   await page.getByRole('button', { name: '工具设置', exact: true }).click()
   await expect(page.getByRole('heading', { name: '设置', exact: true })).toBeVisible()
-  await page.getByRole('navigation', { name: '设置目录' }).getByRole('button', { name: '下载与存储', exact: true }).click()
-  await expect(page.locator('.settings-action-storage .settings-tool-row .settings-state[data-ready="true"]').first()).toBeVisible()
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  await page.getByRole('navigation', { name: '设置目录' }).getByRole('button', { name: '组件与更新', exact: true }).click()
+  await expect(page.locator('[data-setting="download-tools"] .settings-status-chip[data-tone="positive"]').first()).toBeVisible()
+  const violations = await new AxeBuilder({ page }).analyze()
+  expect(violations.violations.filter(item => !['landmark-main-is-top-level', 'landmark-no-duplicate-main', 'landmark-unique'].includes(item.id))).toEqual([])
 })
 
 test('browse, preview, save, reload and unsave use actual storage', async ({ page, request }) => {

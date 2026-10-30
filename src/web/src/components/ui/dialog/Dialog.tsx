@@ -4,10 +4,11 @@ import './dialog.css'
 
 interface DialogProps extends DialogHTMLAttributes<HTMLDialogElement> {
   title?: string
+  closeDisabled?: boolean
 }
 
 export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(
-  ({ open, onClose, onCancel, onKeyDown, title, children, className = '', ...props }, ref) => {
+  ({ open, onClose, onCancel, onKeyDown, title, children, className = '', closeDisabled = false, ...props }, ref) => {
     const localRef = useRef<HTMLDialogElement>(null)
     const titleId = useId()
     useImperativeHandle(ref, () => localRef.current!, [])
@@ -37,7 +38,7 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(
       className={['ui-dialog', title && 'ui-dialog-framed', className].filter(Boolean).join(' ')}
       aria-labelledby={props['aria-labelledby'] ?? (title ? titleId : undefined)}
       onClose={event => { if (!event.currentTarget.open) onClose?.(event) }}
-      onCancel={onCancel}
+      onCancel={event => { if (closeDisabled) event.preventDefault(); onCancel?.(event) }}
       onKeyDown={event => {
         onKeyDown?.(event)
         if (event.defaultPrevented || event.key !== 'Tab') return
@@ -57,7 +58,7 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(
       {title ? <>
         <div className="ui-dialog-header">
           <h2 id={titleId}>{title}</h2>
-          <Button type="button" variant="quiet" iconOnly aria-label="关闭" onClick={() => localRef.current?.close()}>×</Button>
+          <Button type="button" variant="quiet" iconOnly aria-label="关闭" disabled={closeDisabled} onClick={() => localRef.current?.close()}>×</Button>
         </div>
         <div className="ui-dialog-content">{children}</div>
       </> : children}

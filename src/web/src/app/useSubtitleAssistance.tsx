@@ -8,10 +8,11 @@ import type { SubtitleLanguage, SubtitleTrack } from '../shared/api/types'
 import { preferredSubtitleLanguage, subtitleTargetLabel } from '../features/subtitles/subtitleLanguageMatch'
 import type { SubtitleAssistance } from '../shared/ui/subtitleAssistance'
 import { ReaderActions } from '../shared/reader/ReaderActions'
+import { readTranslationLanguage } from '../features/ai/useTranslationLanguage'
 const noPlatformLanguages: SubtitleLanguage[] = []
 export function useSubtitleAssistance(contentId: string, track: SubtitleTrack | null, onSeek?: (seconds: number) => void, source?: SummarySource, showSummary = true): SubtitleAssistance | undefined {
   const [platformState, setPlatformState] = useState<{ contentId: string; languages: SubtitleLanguage[]; ready: boolean }>(() => ({ contentId, languages: [], ready: !contentId.startsWith('bilibili:') && !contentId.startsWith('youtube:') }))
-  const [selectedTarget, setSelectedTarget] = useState('zh-Hans')
+  const [selectedTarget, setSelectedTarget] = useState(readTranslationLanguage)
   const platformStateCurrent = platformState.contentId === contentId
   const availableLanguages = platformStateCurrent ? platformState.languages : []
   const platformLanguagesReady = platformStateCurrent ? platformState.ready : !contentId.startsWith('bilibili:') && !contentId.startsWith('youtube:')

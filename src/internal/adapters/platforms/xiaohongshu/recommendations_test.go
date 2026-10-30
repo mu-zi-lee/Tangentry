@@ -76,3 +76,24 @@ func TestRecommendationPublicationTime(t *testing.T) {
 		}
 	}
 }
+
+func TestRecommendationPreservesActualCoverDimensions(t *testing.T) {
+	for _, tc := range []struct {
+		dimensions    string
+		width, height int
+	}{
+		{`"width":900,"height":1200,`, 900, 1200},
+		{`"width":1200,"height":800,`, 1200, 800},
+		{`"width":0,"height":1200,`, 0, 0},
+	} {
+		page := strings.Replace(recommendationPage(), `"cover":{`, `"cover":{`+tc.dimensions, 1)
+		feed, err := ParseRecommendations([]byte(page))
+		if err != nil || len(feed.Items) != 1 {
+			t.Fatal(feed, err)
+		}
+		item := feed.Items[0]
+		if item.ThumbnailWidth != tc.width || item.ThumbnailHeight != tc.height {
+			t.Fatalf("cover dimensions = %dx%d, want %dx%d", item.ThumbnailWidth, item.ThumbnailHeight, tc.width, tc.height)
+		}
+	}
+}

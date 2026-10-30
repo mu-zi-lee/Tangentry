@@ -4,13 +4,13 @@ import { QrCode } from 'lucide-react'
 import { request } from '../../shared/api/client'
 
 type Session = { id: string; image?: string; status: string; expiresAt: number }
-export function BilibiliLogin({ onSuccess }: { onSuccess: () => void }) {
+export function BilibiliLogin({ onSuccess, active = true }: { onSuccess: () => void; active?: boolean }) {
   const [session, setSession] = useState<Session | null>(null)
   const [pending, setPending] = useState(false)
   const [error, setError] = useState('')
   const [open, setOpen] = useState(false)
   useEffect(() => {
-    if (!open || !session || session.status === 'success' || session.status === 'expired') return
+    if (!active || !open || !session || session.status === 'success' || session.status === 'expired') return
     const controller = new AbortController()
     let timer: ReturnType<typeof setTimeout>
     const poll = async () => {
@@ -26,7 +26,7 @@ export function BilibiliLogin({ onSuccess }: { onSuccess: () => void }) {
     }
     timer = setTimeout(poll, 2500)
     return () => { controller.abort(); clearTimeout(timer) }
-  }, [open, session?.id, session?.status, onSuccess])
+  }, [active, open, session?.id, session?.status, onSuccess])
   async function start() {
     setOpen(true); setPending(true); setError(''); setSession(null)
     try { setSession(await request<Session>('/settings/bilibili/login', { method: 'POST' })) }

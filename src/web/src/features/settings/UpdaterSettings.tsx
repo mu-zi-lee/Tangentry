@@ -5,6 +5,8 @@ import remarkGfm from 'remark-gfm'
 import { useCapabilities } from '../../shared/api/desktop'
 import '../notes/markdown.css'
 import { SettingsTask } from './ui/SettingsActionPage'
+import { SettingsRow } from './ui/SettingsRow'
+import { version as webVersion } from '../../../package.json'
 
 export type UpdaterStatus = {
   enabled: boolean
@@ -40,7 +42,7 @@ function snoozeUpdaterNotice() {
   window.dispatchEvent(new Event('tangentry-updater-snooze'))
 }
 
-export function UpdaterSettings() {
+export function UpdaterSettings({ active = true }: { active?: boolean }) {
   const capabilities = useCapabilities()
   const [status, setStatus] = useState<UpdaterStatus>(initial)
   const [message, setMessage] = useState('')
@@ -54,11 +56,11 @@ export function UpdaterSettings() {
   }, [])
 
   useEffect(() => {
-    if (!isDesktop) return
+    if (!active || !isDesktop) return
     void refresh()
     const off = runtime()?.on<UpdaterStatus>('tangentry-updater', setStatus)
     return off
-  }, [isDesktop, refresh])
+  }, [active, isDesktop, refresh])
 
   const run = async (method: string, ...args: unknown[]) => {
     const rt = runtime()
@@ -70,11 +72,15 @@ export function UpdaterSettings() {
   }
 
   const date = useMemo(() => status.date ? new Date(status.date).toLocaleString('zh-CN') : '', [status.date])
-  if (capabilities.server) return <SettingsTask title="服务端版本" description="服务端版本通过 Docker 镜像更新，请拉取新镜像后重新创建容器。" actions={<span className="settings-inline-status">服务端模式</span>}><p className="field-hint">更新由部署环境负责。</p></SettingsTask>
-  if (!isDesktop) return <SettingsTask title="Web 版本" description="当前运行在 Web 模式，版本更新由部署环境负责。" actions={<span className="settings-inline-status">Web 模式</span>}><p className="field-hint">请在部署 Tangentry 的环境中更新版本。</p></SettingsTask>
+  if (!isDesktop) return <SettingsTask><div className="settings-list-card" data-setting="application-update"><SettingsRow className="settings-app-row" title="Tangentry" description={`Web 版本 ${webVersion} · ${capabilities.server ? '由运行环境管理更新' : '浏览器预览'}`}/></div></SettingsTask>
 
-  return <SettingsTask title="应用更新" description={`当前版本 ${status.currentVersion || '开发版'}`} actions={<button type="button" className="button button-secondary" disabled={pending || status.state === 'checking'} onClick={() => void run('Updater.Check', true)}>{status.state === 'checking' ? <LoaderCircle size={15} className="spin"/> : <Check size={15}/>}检查更新</button>}>
-    <div className="setting-row"><div><strong>自动检查更新</strong><p>启动后检查一次，之后每 6 小时检查。</p></div><label className="card-switch"><input type="checkbox" checked={status.automaticChecks} disabled={pending} onChange={event => void run('Updater.SetAutomaticChecks', event.target.checked)}/><span>启用</span></label></div>
+  return <SettingsTask>
+    <div className="settings-list-card" data-setting="application-update">
+      <SettingsRow className="settings-app-row" title="Tangentry" description={`版本 ${status.currentVersion || '开发版'}${status.available ? ` · 有新版本 ${status.version}` : status.lastCheck && status.state === 'idle' ? ' · 已是最新' : ''}`}>
+        <button type="button" className="button button-secondary" disabled={pending || status.state === 'checking' || !status.enabled} onClick={() => void run('Updater.Check', true)}>{status.state === 'checking' ? <LoaderCircle size={15} className="spin"/> : <Check size={15}/>}检查更新</button>
+      </SettingsRow>
+      <SettingsRow title="自动检查更新" description="启动后检查一次，之后每 6 小时检查。"><input className="settings-switch" role="switch" aria-label="自动检查更新" type="checkbox" checked={status.automaticChecks} disabled={pending || !status.enabled} onChange={event => void run('Updater.SetAutomaticChecks', event.target.checked)}/></SettingsRow>
+    </div>
     {!status.enabled && <p className="field-hint" role="status">开发构建或不可写的安装位置不会自动更新。</p>}
     {message && <p className="error-panel" role="alert">{message}</p>}
     {status.available && <div className="updater-release" role="status"><div className="updater-release-head"><div><strong>发现新版本 {status.version}</strong>{date && <small>{date}</small>}</div><span>当前 {status.currentVersion}</span></div>

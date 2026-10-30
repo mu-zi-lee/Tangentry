@@ -141,7 +141,7 @@ func (s *Server) handle(ctx context.Context, request request) (any, *rpcError) {
 	}
 	switch request.Method {
 	case "initialize":
-		return map[string]any{"protocolVersion": protocolVersion, "capabilities": map[string]any{"tools": map[string]any{}}, "serverInfo": map[string]string{"name": "tangentry", "version": "0.0.3.4"}}, nil
+		return map[string]any{"protocolVersion": protocolVersion, "capabilities": map[string]any{"tools": map[string]any{}}, "serverInfo": map[string]string{"name": "tangentry", "version": "0.0.3.5"}}, nil
 	case "ping":
 		return map[string]any{}, nil
 	case "notifications/initialized":

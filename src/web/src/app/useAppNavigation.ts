@@ -53,6 +53,11 @@ export function RestoreViewport({ top, sourceID, focusID = '', routeKey: targetR
     const restore = () => {
       if (stopped) return
       attempts++
+      if (attempts > maxAttempts) {
+        focusFallback()
+        stop()
+        return
+      }
       // Re-apply after async lists render; an early scroll can otherwise be clamped by a short page.
       window.scrollTo({ top, behavior: 'instant' })
       const source = findSource(view, sourceID, focusID)
@@ -93,7 +98,19 @@ export function RestoreViewport({ top, sourceID, focusID = '', routeKey: targetR
       stopped = true
       if (frame) window.cancelAnimationFrame(frame)
       observer?.disconnect()
+      window.removeEventListener('wheel', stop)
+      window.removeEventListener('touchstart', stop)
+      window.removeEventListener('pointerdown', stop)
+      window.removeEventListener('keydown', onKeyDown)
     }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '].includes(event.key)) stop()
+    }
+    // A saved position belongs to navigation; user input takes over immediately.
+    window.addEventListener('wheel', stop, { passive: true })
+    window.addEventListener('touchstart', stop, { passive: true })
+    window.addEventListener('pointerdown', stop, { passive: true })
+    window.addEventListener('keydown', onKeyDown)
     observer?.observe(document.body, { childList: true, subtree: true })
     schedule()
     return stop
@@ -217,11 +234,22 @@ export function useAppNavigation(input: RefObject<HTMLInputElement | null>) {
         window.setTimeout(() => (document.querySelector<HTMLInputElement>('.unified-search-form input') ?? input.current)?.focus(), 100)
       }
     }
+    const openSettings = (event: MouseEvent) => {
+      if (currentView.current === 'tools' || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+      const link = event.target instanceof Element ? event.target.closest('a[href]') : null
+      if (!(link instanceof HTMLAnchorElement) || link.hasAttribute('download') || link.target && link.target !== '_self') return
+      const url = new URL(link.href)
+      if (url.origin !== location.origin || url.pathname !== viewPaths.tools) return
+      event.preventDefault()
+      navigate('tools', true, `${url.pathname}${url.search}${url.hash}`)
+    }
     window.addEventListener('popstate', popstate)
     window.addEventListener('keydown', cmdK)
+    document.addEventListener('click', openSettings)
     return () => {
       window.removeEventListener('popstate', popstate)
       window.removeEventListener('keydown', cmdK)
+      document.removeEventListener('click', openSettings)
     }
   }, [view])
 

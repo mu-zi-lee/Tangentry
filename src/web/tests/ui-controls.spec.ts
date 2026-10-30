@@ -1,21 +1,15 @@
 import { expect, test } from './e2e'
 
-test('card cover height stays fixed when card width changes and survives reload', async ({ page }) => {
+test('card width stays saved and appearance preview remains available', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 720 })
   await page.goto('/tools#display')
   const width = page.getByRole('slider', { name: '卡片宽度', exact: true })
-  const height = page.getByRole('slider', { name: '封面高度', exact: true })
-  const cover = page.locator('.settings-preview-actual .modern-card-thumbnail')
-  await height.fill('180')
-  for (const value of ['180', '420']) {
-    await width.fill(value)
-    await expect.poll(async () => (await cover.boundingBox())?.height).toBe(180)
-  }
+  await expect(width).toBeVisible()
+  await width.fill('420')
+  await expect(page.locator('.settings-display-previews')).toBeVisible()
   await page.reload()
   await expect(width).toHaveValue('420')
-  await expect(height).toHaveValue('180')
-  await expect.poll(async () => (await cover.boundingBox())?.height).toBe(180)
-  expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight)).toBe(true)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
 })
 
 test('download confirmation traps focus and cancels without deleting records', async ({ page }) => {

@@ -1,99 +1,24 @@
-/* Scoped to model settings; reader and other AI interfaces keep their own layout. */
-.settings-action-translation .settings-action-head { min-height: 0; padding-bottom: 14px; }
-.settings-action-translation .settings-action-head h2 { font-size: 26px; }
-.settings-action-translation .settings-action-head p { margin-top: 6px; }
-.settings-action-translation .settings-action-body { padding-top: 14px; }
-.ai-settings-workspace { display: flex; flex-direction: column; height: calc(100dvh - 270px); min-height: 280px; max-height: 760px; padding-bottom: 0; }
-.ai-settings-workspace > .settings-task-head { display:flex; justify-content:flex-end; flex:0 0 auto; margin-bottom:8px; }
-@media (min-width:761px) {
-  .ai-settings-workspace { position:relative; height:calc(100dvh - 275px); }
-  .ai-settings-workspace > .settings-task-head { position:absolute; top:0; right:0; z-index:1; }
-  .ai-settings-workspace > .settings-task-head .settings-task-actions { min-height:34px; }
-}
-.ai-settings-workspace > .settings-task-content { display: flex; flex: 1; flex-direction: column; min-height: 0; }
-.ai-settings-workspace .cookie-confirm { flex: 0 0 auto; margin-bottom: 10px; }
-.ai-settings-workspace .ai-settings-form { display: flex; flex: 1; flex-direction: column; min-height: 0; gap: 0; }
-.ai-settings-tabs { display:inline-flex; align-self:flex-start; flex:0 0 auto; gap:18px; padding:0; border:0; background:transparent; }
-.ai-settings-tabs [role='tab'] { min-height:34px; padding:0 0 6px; border-bottom:2px solid transparent; border-radius:0; color:var(--muted); font-size:12px; white-space:nowrap; }
-.ai-settings-tabs [role='tab']:hover { color: var(--ink); }
-.ai-settings-tabs [aria-selected='true'] { color:var(--ink); border-bottom-color:var(--accent); font-weight:600; }
-.ai-settings-tabs [role='tab']:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.ai-settings-scroll { flex: 1; min-height: 0; overflow: auto; scrollbar-gutter: stable; overscroll-behavior: contain; padding: 18px 8px 18px 0; }
-.ai-settings-scroll:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-.ai-connection-fields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; gap: 16px 24px; }
-.ai-connection-fields > label, .ai-model-assignment > label, .ai-summary-budget > label { display: grid; gap: 7px; min-width: 0; color: var(--muted); font-size: 12px; }
-.ai-settings-workspace input:not([type='checkbox'], [type='radio']), .ai-settings-workspace select { box-sizing: border-box; min-width: 0; width: 100%; min-height: 36px; padding: 7px 10px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--card); color: var(--ink); font-size: 13px; }
-.ai-settings-workspace input:not([type='checkbox'], [type='radio']):focus-visible, .ai-settings-workspace select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.ai-connection-protocol { min-width: 0; margin: 0; padding: 0; border: 0; }
-.ai-connection-protocol legend { margin-bottom: 7px; color: var(--muted); font-size: 12px; }
-.ai-protocol-options { display: flex; align-items: center; gap: 16px; min-height: 36px; }
-.ai-protocol-options label, .ai-key-options .ai-no-key { display: inline-flex; align-items: center; gap: 7px; color: var(--ink); font-size: 12px; }
-.ai-protocol-options input, .ai-key-options input { margin: 0; accent-color: var(--accent); }
-.ai-key-options { display: grid; align-content: center; gap: 7px; min-height: 62px; }
-.ai-key-options > .field-hint { margin: 0 0 0 21px; font-size: 11px; }
-.ai-connection-fields > .ai-config-wide { grid-column: 1 / -1; }
-.ai-task-overview { margin-top:22px; padding:16px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
-.ai-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
-.ai-section-heading h4 { margin: 0; color: var(--ink); font-size: 12px; font-weight: 600; }
-.ai-section-heading p { margin: 4px 0 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
-.ai-section-heading > .field-hint { margin: 0; font-size: 11px; }
-.ai-task-overview .ai-section-heading { margin-bottom: 8px; }
-.ai-task-overview dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 0; }
-.ai-task-overview dl > div { min-width: 0; }
-.ai-task-overview dt { margin-bottom: 5px; color: var(--muted); font-size: 11px; }
-.ai-task-overview dd { margin: 0; color: var(--ink); font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
-.ai-task-overview dd small { display: block; color: var(--muted); font-size: 10px; }
-.ai-settings-help { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 20px; margin-top: 14px; }
-.ai-settings-workspace .settings-details { margin: 0; padding-top: 10px; }
-.ai-settings-workspace .settings-details summary { font-size: 11px; }
-.ai-model-workspace { display: grid; gap: 18px; }
-.ai-task-models { padding-bottom: 16px; border-bottom: 1px solid var(--line); }
-.ai-model-assignment { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
-.ai-model-management { min-width: 0; }
-.ai-settings-workspace .model-picker-list { max-height: 220px; scrollbar-width: thin; }
-.ai-settings-workspace .model-picker-search input { border: 0; padding-left: 0; background: transparent; }
-.ai-settings-workspace .ai-summary-budget > label { max-width: 340px; margin-top: 14px; }
-.ai-prompts-workspace { display: grid; gap: 16px; }
-.ai-prompt-task-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.ai-prompt-task-bar > .field-hint { margin: 0; font-size: 11px; }
-.ai-prompt-task-bar .ai-settings-tabs { background: transparent; }
-.ai-prompt-task-bar .ai-settings-tabs [aria-selected='true'] { background: var(--surface); box-shadow: none; }
-.ai-settings-workspace .ai-template-header { flex-wrap: wrap; gap: 8px; }
-.ai-settings-workspace .ai-template-header h3 { font-size: 13px; }
-.ai-settings-workspace .ai-template-header p { font-size: 11px; }
-.ai-settings-workspace .ai-template-actions { justify-content: flex-start; }
-.ai-settings-workspace .ai-template-fields textarea { max-height: 200px; border: 1px solid var(--line-strong); border-radius: var(--radius); padding: 9px 11px; background: var(--card); color: var(--ink); }
-.ai-settings-workspace .ai-variable-chip small { display: none; }
-.ai-settings-workspace .ai-template-preview pre { max-height: 220px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
-.ai-settings-footer { display: flex; flex: 0 0 auto; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 18px; padding: 12px 0 8px; border-top: 1px solid var(--line); }
-.ai-settings-feedback { flex: 1 1 160px; min-width: 0; }
-.ai-settings-feedback .settings-feedback, .ai-settings-feedback .field-hint { margin: 0; font-size: 11px; overflow-wrap: anywhere; }
-.ai-settings-footer-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
-.ai-settings-footer .ai-check-actions { gap: 6px; margin: 0; }
-.ai-settings-footer .ui-button { white-space: nowrap; }
-
-@media (max-width: 760px) {
-  .ai-settings-workspace { height:calc(100dvh - 310px); min-height:280px; max-height:none; }
-  .ai-settings-workspace > .settings-task-head { display: flex; }
-  .ai-settings-workspace > .settings-task-head .settings-task-actions { margin-top: 0; }
-  .ai-settings-tabs { display: flex; align-self: stretch; }
-  .ai-settings-tabs [role='tab'] { flex: 1; min-height: 42px; padding-inline: 10px; }
-  .ai-settings-scroll { flex:1; min-height:0; padding-top:16px; }
-  .ai-connection-fields, .ai-model-assignment { grid-template-columns: minmax(0, 1fr); gap: 14px; }
-  .ai-settings-workspace input:not([type='checkbox'], [type='radio']), .ai-settings-workspace select { min-height: 44px; font-size: 16px; }
-  .ai-key-options { min-height: 44px; }
-  .ai-task-overview { margin-top: 16px; padding: 12px; }
-  .ai-task-overview dl { grid-template-columns: minmax(0, 1fr); gap: 10px; }
-  .ai-task-overview dl > div { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 8px; }
-  .ai-task-overview dt { margin: 0; }
-  .ai-task-overview dd { font-size: 11px; }
-  .ai-settings-help { grid-template-columns: minmax(0, 1fr); }
-  .ai-prompt-task-bar { display: grid; }
-  .ai-prompt-task-bar > .field-hint { display: none; }
-  .ai-settings-workspace .ai-template-fields { grid-template-columns: minmax(0, 1fr); }
-  .ai-settings-workspace .ai-template-state { white-space: normal; }
-  .ai-settings-workspace .model-picker-manual { display: flex; flex-wrap: wrap; }
-  .ai-settings-workspace .model-picker-group-heading { flex-wrap: wrap; gap: 4px; }
-  .ai-settings-footer-actions { justify-content: space-between; width: 100%; gap: 8px; }
-  .ai-settings-footer .ui-button { min-height: 40px; padding-inline: 10px; }
+.ai-settings-workspace { min-width:0; }
+.ai-settings-form { display:block; }
+.ai-settings-footer { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-top:18px; }
+.ai-settings-feedback { min-width:0; flex:1; }
+.ai-settings-feedback :is(.field-hint,.settings-feedback) { margin:0; }
+.ai-settings-workspace .settings-row-control { flex:0 1 280px; }
+.ai-settings-workspace .ai-connection-row .settings-row-control { flex-basis:330px; }
+.ai-settings-workspace .settings-row-control > input,.ai-settings-workspace .settings-row-control > select { width:260px; }
+.ai-settings-dialog .ai-template-editor { padding:0; border:0; background:transparent; }
+.ai-settings-dialog .ai-template-header { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:16px; }
+.ai-settings-dialog .ai-template-header h3 { margin:0; font-size:14px; }
+.ai-settings-dialog .ai-template-header p { margin:4px 0 0; color:var(--muted); font-size:12.5px; }
+.ai-settings-dialog .ai-template-actions { display:flex; flex-wrap:wrap; gap:8px; }
+.ai-settings-dialog .ai-template-fields { display:grid; gap:16px; }
+.ai-settings-dialog .ai-template-fields label { display:grid; gap:6px; font-size:13px; }
+.ai-settings-dialog .ai-template-fields textarea { width:100%; min-height:100px; max-height:280px; resize:vertical; font-size:13px; }
+.ai-settings-dialog .ai-variable-bar { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-top:14px; }
+.ai-settings-dialog .ai-variable-chip small { display:none; }
+.ai-settings-dialog .ai-template-preview pre { max-height:240px; overflow:auto; white-space:pre-wrap; overflow-wrap:anywhere; }
+.ai-settings-dialog .model-picker { margin-top:16px; }
+@media (max-width:760px) {
+  .ai-settings-workspace .settings-row-control { flex:1 1 100%; }
+  .ai-settings-workspace .settings-row-control > input,.ai-settings-workspace .settings-row-control > select { width:100%; }
 }

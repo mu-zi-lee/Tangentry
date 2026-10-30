@@ -63,12 +63,6 @@ func (p youtubeSearchProvider) Search(ctx context.Context, query, cursor string)
 	return p.toolkit.YouTubeSearch(ctx, query, cursor)
 }
 
-type unsupportedSearchProvider struct{ platform string }
-
-func (p unsupportedSearchProvider) Search(context.Context, string, string) (discovery.SearchPage, error) {
-	return discovery.SearchPage{Platform: p.platform}, &discovery.PlatformError{Message: p.platform + "关键词搜索仅桌面版支持，请在应用内打开搜索结果。"}
-}
-
 func httpLibraryDependencies(s *services) httptransport.LibraryDependencies {
 	return httptransport.LibraryDependencies{
 		Content: s.features.content, Documents: s.runtime.documents, Articles: s.features.articles, ArticleImageHTTP: s.adapters.network.public,

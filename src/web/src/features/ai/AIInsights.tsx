@@ -457,7 +457,7 @@ export function AIChatPanel({ contentId, context, revision }: { contentId: strin
       {pending && <p className="ai-chat-pending" role="status"><LoaderCircle size={14} className="spin"/>正在生成…</p>}
       {error && <div className="ai-chat-error" role="alert"><p>{error}</p>{messages.some(message => message.role === 'user') && <Button variant="quiet" type="button" disabled={pending || !ready} onClick={retry}><RotateCcw size={14}/>重新尝试</Button>}</div>}
     </div>
-    {ready && !model && <p className="ai-chat-setup" role="status">请在<a href="/tools#translation">AI 设置</a>中选择对话模型。</p>}
+    {ready && !model && <p className="ai-chat-setup" role="status">请在<a href="/tools#ai/text">AI 设置</a>中选择对话模型。</p>}
     <form className="ai-chat-composer" onSubmit={event => { event.preventDefault(); void send() }}>
       <textarea ref={composer} aria-label="输入问题" value={input} maxLength={12000} onChange={event => setInput(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); void send() } }} placeholder="围绕这篇内容提问…" rows={2}/>
       <div className="ai-chat-toolbar">

@@ -113,6 +113,8 @@ func ParseRecommendations(data []byte) (discovery.Feed, error) {
 					Cover struct {
 						URL     string `json:"urlDefault"`
 						Preview string `json:"urlPre"`
+						Width   int    `json:"width"`
+						Height  int    `json:"height"`
 					} `json:"cover"`
 				} `json:"noteCard"`
 			} `json:"feeds"`
@@ -141,6 +143,9 @@ func ParseRecommendations(data []byte) (discovery.Feed, error) {
 			cover = imageURL(note.Card.Cover.Preview)
 		}
 		item := content.Item{ID: "xiaohongshu:" + note.ID, Platform: "xiaohongshu", PlatformID: note.ID, Kind: kind, Title: note.Card.Title, Author: note.Card.User.Name, AuthorID: note.Card.User.ID, URL: ref.URL, ThumbnailURL: cover}
+		if cover != "" && note.Card.Cover.Width > 0 && note.Card.Cover.Height > 0 {
+			item.ThumbnailWidth, item.ThumbnailHeight = note.Card.Cover.Width, note.Card.Cover.Height
+		}
 		item.PublishedAt = recommendationTime(note.Card.Time)
 		if item.PublishedAt == 0 {
 			item.PublishedAt = recommendationTime(note.Card.PublishTime)

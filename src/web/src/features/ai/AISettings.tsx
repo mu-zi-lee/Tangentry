@@ -1,5 +1,6 @@
 import { Check, Eye, LoaderCircle, PlugZap, RefreshCw, RotateCcw, Save, X, ListRestart } from 'lucide-react'
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { Dialog } from '../../components/ui/dialog'
 import { Button } from '../../components/ui/button'
 import { request } from '../../shared/api/client'
 import { listOrEmpty } from '../../shared/api/list'
@@ -9,20 +10,10 @@ import { mergeModelLists, modelsForTask } from './modelPicker'
 import { EMPTY_TEMPLATES, PROMPT_TASKS, PROMPT_VARIABLES, changedTemplateFields, insertVariable, normalizeTemplate, renderTemplate, resetTemplate, templateError, templatesEqual, type PromptTask } from './promptTemplates'
 import './ai.css'
 import { SettingsTask } from '../settings/ui/SettingsActionPage'
+import { SettingsRow, SettingsStatus } from '../settings/ui/SettingsRow'
 import './ai-settings.css'
-
-type SettingsSection = 'connection' | 'models' | 'prompts'
-const SETTINGS_SECTIONS = [{ id: 'connection', label: '服务连接' }, { id: 'models', label: '任务模型' }, { id: 'prompts', label: '提示词' }] as const
-
-function SettingsTabs<T extends string>({ id, label, options, value, onChange }: { id: string; label: string; options: readonly { id: T; label: string }[]; value: T; onChange: (value: T) => void }) {
-  return <div className="ai-settings-tabs" role="tablist" aria-label={label}>
-    {options.map((option, index) => <button type="button" role="tab" key={option.id} id={`${id}-tab-${option.id}`} aria-controls={`${id}-panel-${option.id}`} aria-selected={value === option.id} tabIndex={value === option.id ? 0 : -1} onClick={() => onChange(option.id)} onKeyDown={event => {
-      const nextIndex = event.key === 'ArrowRight' ? (index + 1) % options.length : event.key === 'ArrowLeft' ? (index - 1 + options.length) % options.length : event.key === 'Home' ? 0 : event.key === 'End' ? options.length - 1 : -1
-      if (nextIndex < 0) return
-      event.preventDefault(); onChange(options[nextIndex].id); document.getElementById(`${id}-tab-${options[nextIndex].id}`)?.focus()
-    }}>{option.label}</button>)}
-  </div>
-}
+import { useTranslationLanguage } from './useTranslationLanguage'
+import { translationTargets } from '../subtitles/subtitleLanguageMatch'
 
 const PREVIEW_VARIABLES = { title: '示例文章标题', source_type: '文章', content: '这是一段脱敏的示例内容，用于检查变量渲染和换行效果。', target_language: '简体中文' }
 
@@ -65,10 +56,8 @@ function TemplateEditor({ task, template, defaults, savedTemplate, disabled, onC
   </div>
 }
 
-export function AISettings() {
-  const tabsId = useId()
-  const promptTabsId = useId()
-  const [section, setSection] = useState<SettingsSection>('connection')
+export function AISettings({ active = true, section = 'provider' }: { active?: boolean; section?: 'provider' | 'text' | 'asr' }) {
+  const translationLanguage = useTranslationLanguage()
   const [saved, setSaved] = useState<Settings | null>(null)
   const [baseUrl, setBaseUrl] = useState(''), [model, setModel] = useState(''), [key, setKey] = useState(''), [noKey, setNoKey] = useState(false)
   const [summaryModel, setSummaryModel] = useState('')
@@ -78,7 +67,8 @@ export function AISettings() {
   const [manualModel, setManualModel] = useState('')
   const [templates, setTemplates] = useState(EMPTY_TEMPLATES)
   const [defaultTemplates, setDefaultTemplates] = useState(EMPTY_TEMPLATES)
-  const [selectedPromptTask, setSelectedPromptTask] = useState<PromptTask>('summary')
+  const [selectedPromptTask, setSelectedPromptTask] = useState<PromptTask | null>(null)
+  const [modelLibraryOpen, setModelLibraryOpen] = useState(false)
   const [summaryContextBudget, setSummaryContextBudget] = useState(28000)
   const [protocol, setProtocol] = useState<Settings['protocol']>('openai')
   const [pending, setPending] = useState(false), [error, setError] = useState(''), [notice, setNotice] = useState(''), [saveState, setSaveState] = useState<'saved' | 'dirty' | 'saving' | 'error'>('saved')
@@ -94,9 +84,9 @@ export function AISettings() {
     } catch (cause) { if (!current.signal.aborted) setError(cause instanceof Error ? cause.message : 'AI 设置暂不可用。') }
     finally { if (!current.signal.aborted) setPending(false) }
   }
-  useEffect(() => { void load(); return () => operation.current?.abort() }, [])
-  async function save(event: React.FormEvent) {
-    event.preventDefault(); if (!saved || pending) return
+  useEffect(() => { if (!active) { operation.current?.abort(); return }; void load(); return () => operation.current?.abort() }, [active])
+  async function save(event?: { preventDefault: () => void }) {
+    event?.preventDefault(); if (!saved || pending) return
     const current = new AbortController(); operation.current = current
     setPending(true); setError(''); setNotice(''); setConfirmReload(false)
     setSaveState('saving')
@@ -128,55 +118,56 @@ export function AISettings() {
       if (!current.signal.aborted) { setPending(false); setChecking(null) }
     }
   }
-  return <SettingsTask className="ai-settings-workspace" actions={<><span className="settings-inline-status">{dirty ? '未保存更改' : saved?.ready ? '服务已就绪' : '等待配置'}</span><button type="button" className="icon-button" aria-label="刷新" title="刷新 AI 设置" disabled={pending} onClick={() => { if (dirty) setConfirmReload(true); else void load() }}><RefreshCw size={16}/></button></>}>
+  const modelOptions = (task: 'translation' | 'summary' | 'chat') => modelsForTask(mergeModelLists(availableModels, enabledModels), enabledModels, task).map(value => <option key={value} value={value}>{value}</option>)
+  const checkButtons = <>{(['translation', 'summary'] as const).map(task => <Button key={task} aria-label={`检测${task === 'translation' ? '翻译' : '摘要'}连接`} type="button" variant="secondary" title={dirty ? '先保存修改后的设置' : undefined} disabled={pending || Boolean(dirty) || saved?.translating || !(task === 'translation' ? saved?.ready : saved?.summaryReady)} onClick={() => void check(task)} icon={checking === task ? <LoaderCircle size={14} className="spin"/> : <PlugZap size={14}/>}>测试{task === 'translation' ? '翻译' : '摘要'}</Button>)}{checking && <Button type="button" variant="quiet" onClick={() => { operation.current?.abort(); setPending(false); setChecking(null) }}><X size={14}/>取消检测</Button>}</>
+  return <div className="ai-settings-workspace" hidden={section === 'asr'}>
     {confirmReload && <div className="cookie-confirm" role="group" aria-label="放弃未保存的设置"><p>刷新会丢弃未保存的修改。</p><div><Button type="button" variant="secondary" onClick={() => setConfirmReload(false)}>继续编辑</Button><Button type="button" variant="quiet" onClick={() => void load()}>放弃修改</Button></div></div>}
     {saved && <form className="ai-config ai-settings-form" onSubmit={event => void save(event)}>
-      <SettingsTabs id={tabsId} label="模型服务设置" options={SETTINGS_SECTIONS} value={section} onChange={setSection}/>
-      <div className="ai-settings-scroll" key={section} id={`${tabsId}-panel-${section}`} role="tabpanel" aria-labelledby={`${tabsId}-tab-${section}`} tabIndex={0}>
-        {section === 'connection' && <>
-          <div className="ai-connection-fields">
-            <label>接口地址<input type="url" value={baseUrl} onChange={event => setBaseUrl(event.target.value)} placeholder="https://api.openai.com/v1" autoComplete="off" maxLength={2048} required disabled={pending}/></label>
-            <fieldset className="ai-connection-protocol"><legend>连接方式</legend><div className="ai-protocol-options">
-              {([{ value: 'openai', label: '标准接口' }, { value: 'compatible', label: '兼容接口' }] as const).map(option => <label key={option.value}><input type="radio" name="ai-protocol" value={option.value} checked={protocol === option.value} disabled={pending} onChange={() => setProtocol(option.value)}/><span>{option.label}</span></label>)}
-            </div></fieldset>
-            <label>API 密钥<input type="password" value={key} onChange={event => setKey(event.target.value)} placeholder={saved.hasKey ? '已保存；同一接口留空保留' : '本地服务可留空'} maxLength={4096} autoComplete="new-password" disabled={pending || noKey}/></label>
-            <div className="ai-key-options"><label className="ai-no-key"><input type="checkbox" checked={noKey} onChange={event => { setNoKey(event.target.checked); setKey('') }} disabled={pending}/>无需密钥（清除旧密钥）</label><span className="field-hint">{saved.hasKey ? '密钥已保存在本机' : '支持本地服务与兼容接口'}</span></div>
-            {requiresKey && <p className="field-hint ai-config-wide">更换接口后，请填写该服务的密钥，或勾选不需要密钥。</p>}
-          </div>
-          <div className="ai-task-overview"><div className="ai-section-heading"><h4>当前任务模型</h4><Button type="button" size="sm" variant="quiet" onClick={() => setSection('models')}>配置模型 →</Button></div><dl>
-            <div><dt>翻译</dt><dd>{model || '未选择'}</dd></div><div><dt>摘要</dt><dd>{summaryModel || model || '未选择'}{!summaryModel && model && <small>跟随翻译</small>}</dd></div><div><dt>对话</dt><dd>{chatModel || '未选择'}</dd></div>
-          </dl></div>
-          <div className="ai-settings-help">
-            <details className="settings-details"><summary>连接说明</summary><p>支持 Chat Completions 接口，可填写自己的 HTTPS 接口或本机 HTTP 地址。本地服务可选择「兼容接口」。通用模型使用 JSON 输出；Index-Translate 与 doubao-translate 使用编号分隔的批量纯文本翻译。摘要模型需支持指令与 JSON 输出，与翻译共用接口和密钥。字幕分批翻译，失败后不自动重试。保存配置不会调用模型。</p></details>
-            <details className="settings-details"><summary>数据发送与费用</summary><p>启用模型后，可见卡片的外文标题与摘要会自动发送到所选服务翻译；摘要最多发送前 280 个字符。阅读页的标题、文章、字幕翻译与 AI 摘要由你点击后发送对应原文。连接检测只发送一段固定测试文字，不读取文章或笔记。已有缓存会复用，不发送视频、平台 Cookie 或笔记。第三方服务可能收费，取消前已处理的请求可能仍产生费用。密钥保存在运行 Tangentry 的机器上，页面只显示保存状态。</p></details>
-          </div>
-        </>}
-        {section === 'models' && <div className="ai-model-workspace">
-          <div className="ai-task-models"><div className="ai-section-heading"><h4>分配任务模型</h4><span className="field-hint">从已启用模型中选择</span></div><div className="ai-model-assignment">
-            <label>翻译模型<select value={model} onChange={event => setModel(event.target.value)} disabled={pending}><option value="">选择已启用模型</option>{modelsForTask(mergeModelLists(availableModels, enabledModels), enabledModels, 'translation').map(value => <option key={value} value={value}>{value}</option>)}</select></label>
-            <label>摘要模型<select value={summaryModel} onChange={event => setSummaryModel(event.target.value)} disabled={pending}><option value="">使用翻译模型</option>{modelsForTask(mergeModelLists(availableModels, enabledModels), enabledModels, 'summary').map(value => <option key={value} value={value}>{value}</option>)}</select></label>
-            <label>对话模型<select value={chatModel} onChange={event => setChatModel(event.target.value)} disabled={pending}><option value="">选择已启用模型</option>{modelsForTask(mergeModelLists(availableModels, enabledModels), enabledModels, 'chat').map(value => <option key={value} value={value}>{value}</option>)}</select></label>
-          </div>{saved.ready && saved.summaryReady === false && <p className="field-hint">当前模型可用于翻译；生成摘要需填写通用摘要模型。</p>}</div>
-          <div className="ai-model-management"><div className="ai-section-heading"><div><h4>模型库</h4><p>获取服务模型，或手动添加模型名后启用。</p></div><Button type="button" variant="secondary" size="sm" onClick={() => void loadModels()} disabled={pending} icon={<ListRestart size={14}/>}>获取模型</Button></div><ModelPicker availableModels={availableModels} enabledModels={enabledModels} manualModel={manualModel} disabled={pending} onEnabledModelsChange={updateEnabledModels} onManualModelChange={setManualModel} onAddManualModel={addManualModel}/></div>
-          <details className="settings-details ai-summary-budget"><summary>摘要高级设置</summary><label>摘要上下文预算<input type="number" min={2000} max={64000} step={1000} value={summaryContextBudget} onChange={event => setSummaryContextBudget(Number(event.target.value) || 28000)} disabled={pending}/><span className="field-hint">默认 28000 字节，内容超出后才会分段。</span></label></details>
-        </div>}
-        {section === 'prompts' && <div className="ai-prompts-workspace">
-          <div className="ai-prompt-task-bar"><SettingsTabs id={promptTabsId} label="提示词任务" options={PROMPT_TASKS} value={selectedPromptTask} onChange={setSelectedPromptTask}/><span className="field-hint">按任务分别编辑模板</span></div>
-          <div id={`${promptTabsId}-panel-${selectedPromptTask}`} role="tabpanel" aria-labelledby={`${promptTabsId}-tab-${selectedPromptTask}`}><TemplateEditor task={selectedPromptTask} template={templates[selectedPromptTask]} defaults={defaultTemplates} savedTemplate={savedTemplates[selectedPromptTask]} disabled={pending} onChange={next => setTemplates(current => ({ ...current, [selectedPromptTask]: next }))} onReset={() => setTemplates(current => resetTemplate(current, selectedPromptTask, defaultTemplates))} saveState={effectiveSaveState}/></div>
-        </div>}
+      <div role="tabpanel" id="ai-tab-panel-provider" aria-labelledby="ai-tab-provider" hidden={section !== 'provider'}>
+      <SettingsTask title="服务商" actions={<button type="button" className="icon-button" aria-label="刷新" title="刷新 AI 设置" disabled={pending} onClick={() => { if (dirty) setConfirmReload(true); else void load() }}><RefreshCw size={16}/></button>}>
+        <div className="settings-list-card">
+          <SettingsRow setting="ai-protocol" title="接口类型" description="兼容 OpenAI 接口的服务都可以使用"><select aria-label="接口类型" value={protocol} disabled={pending} onChange={event => setProtocol(event.target.value as Settings['protocol'])}><option value="openai">OpenAI</option><option value="compatible">OpenAI 兼容 / 本机服务</option></select></SettingsRow>
+          <SettingsRow setting="ai-url" title="接口地址"><input aria-label="接口地址" type="url" value={baseUrl} onChange={event => setBaseUrl(event.target.value)} placeholder="https://api.openai.com/v1" autoComplete="off" maxLength={2048} required disabled={pending}/></SettingsRow>
+          <SettingsRow setting="ai-key" title="API 密钥" description="只保存在本机"><input aria-label="API 密钥" type="password" value={key} onChange={event => setKey(event.target.value)} placeholder={saved.hasKey ? '已保存；留空保留' : '本机服务可留空'} maxLength={4096} autoComplete="new-password" disabled={pending || noKey}/><label><input type="checkbox" checked={noKey} onChange={event => { setNoKey(event.target.checked); setKey('') }} disabled={pending}/>无需密钥（清除旧密钥）</label></SettingsRow>
+          <SettingsRow className="ai-connection-row" setting="ai-connection" title="连接状态" description={requiresKey ? '更换接口后，请填写新密钥或选择无需密钥。' : '使用已保存的任务模型测试连接'}><SettingsStatus tone={saved.ready ? 'positive' : 'neutral'}>{saved.ready ? '已配置' : '等待配置'}</SettingsStatus>{checkButtons}</SettingsRow>
+        </div>
+      </SettingsTask>
+      </div>
+      <div role="tabpanel" id="ai-tab-panel-text" aria-labelledby="ai-tab-text" hidden={section !== 'text'}>
+      <SettingsTask title="任务模型" actions={<Button type="button" variant="quiet" className="text-button" onClick={() => setModelLibraryOpen(true)}>管理模型</Button>}>
+        <div className="settings-list-card">
+          <SettingsRow setting="translation-language" title="翻译目标语言"><select aria-label="默认翻译目标语言" value={translationLanguage.language} onChange={event => translationLanguage.change(event.target.value)}>{translationTargets.map(([code, label]) => <option key={code} value={code}>{label}</option>)}</select></SettingsRow>
+          <SettingsRow setting="translation-model" title="翻译模型" description="字幕逐句翻译，建议选择速度快的模型"><select aria-label="翻译模型" value={model} onChange={event => setModel(event.target.value)} disabled={pending}><option value="">选择已启用模型</option>{modelOptions('translation')}</select></SettingsRow>
+          <SettingsRow setting="summary-model" title="摘要模型" description="长内容摘要，建议选择上下文更长的模型"><select aria-label="摘要模型" value={summaryModel} onChange={event => setSummaryModel(event.target.value)} disabled={pending}><option value="">使用翻译模型</option>{modelOptions('summary')}</select></SettingsRow>
+          <SettingsRow setting="chat-model" title="对话模型" description="围绕当前内容回答阅读问题"><select aria-label="对话模型" value={chatModel} onChange={event => setChatModel(event.target.value)} disabled={pending}><option value="">选择已启用模型</option>{modelOptions('chat')}</select></SettingsRow>
+          <SettingsRow setting="ai-model-library" title="模型库" description={`${enabledModels.length} 个模型已启用`}><Button type="button" variant="secondary" onClick={() => setModelLibraryOpen(true)}>管理</Button></SettingsRow>
+        </div>
+      </SettingsTask>
+      <SettingsTask title="提示词模板" actions={<span className="settings-inline-status">高级</span>}>
+        <div className="settings-list-card" data-setting="ai-prompts">{PROMPT_TASKS.map(task => <SettingsRow key={task.id} title={`${task.label}提示词`} description={task.description}><SettingsStatus tone={templatesEqual(templates[task.id], defaultTemplates[task.id]) ? 'neutral' : 'positive'}>{templatesEqual(templates[task.id], defaultTemplates[task.id]) ? '默认' : '已自定义'}</SettingsStatus><Button type="button" variant="secondary" aria-label={`编辑${task.label}提示词`} onClick={() => setSelectedPromptTask(task.id)}>编辑</Button></SettingsRow>)}</div>
+        <details className="settings-details"><summary>摘要高级设置</summary><SettingsRow title="摘要上下文预算" description="内容超出预算后分段处理"><input aria-label="摘要上下文预算" type="number" min={2000} max={64000} step={1000} value={summaryContextBudget} onChange={event => setSummaryContextBudget(Number(event.target.value) || 28000)} disabled={pending}/></SettingsRow></details>
+      </SettingsTask>
       </div>
       <div className="ai-settings-footer">
         <div className="ai-settings-feedback" aria-live="polite">
           {checking ? <p className="field-hint" role="status">正在检测{checking === 'translation' ? '翻译' : '摘要'}连接…</p> : notice && !dirty ? <p className="settings-feedback" role="status"><Check size={14}/>{notice}</p> : <span className="settings-state" data-dirty={Boolean(dirty)}>{dirty ? '更改尚未保存' : saved.ready ? <><Check size={14}/>已选模型</> : '先连接服务并选择任务模型'}</span>}
           {error && <p className="settings-feedback" role="alert">{error}</p>}
         </div>
-        <div className="ai-settings-footer-actions"><div className="ai-check-actions">
-          {(['translation', 'summary'] as const).map(task => <Button key={task} aria-label={`检测${task === 'translation' ? '翻译' : '摘要'}连接`} type="button" variant="secondary" size="sm" title={dirty ? '先保存修改后的设置' : undefined} disabled={pending || Boolean(dirty) || saved.translating || !(task === 'translation' ? saved.ready : saved.summaryReady)} onClick={() => void check(task)} icon={checking === task ? <LoaderCircle size={14} className="spin"/> : <PlugZap size={14}/>}>测试{task === 'translation' ? '翻译' : '摘要'}</Button>)}
-          {checking && <Button type="button" size="sm" variant="quiet" onClick={() => { operation.current?.abort(); setPending(false); setChecking(null); setNotice('检测已取消。') }} icon={<X size={14}/>}>取消检测</Button>}
-        </div><Button aria-label="保存 AI 设置" variant="primary" size="sm" type="submit" disabled={pending || !dirty || !!requiresKey} icon={pending && !checking ? <LoaderCircle size={15} className="spin"/> : <Save size={15}/>}>{pending && !checking ? '保存中' : '保存设置'}</Button></div>
+        <Button aria-label="保存 AI 设置" variant="primary" type="submit" disabled={pending || !dirty || !!requiresKey} icon={pending && !checking ? <LoaderCircle size={15} className="spin"/> : <Save size={15}/>}>{pending && !checking ? '保存中' : '保存设置'}</Button>
       </div>
+      {section === 'provider' && <details className="settings-details"><summary>数据发送与费用</summary><p>可见卡片的外文标题与摘要会自动发送到所选服务翻译；摘要最多发送前 280 个字符。阅读页翻译和摘要由你点击后发送对应原文。连接检测只发送固定测试文字。第三方服务可能收费。</p></details>}
     </form>}
     {pending && !saved && <p className="field-hint" role="status">正在读取 AI 设置…</p>}
     {!saved && error && <p className="settings-feedback" role="alert">{error}</p>}
-  </SettingsTask>
+    <Dialog open={modelLibraryOpen} title="模型库" className="settings-dialog ai-settings-dialog" onClose={() => setModelLibraryOpen(false)}>
+      <Button type="button" variant="secondary" onClick={() => void loadModels()} disabled={pending} icon={<ListRestart size={14}/>}>获取模型</Button>
+      <ModelPicker availableModels={availableModels} enabledModels={enabledModels} manualModel={manualModel} disabled={pending} onEnabledModelsChange={updateEnabledModels} onManualModelChange={setManualModel} onAddManualModel={addManualModel}/>
+      <div className="settings-dialog-actions"><Button type="button" variant="secondary" onClick={() => setModelLibraryOpen(false)}>完成</Button></div>
+    </Dialog>
+    <Dialog open={selectedPromptTask !== null} title={`${PROMPT_TASKS.find(task => task.id === selectedPromptTask)?.label ?? ''}提示词`} className="settings-dialog ai-settings-dialog" onClose={() => setSelectedPromptTask(null)}>
+      {selectedPromptTask && <TemplateEditor task={selectedPromptTask} template={templates[selectedPromptTask]} defaults={defaultTemplates} savedTemplate={savedTemplates[selectedPromptTask]} disabled={pending} onChange={next => setTemplates(current => ({ ...current, [selectedPromptTask]: next }))} onReset={() => setTemplates(current => resetTemplate(current, selectedPromptTask, defaultTemplates))} saveState={effectiveSaveState}/>}
+      {error && <p className="settings-feedback" role="alert">{error}</p>}
+      <div className="settings-dialog-actions"><Button type="button" variant="secondary" onClick={() => setSelectedPromptTask(null)}>完成</Button><Button type="button" variant="primary" disabled={pending || !dirty || !!requiresKey} onClick={() => void save()}>保存提示词</Button></div>
+    </Dialog>
+  </div>
 }
