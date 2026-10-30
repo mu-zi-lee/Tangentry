@@ -438,6 +438,16 @@ type aiFixture struct {
 	calls map[string]int
 }
 
+func (f *aiFixture) Chat(ctx context.Context, c ai.Config, contextText string, _ []ai.ChatMessage) (string, error) {
+	if c.BaseURL != "https://ai-fixture.example/v1" {
+		return "", ai.ErrProvider
+	}
+	if err := ctx.Err(); err != nil {
+		return "", err
+	}
+	return "当前字幕内容：\n\n" + contextText, nil
+}
+
 func (f *aiFixture) SupportsSummary(c ai.Config) bool {
 	return (&aichat.Client{}).SupportsSummary(c)
 }

@@ -72,10 +72,19 @@ export function BilingualTitle({ contentId, text, compact = false, source = 'tit
     return () => { canceled = true }
   }, [compact, visible, text, key, inspection, translation.loading, translation.pending, translation.error])
   const translated = translation.show ? translation.inspection?.result.texts[0] : undefined
+  const complete = Boolean(inspection && inspection.result.texts.length === inspection.result.total)
+  const titleAction = translation.pending ? '取消标题翻译' : complete ? translated ? '显示原标题' : '显示译文' : '翻译标题'
+  const toggleTitle = () => {
+    if (translation.pending) translation.cancel()
+    else if (complete) translation.setShow(!translation.show)
+    else if (translation.error || !inspection?.settings.ready) void translation.reload()
+    else void translation.translate()
+  }
   return <div ref={root} className={`bilingual-title${compact ? ' bilingual-title-compact' : ''}${heading ? ' bilingual-reader-heading' : ''}`}>
-    {heading && <h1>{text}</h1>}
-    {!compact && <TextTranslationControl translation={translation} label="翻译标题" iconOnly/>}
-    {children ? children(translated || text, translated ? text : undefined) : translated && <p lang="zh-Hans">{translated}</p>}
+    {heading && <h1 aria-label={translated || text}>{translation.alreadyChinese ? text : <button type="button" className="reader-title-toggle" aria-label={`${titleAction}：${translated || text}`} aria-pressed={Boolean(translated)} aria-busy={translation.pending} disabled={!complete && !translation.pending && (translation.loading || !inspection && !translation.error)} title={translation.error || (translated ? text : titleAction)} onClick={toggleTitle}>{translated || text}</button>}</h1>}
+    {!compact && !heading && <TextTranslationControl translation={translation} label="翻译标题" iconOnly/>}
+    {heading && translation.error && <span className="visually-hidden" role="alert">{translation.error}</span>}
+    {!heading && (children ? children(translated || text, translated ? text : undefined) : translated && <p lang="zh-Hans">{translated}</p>)}
   </div>
 }
 

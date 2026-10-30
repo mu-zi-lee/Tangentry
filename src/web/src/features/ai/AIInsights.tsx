@@ -1,5 +1,5 @@
 import { Button, Select } from '../../components/ui'
-import { ChevronDown, ChevronRight, Clipboard, Copy, LoaderCircle, MessageCircle, RotateCcw, Send, Square, Trash2, ListTree, NotebookPen, Pencil } from 'lucide-react'
+import { ArrowUp, ChevronDown, ChevronRight, Clipboard, Copy, LoaderCircle, MessageCircle, RotateCcw, Square, Trash2, ListTree, NotebookPen, Pencil } from 'lucide-react'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type WheelEvent } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -346,45 +346,126 @@ export function AIChatPanel({ contentId, context, revision }: { contentId: strin
   const [models, setModels] = useState<string[]>([])
   const [pending, setPending] = useState(false)
   const [error, setError] = useState('')
+  const [ready, setReady] = useState(false)
+  const [chatRevision, setChatRevision] = useState(revision)
   const abort = useRef<AbortController | null>(null)
   const composer = useRef<HTMLTextAreaElement>(null)
-  useEffect(() => { let alive = true; setMessages([]); setModels([]); setModel(''); void Promise.all([request<{ messages: ChatMessage[] }>(`/ai/chat?contentId=${encodeURIComponent(contentId)}`), request<{ enabledModels?: string[]; availableModels?: string[]; chatModel?: string }>('/ai/settings')]).then(([history, settings]) => { if (!alive) return; setMessages(history.messages); const enabled = [...new Set((settings.enabledModels ?? []).filter(Boolean))]; const chatModels = modelsForTask(mergeModelLists(settings.availableModels ?? [], enabled), enabled, 'chat'); setModels(chatModels); setModel(selectedChatModel(settings) || rememberedChatModel(chatModels)) }).catch(() => {}); return () => { alive = false; abort.current?.abort() } }, [contentId])
+  const conversation = useRef<HTMLDivElement>(null)
+  const follow = useRef(true)
+  useEffect(() => {
+    let alive = true
+    const controller = new AbortController()
+    setMessages([]); setModels([]); setModel(''); setError(''); setInput(''); setReady(false)
+    follow.current = true
+    void Promise.all([
+      request<{ messages: ChatMessage[] }>(`/ai/chat?contentId=${encodeURIComponent(contentId)}`, { signal: controller.signal }),
+      request<{ enabledModels?: string[]; availableModels?: string[]; chatModel?: string; revision: number }>('/ai/settings', { signal: controller.signal }),
+    ]).then(([history, settings]) => {
+      if (!alive) return
+      setMessages(history.messages)
+      const enabled = [...new Set((settings.enabledModels ?? []).filter(Boolean))]
+      const chatModels = modelsForTask(mergeModelLists(settings.availableModels ?? [], enabled), enabled, 'chat')
+      setModels(chatModels)
+      setModel(rememberedChatModel(chatModels) || selectedChatModel(settings))
+      setChatRevision(settings.revision)
+      setReady(true)
+    }).catch(cause => { if (alive) setError(cause instanceof Error ? cause.message : '对话读取失败，请重新打开。') })
+    return () => { alive = false; controller.abort(); abort.current?.abort() }
+  }, [contentId])
   const suggestions = ['这个讲了什么', '列出关键观点', '有哪些值得记下的地方']
-  const resize = () => { const element = composer.current; if (!element) return; element.style.height = 'auto'; element.style.height = `${Math.min(element.scrollHeight, 180)}px` }
+  useLayoutEffect(() => {
+    const element = composer.current
+    if (element) { element.style.height = 'auto'; element.style.height = `${Math.min(element.scrollHeight, 180)}px` }
+  }, [input])
+  useLayoutEffect(() => {
+    const element = conversation.current
+    if (element && follow.current) element.scrollTop = element.scrollHeight
+  }, [messages, pending, error])
   const send = async (question = input.trim(), conversation = messages) => {
-    const value = question.trim(); if (!value || pending || !model) return
+    const value = question.trim(); if (!value || pending || !model || !ready) return
     const next = [...conversation, { role: 'user' as const, content: value }]
+    follow.current = true
     setMessages(next); setInput(''); setPending(true); setError('')
     const controller = new AbortController(); abort.current = controller
     try {
-      const response = await fetch('/api/ai/chat?stream=1', { method: 'POST', signal: controller.signal, headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' }, body: JSON.stringify({ contentId, context, messages: next, model, revision }) })
+      const response = await fetch('/api/ai/chat', { method: 'POST', signal: controller.signal, headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' }, body: JSON.stringify({ contentId, context, messages: next.filter(message => message.content.trim()).slice(-39), model, revision: chatRevision }) })
       if (!response.ok || !response.body) { const body = await response.json().catch(() => ({})) as { message?: string }; throw new Error(body.message ?? '对话暂时不可用。') }
+      if (!response.headers.get('Content-Type')?.includes('text/event-stream')) {
+        const result = await response.json() as { messages: ChatMessage[] }
+        setMessages(result.messages)
+        return
+      }
       const reader = response.body.getReader(), decoder = new TextDecoder()
       let buffer = '', answer = ''
       setMessages([...next, { role: 'assistant', content: '', model }])
+      const consume = (event: string) => {
+        const payload = event.split(/\r?\n/).filter(line => line.startsWith('data:')).map(line => line.slice(5).trimStart()).join('\n')
+        if (!payload) return
+        const data = JSON.parse(payload) as { delta?: string; error?: string }
+        if (data.error) throw new Error(data.error)
+        if (data.delta) { answer += data.delta; setMessages([...next, { role: 'assistant', content: answer, model }]) }
+      }
       while (true) {
         const chunk = await reader.read(); if (chunk.done) break
         buffer += decoder.decode(chunk.value, { stream: true })
         const events = buffer.split(/\r?\n\r?\n/); buffer = events.pop() ?? ''
-        for (const event of events) {
-          const line = event.split('\n').find(value => value.startsWith('data:'))
-          if (!line) continue
-          const data = JSON.parse(line.slice(5).trim()) as { delta?: string; error?: string; messages?: ChatMessage[] }
-          if (data.error) throw new Error(data.error)
-          if (data.delta) { answer += data.delta; setMessages([...next, { role: 'assistant', content: answer, model }]) }
-        }
+        for (const event of events) consume(event)
       }
       buffer += decoder.decode()
+      if (buffer.trim()) consume(buffer)
       if (!answer) throw new Error('对话暂时不可用。')
     }
     catch (cause) { if (!(cause instanceof DOMException && cause.name === 'AbortError')) setError(cause instanceof Error ? cause.message : '对话暂时不可用。') }
-    finally { setPending(false) }
+    finally {
+      if (abort.current === controller) {
+        setPending(false)
+        setMessages(current => current.filter(message => message.content.trim()))
+        abort.current = null
+        composer.current?.focus({ preventScroll: true })
+      }
+    }
   }
-  const clear = async () => { if (pending) return; setMessages([]); try { await request('/ai/chat', { method: 'POST', body: JSON.stringify({ contentId, context, messages: [], revision, clear: true }) }) } catch { /* local state is already clear */ } }
+  const clear = async () => {
+    if (pending) return
+    try {
+      await request('/ai/chat', { method: 'POST', body: JSON.stringify({ contentId, context, messages: [], revision: chatRevision, clear: true }) })
+      setMessages([]); setError(''); composer.current?.focus()
+    } catch (cause) { setError(cause instanceof Error ? cause.message : '清空对话失败。') }
+  }
   const copy = async (text: string) => { await navigator.clipboard?.writeText(text) }
   const saveNote = async (text: string) => { try { await request('/notes', { method: 'POST', body: JSON.stringify({ contentId, body: text, tags: ['AI对话'], subtitleReferences: [] }) }) } catch (cause) { setError(cause instanceof Error ? cause.message : '保存笔记失败。') } }
   const regenerate = (index: number) => { const previous = messages[index - 1]; if (previous?.role !== 'user' || pending) return; void send(previous.content, messages.slice(0, index - 1)) }
-  return <div className="ai-chat-panel"><div className="ai-chat-actions"><Button variant="quiet" iconOnly type="button" className="icon-button" title="清空对话" aria-label="清空对话" disabled={pending || messages.length === 0} onClick={() => void clear()}><Trash2 size={15}/></Button></div><div className="ai-chat-messages" aria-live="polite">{messages.length === 0 && <div className="ai-chat-empty"><p className="ai-insight-empty">围绕当前内容提问，AI 会结合字幕、正文和摘要回答。</p><div className="ai-chat-suggestions">{suggestions.map(value => <Button variant="quiet" key={value} type="button" disabled={pending || !model} onClick={() => void send(value)}>{value}</Button>)}</div></div>}{messages.map((message, index) => <div key={`${message.role}-${index}`} className={`ai-chat-message ai-chat-${message.role}`}><strong>{message.role === 'user' ? '你' : 'AI'}{message.model && <small>{message.model}</small>}</strong>{message.role === 'assistant' ? <div className="ai-chat-markdown"><ReactMarkdown remarkPlugins={[remarkGfm]} components={{ code({ children, className }) { const text = String(children).replace(/\n$/, ''); return <div className="ai-code"><pre className={className}><code>{text}</code></pre><Button variant="quiet" iconOnly type="button" className="icon-button" title="复制代码" aria-label="复制代码" onClick={() => void copy(text)}><Clipboard size={14}/></Button></div> } }}>{message.content}</ReactMarkdown></div> : <p>{message.content}</p>}{message.role === 'assistant' && message.content && !pending && <div className="ai-chat-message-actions"><Button variant="quiet" iconOnly type="button" className="icon-button" title="复制回答" aria-label="复制回答" onClick={() => void copy(message.content)}><Copy size={14}/></Button><Button variant="quiet" iconOnly type="button" className="icon-button" title="重新生成" aria-label="重新生成" onClick={() => regenerate(index)}><RotateCcw size={14}/></Button><Button variant="quiet" iconOnly type="button" className="icon-button" title="存为笔记" aria-label="存为笔记" onClick={() => void saveNote(message.content)}><NotebookPen size={14}/></Button></div>}</div>)}{pending && <p className="ai-chat-pending"><LoaderCircle size={14} className="spin"/>正在生成…</p>}</div>{!model && <p className="ai-chat-setup" role="status">尚未设置对话模型，请前往 AI 设置选择通用模型。</p>}<div className="ai-chat-composer"><textarea ref={composer} value={input} onChange={event => { setInput(event.target.value); resize() }} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); void send() } }} placeholder="输入问题" rows={2} disabled={pending}/><div className="ai-chat-toolbar"><Select aria-label="对话模型" value={model} onChange={event => { setModel(event.target.value); rememberChatModel(event.target.value) }} disabled={pending || models.length === 0}><option value="">选择模型</option>{models.map(value => <option key={value} value={value}>{value}</option>)}</Select>{pending ? <Button variant="quiet" iconOnly type="button" className="icon-button" title="停止生成" aria-label="停止生成" onClick={() => abort.current?.abort()}><Square size={16}/></Button> : <Button variant="quiet" iconOnly type="button" className="icon-button" title="发送" aria-label="发送" disabled={!input.trim() || !model} onClick={() => void send()}><Send size={16}/></Button>}</div></div>{error && <p className="ai-summary-feedback" role="alert">{error}</p>}</div>
+  const retry = () => {
+    const index = messages.map(message => message.role).lastIndexOf('user')
+    if (index >= 0) void send(messages[index].content, messages.slice(0, index))
+  }
+  return <div className="ai-chat-panel">
+    <div className="ai-chat-actions"><span>{pending ? '正在回答' : messages.length ? '当前内容的对话' : '新对话'}</span><Button variant="quiet" iconOnly type="button" className="icon-button" title="清空对话" aria-label="清空对话" disabled={pending || messages.length === 0} onClick={() => void clear()}><Trash2 size={15}/></Button></div>
+    <div ref={conversation} className="ai-chat-messages" role="log" aria-label="对话记录" aria-live="polite" onScroll={event => { const node = event.currentTarget; follow.current = node.scrollHeight - node.scrollTop - node.clientHeight < 48 }}>
+      {messages.length === 0 && <div className="ai-chat-empty"><MessageCircle size={23} strokeWidth={1.5} aria-hidden="true"/><h3>关于这篇内容，想了解什么？</h3><div className="ai-chat-suggestions">{suggestions.map(value => <Button variant="quiet" key={value} type="button" disabled={pending || !model || !ready} onClick={() => void send(value)}>{value}<ArrowUp size={14} aria-hidden="true"/></Button>)}</div></div>}
+      {messages.map((message, index) => <article key={`${message.role}-${index}`} className={`ai-chat-message ai-chat-${message.role}`} aria-label={message.role === 'user' ? '你的提问' : 'AI 回答'}>
+        <span className="visually-hidden">{message.role === 'user' ? '你' : 'AI'}</span>
+        {message.role === 'assistant' ? <div className="ai-chat-markdown"><ReactMarkdown remarkPlugins={[remarkGfm]} components={{
+          pre({ children }) { return <div className="ai-code"><pre>{children}</pre></div> },
+          code({ children, className }) {
+            const text = String(children).replace(/\n$/, '')
+            return <><code className={className}>{children}</code>{String(children).includes('\n') && <Button variant="quiet" iconOnly type="button" className="icon-button ai-code-copy" title="复制代码" aria-label="复制代码" onClick={() => void copy(text)}><Clipboard size={14}/></Button>}</>
+          },
+        }}>{message.content}</ReactMarkdown></div> : <p>{message.content}</p>}
+        {message.role === 'assistant' && message.content && !pending && <div className="ai-chat-message-actions"><Button variant="quiet" iconOnly type="button" className="icon-button" title="复制回答" aria-label="复制回答" onClick={() => void copy(message.content)}><Copy size={14}/></Button><Button variant="quiet" iconOnly type="button" className="icon-button" title="重新生成" aria-label="重新生成" onClick={() => regenerate(index)}><RotateCcw size={14}/></Button><Button variant="quiet" iconOnly type="button" className="icon-button" title="存为笔记" aria-label="存为笔记" onClick={() => void saveNote(message.content)}><NotebookPen size={14}/></Button>{message.model && <small title={message.model}>{message.model.split('/').pop()}</small>}</div>}
+      </article>)}
+      {pending && <p className="ai-chat-pending" role="status"><LoaderCircle size={14} className="spin"/>正在生成…</p>}
+      {error && <div className="ai-chat-error" role="alert"><p>{error}</p>{messages.some(message => message.role === 'user') && <Button variant="quiet" type="button" disabled={pending || !ready} onClick={retry}><RotateCcw size={14}/>重新尝试</Button>}</div>}
+    </div>
+    {ready && !model && <p className="ai-chat-setup" role="status">请在<a href="/tools#translation">AI 设置</a>中选择对话模型。</p>}
+    <form className="ai-chat-composer" onSubmit={event => { event.preventDefault(); void send() }}>
+      <textarea ref={composer} aria-label="输入问题" value={input} maxLength={12000} onChange={event => setInput(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); void send() } }} placeholder="围绕这篇内容提问…" rows={2}/>
+      <div className="ai-chat-toolbar">
+        <Select aria-label="对话模型" title={model || '选择模型'} value={model} onChange={event => { setModel(event.target.value); rememberChatModel(event.target.value) }} disabled={pending || models.length === 0}><option value="">选择模型</option>{models.map(value => <option key={value} value={value}>{value.split('/').pop()}</option>)}</Select>
+        {pending ? <Button variant="quiet" iconOnly type="button" className="icon-button ai-chat-send" title="停止生成" aria-label="停止生成" onClick={() => abort.current?.abort()}><Square size={14} fill="currentColor"/></Button> : <Button variant="quiet" iconOnly type="submit" className="icon-button ai-chat-send" title="发送" aria-label="发送" disabled={!input.trim() || !model || !ready}><ArrowUp size={18}/></Button>}
+      </div>
+    </form>
+  </div>
 }
 
 export function AIInsights({ summary, onSeek, onLocateQuote, onLocatePage, contentId, context, revision }: { summary: ReturnType<typeof useSummary>; onSeek?: (seconds: number) => void; onLocateQuote?: (quote: string) => void; onLocatePage?: (page: number) => void; contentId: string; context: string; revision: number }) {

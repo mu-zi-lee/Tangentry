@@ -117,7 +117,7 @@ func (h *aiHandler) aiChat(w http.ResponseWriter, r *http.Request) {
 	if !decodeAIRequest(w, r, &input, 512<<10) {
 		return
 	}
-	if r.Header.Get("Accept") == "text/event-stream" || r.URL.Query().Get("stream") == "1" {
+	if r.Header.Get("Accept") == "text/event-stream" {
 		h.aiChatStream(w, r, input)
 		return
 	}
