@@ -79,7 +79,7 @@ func (s *Service) Start(ctx context.Context, request Request) (Job, error) {
 		}
 	}
 	now := time.Now().Unix()
-	job := Job{Options: request.Options, ID: rand.Text(), URL: canonical, Title: strings.TrimSpace(request.Title), Subdirectory: request.Subdirectory, OutputDirectory: request.OutputDirectory, MaxHeight: request.MaxHeight, State: "queued", CreatedAt: now, UpdatedAt: now}
+	job := Job{Options: request.Options, ID: rand.Text(), URL: canonical, Title: strings.TrimSpace(request.Title), ThumbnailURL: strings.TrimSpace(request.ThumbnailURL), Subdirectory: request.Subdirectory, OutputDirectory: request.OutputDirectory, MaxHeight: request.MaxHeight, State: "queued", CreatedAt: now, UpdatedAt: now}
 	if job.OutputDirectory != "" {
 		retryable, occupied := false, false
 		for _, existing := range jobs {

@@ -70,6 +70,13 @@ type MediaRunner interface {
 	DownloadMedia(context.Context, string, string, int, Options) (Result, error)
 }
 
+// ProgressMediaRunner is implemented by download tools that can report the
+// percentage emitted by their underlying media downloader.
+type ProgressMediaRunner interface {
+	MediaRunner
+	DownloadMediaProgress(context.Context, string, string, int, Options, func(float64)) (Result, error)
+}
+
 var formatIDPattern = regexp.MustCompile(`^[A-Za-z0-9_.-]{1,100}$`)
 var subtitleLanguagePattern = regexp.MustCompile(`^[A-Za-z0-9_-]{1,48}$`)
 

@@ -3,7 +3,9 @@ package downloads
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
+	"math"
 	"os"
 	"time"
 )
@@ -58,7 +60,16 @@ func (s *Service) run(id string) {
 	outputDir := directory
 	var result Result
 	var runErr error
-	if runner, ok := s.runner.(MediaRunner); ok {
+	if runner, ok := s.runner.(ProgressMediaRunner); ok {
+		lastProgress := -1.0
+		result, runErr = runner.DownloadMediaProgress(ctx, job.URL, outputDir, job.MaxHeight, job.Options, func(progress float64) {
+			if math.IsNaN(progress) || progress < 0 || progress > 100 || progress < lastProgress+1 && progress != 100 {
+				return
+			}
+			lastProgress = progress
+			s.updateProgress(id, progress, observer)
+		})
+	} else if runner, ok := s.runner.(MediaRunner); ok {
 		result, runErr = runner.DownloadMedia(ctx, job.URL, outputDir, job.MaxHeight, job.Options)
 	} else {
 		result.FileName, runErr = s.runner.Download(ctx, job.URL, outputDir, job.MaxHeight)
@@ -69,7 +80,7 @@ func (s *Service) run(id string) {
 	}
 	ctxErr := ctx.Err()
 	cancel()
-	finished := Job{ID: id, URL: job.URL, Title: job.Title, State: "failed"}
+	finished := Job{ID: id, URL: job.URL, Title: job.Title, ThumbnailURL: job.ThumbnailURL, State: "failed"}
 	defer func() { s.notify(observer, finished) }()
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -118,10 +129,31 @@ func (s *Service) applyResult(job *Job, result Result, files []string, runErr er
 	case !validArtifactPath(result.FileName):
 		job.State, job.Message = "failed", "下载工具没有提供有效的输出文件。"
 	default:
-		job.State, job.FileName, job.Message = "completed", result.FileName, result.Message
+		job.State, job.FileName, job.Message, job.Progress = "completed", result.FileName, result.Message, 100
 		job.Files, job.FileSize, job.OriginalSize, job.Compressed = files, result.FileSize, result.OriginalSize, result.Compressed
 		*keepFile = true
 	}
+}
+
+func (s *Service) updateProgress(id string, progress float64, observer func(Job)) {
+	s.mu.Lock()
+	job, err := s.repo.GetDownload(context.Background(), id)
+	if err != nil || job.State != "running" {
+		s.mu.Unlock()
+		return
+	}
+	job.Progress = progress
+	job.Message = fmt.Sprintf("已下载 %.0f%%", progress)
+	job.UpdatedAt = time.Now().Unix()
+	if err := s.repo.SaveDownload(context.Background(), job); err != nil {
+		s.mu.Unlock()
+		s.mu.Lock()
+		s.failStorage(err)
+		s.mu.Unlock()
+		return
+	}
+	s.mu.Unlock()
+	s.notify(observer, job)
 }
 
 // Called while mu is held. A storage failure stops work and remains visible via the API.

@@ -80,7 +80,7 @@ export function useDownloads() {
     }
   }
 
-  async function start(url: string, title = '', maxHeight = 1080, options: DownloadOptions = {}, location: { subdirectory?: string; outputDirectory?: string } = {}) {
+  async function start(url: string, title = '', maxHeight = 1080, options: DownloadOptions = {}, location: { subdirectory?: string; outputDirectory?: string; thumbnailUrl?: string } = {}) {
     if (starting.current) return false
     starting.current = true
     setSubmitting(true)

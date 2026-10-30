@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -14,6 +15,23 @@ import (
 	"tangentry/internal/config"
 	"tangentry/internal/downloads"
 )
+
+func TestDownloadProgressHandlesPartialLinesAndInvalidPercentages(t *testing.T) {
+	var got []float64
+	buffer := &downloadProgressBuffer{report: func(value float64) { got = append(got, value) }}
+	for _, chunk := range []string{
+		"[download]   12.",
+		"5% of 2MiB\n[Merger] 50% ignored\n[download] NaN%\n[download] +Inf%\n[download] -1%\n[download] 101%\n",
+		"[download] 100% of 2MiB\n",
+	} {
+		if n, err := buffer.Write([]byte(chunk)); n != len(chunk) || err != nil {
+			t.Fatal(n, err)
+		}
+	}
+	if !slices.Equal(got, []float64{12.5, 100}) {
+		t.Fatalf("progress: %v", got)
+	}
+}
 
 func TestDownloadMetadataOnlyExposesChoicesAndRejectsPlaylists(t *testing.T) {
 	raw := []byte(`{"title":"标题测试","uploader":"作者","thumbnail":"https://example.com/cover.jpg","formats":[
@@ -60,6 +78,9 @@ func TestDownloadArgumentsUseTitleContainerAndLiteralChoices(t *testing.T) {
 		text := strings.Join(args, " ")
 		if !strings.Contains(text, "--http-chunk-size 10M") {
 			t.Fatalf("CDN chunking fallback missing in %s", text)
+		}
+		if !strings.Contains(text, "--newline --progress") || strings.Contains(text, "--no-progress") {
+			t.Fatalf("download progress must remain enabled with --print: %s", text)
 		}
 		wantOutput := "%(title).180B.%(ext)s"
 		if rawURL == "https://www.bilibili.com/video/BV17x411w7KC/" {

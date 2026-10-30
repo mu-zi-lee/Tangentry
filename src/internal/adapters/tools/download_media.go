@@ -1,10 +1,12 @@
 package tools
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -90,7 +92,7 @@ func (t *Toolkit) mediaArguments(rawURL, directory string, height int, options d
 	// Some Bilibili CDN edges reject the large range requests used by the
 	// default downloader with HTTP 567. Smaller chunks are slower on a fast
 	// connection but make downloads reliable on those edges and proxies.
-	args = append(args, "--no-cache-dir", "--no-progress", "--no-warnings", "--socket-timeout", "20", "--retries", "1", "--fragment-retries", "1", "--concurrent-fragments", "1", "--http-chunk-size", "10M", "--no-overwrites", "--windows-filenames", "--ffmpeg-location", t.config.FFmpegPath, "--format", selector, "--paths", directory, "--output", output, "--print", "after_move:filepath")
+	args = append(args, "--no-cache-dir", "--newline", "--progress", "--no-warnings", "--socket-timeout", "20", "--retries", "1", "--fragment-retries", "1", "--concurrent-fragments", "1", "--http-chunk-size", "10M", "--no-overwrites", "--windows-filenames", "--ffmpeg-location", t.config.FFmpegPath, "--format", selector, "--paths", directory, "--output", output, "--print", "after_move:filepath")
 	if options.Mode == "audio" {
 		format := options.AudioFormat
 		if format == "" {
@@ -140,6 +142,10 @@ func (t *Toolkit) mediaArguments(rawURL, directory string, height int, options d
 }
 
 func (t *Toolkit) DownloadMedia(ctx context.Context, rawURL, directory string, height int, options downloads.Options) (downloads.Result, error) {
+	return t.DownloadMediaProgress(ctx, rawURL, directory, height, options, nil)
+}
+
+func (t *Toolkit) DownloadMediaProgress(ctx context.Context, rawURL, directory string, height int, options downloads.Options, report func(float64)) (downloads.Result, error) {
 	var douyinFallbackErr error
 	if ref, parseErr := discovery.ParseDouyin(rawURL); parseErr == nil && ref.ID != "" {
 		if result, fallbackErr := t.downloadDouyinFallback(ctx, ref.URL, directory, height, options); fallbackErr == nil {
@@ -174,7 +180,7 @@ func (t *Toolkit) DownloadMedia(ctx context.Context, rawURL, directory string, h
 		return downloads.Result{}, err
 	}
 	stdout, stderr := &metadataBuffer{limit: 4 << 20}, &boundedBuffer{}
-	cmd.Stdout, cmd.Stderr = stdout, stderr
+	cmd.Stdout, cmd.Stderr = stdout, &downloadProgressBuffer{target: stderr, report: report}
 	if err := cmd.Run(); err != nil {
 		if ctx.Err() != nil {
 			return downloads.Result{}, ctx.Err()
@@ -276,6 +282,44 @@ func (t *Toolkit) DownloadMedia(ctx context.Context, rawURL, directory string, h
 		}
 	}
 	return result, nil
+}
+
+type downloadProgressBuffer struct {
+	target *boundedBuffer
+	report func(float64)
+	data   []byte
+}
+
+func (b *downloadProgressBuffer) Write(p []byte) (int, error) {
+	if b.target != nil {
+		_, _ = b.target.Write(p)
+	}
+	if b.report != nil {
+		b.data = append(b.data, p...)
+		for {
+			index := bytes.IndexByte(b.data, '\n')
+			if index < 0 {
+				break
+			}
+			line := strings.TrimSpace(string(b.data[:index]))
+			b.data = b.data[index+1:]
+			if strings.HasPrefix(line, "[download]") {
+				fields := strings.Fields(line)
+				for _, field := range fields {
+					if strings.HasSuffix(field, "%") {
+						if value, err := strconv.ParseFloat(strings.TrimSuffix(field, "%"), 64); err == nil && !math.IsNaN(value) && value >= 0 && value <= 100 {
+							b.report(value)
+						}
+						break
+					}
+				}
+			}
+		}
+		if len(b.data) > 4096 {
+			b.data = b.data[len(b.data)-4096:]
+		}
+	}
+	return len(p), nil
 }
 
 func isVideoArtifact(name string) bool {

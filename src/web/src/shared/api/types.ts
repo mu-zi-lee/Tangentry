@@ -214,11 +214,13 @@ export interface DownloadJob extends DownloadOptions {
   id: string
   url: string
   title: string
+  thumbnailUrl?: string
   subdirectory?: string
   outputDirectory?: string
   maxHeight: number
   state: 'queued' | 'running' | 'completed' | 'failed' | 'cancelled' | 'interrupted'
   message?: string
+  progress?: number
   fileName?: string
   files?: string[]
   fileSize?: number

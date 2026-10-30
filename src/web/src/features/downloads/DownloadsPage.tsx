@@ -1,6 +1,6 @@
 import { Button, Checkbox, Dialog, Input, Select } from '../../components/ui'
 import { ArrowDownToLine, Check, ChevronDown, CircleHelp, ExternalLink, FileAudio, Folder, Link2, LoaderCircle, Play, RefreshCw, Settings2, Subtitles, Trash2, Video, X } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import type { useDownloads } from './useDownloads'
 import type { DownloadFormat, DownloadJob, DownloadOptions } from '../../shared/api/types'
 import { formatDate } from '../../shared/ui/ContentCard'
@@ -18,6 +18,21 @@ function bytes(size = 0) {
 }
 function duration(seconds: number) {
   return `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`
+}
+function sourceName(url: string) {
+  try { return new URL(url).hostname.replace(/^www\./, '') } catch { return '本地资料库' }
+}
+function DownloadCover({ job }: { job: DownloadJob }) {
+  const [failed, setFailed] = useState(false)
+  return <div className="download-library-cover">
+    {job.thumbnailUrl && !failed ? <img src={job.thumbnailUrl} alt="" loading="lazy" referrerPolicy="no-referrer" onError={() => setFailed(true)} /> : <div className="download-cover-fallback" aria-hidden="true">{job.mode === 'audio' ? <FileAudio size={27} strokeWidth={1.4} /> : <Video size={27} strokeWidth={1.4} />}<span>{job.mode === 'audio' ? '音频' : '视频'}</span></div>}
+    {job.mode !== 'audio' && <span className="download-cover-type">{job.container?.toUpperCase() ?? '视频'}</span>}
+  </div>
+}
+function DownloadAttachments({ job }: { job: DownloadJob }) {
+  const files = job.files?.filter(file => file !== job.fileName) ?? []
+  if (!files.length) return null
+  return <div className="download-attachments">{files.map(file => <a className="icon-button" key={file} title={file} aria-label={`保存附属文件 ${file}`} href={`/api/downloads/${encodeURIComponent(job.id)}/files/${encodeURIComponent(file)}`} download><Subtitles size={17}/></a>)}</div>
 }
 function canRead(job: DownloadJob) {
   return job.mode !== 'audio' && /^(https:\/\/www\.bilibili\.com\/video\/BV|https:\/\/www\.youtube\.com\/watch\?|https:\/\/www\.douyin\.com\/video\/|https:\/\/www\.xiaohongshu\.com\/explore\/)/.test(job.url)
@@ -61,9 +76,12 @@ export function DownloadsPage({ downloads, onRead, intent }: { downloads: Downlo
     { value: 'all' as const, label: '全部', count: downloads.jobs.length },
     { value: 'active' as const, label: '进行中', count: activeCount },
     { value: 'completed' as const, label: '已完成', count: downloads.jobs.filter(job => job.state === 'completed').length },
-    { value: 'failed' as const, label: '需重试', count: downloads.jobs.filter(job => job.state === 'failed' || job.state === 'interrupted').length },
+    { value: 'failed' as const, label: '需处理', count: downloads.jobs.filter(job => job.state === 'failed' || job.state === 'interrupted' || job.state === 'cancelled').length },
   ]
-  const jobs = downloads.jobs.filter(job => filter === 'all' || (filter === 'active' ? job.state === 'running' || job.state === 'queued' : filter === 'failed' ? job.state === 'failed' || job.state === 'interrupted' : job.state === 'completed'))
+  const jobs = downloads.jobs.filter(job => filter === 'all' || (filter === 'active' ? job.state === 'running' || job.state === 'queued' : filter === 'failed' ? job.state === 'failed' || job.state === 'interrupted' || job.state === 'cancelled' : job.state === 'completed'))
+  const activeJobs = jobs.filter(job => job.state === 'running' || job.state === 'queued')
+  const completedJobs = jobs.filter(job => job.state === 'completed')
+  const failedJobs = jobs.filter(job => job.state === 'failed' || job.state === 'interrupted' || job.state === 'cancelled')
   const deletable = jobs.filter(job => job.state !== 'queued' && job.state !== 'running')
   const allSelected = deletable.length > 0 && deletable.every(job => selected.has(job.id))
   const ready = !!info && (audioOnly ? audioAvailable : videoFormats.length > 0) && downloads.tools?.downloadReady
@@ -92,7 +110,7 @@ export function DownloadsPage({ downloads, onRead, intent }: { downloads: Downlo
 
   async function start() {
     if (!info || !ready) return
-    const ok = await downloads.start(info.url, info.title, height, { ...options, compress: !audioOnly && options.compress, videoOnly: !audioOnly && options.videoOnly })
+    const ok = await downloads.start(info.url, info.title, height, { ...options, compress: !audioOnly && options.compress, videoOnly: !audioOnly && options.videoOnly }, { thumbnailUrl: info.thumbnailUrl })
     if (ok) { setURL(''); downloads.clearInfo() }
   }
 
@@ -151,7 +169,7 @@ export function DownloadsPage({ downloads, onRead, intent }: { downloads: Downlo
     </details>
   </section>
   return <div className="download-workspace">
-    <PageHeader className="download-heading" title="下载" summary={activeCount ? `${activeCount} 个任务处理中，完成后可离线播放与阅读` : '把视频、音频和字幕保存到本机，随时离线继续。'} actions={<a className="button button-secondary" href="/tools#storage" aria-label="下载与存储设置" title="下载与存储设置"><Folder size={15}/>存储位置</a>}/>
+    <PageHeader className="download-heading" title="下载资料库" summary={activeCount ? `${activeCount} 个任务正在处理` : '保存视频、音频和字幕，随时离线播放与阅读。'} actions={<a className="button button-secondary" href="/tools#storage" aria-label="下载与存储设置" title="下载与存储设置"><Folder size={15}/>存储位置</a>}/>
     <section className="download-composer" aria-label="新建下载">
       <div className="download-composer-head">
         <span className={`download-tool-status ${downloads.tools?.downloadReady ? 'is-ready' : ''}`}><span aria-hidden="true"/>{downloads.tools?.downloadReady ? '下载工具已就绪' : downloads.loading ? '检查下载工具…' : '下载工具未就绪'}</span>
@@ -186,12 +204,27 @@ export function DownloadsPage({ downloads, onRead, intent }: { downloads: Downlo
         {downloads.jobs.some(job => job.state !== 'queued' && job.state !== 'running') && <Button variant="secondary" className="button button-secondary" onClick={() => setDeleteDialog({ ids: [], clear: true })}><Trash2 size={15}/>清空历史</Button>}
         <Button variant="quiet" iconOnly className="icon-button" title="刷新下载任务" aria-label="刷新下载任务" disabled={downloads.loading} onClick={() => void downloads.reload()}><RefreshCw size={16} className={downloads.loading ? 'spin' : undefined}/></Button>
       </div>
-      {downloads.loading ? <p className="loading-state" role="status">正在读取任务…</p> : jobs.length === 0 ? <section className="empty-state compact-empty"><ArrowDownToLine size={24} strokeWidth={1.4} aria-hidden="true" /><h2>{downloads.jobs.length ? '没有符合条件的任务' : '还没有下载任务'}</h2></section> : <section aria-label="下载任务" className="download-list">{jobs.map(job => <article className={`download-row state-${job.state}`} key={job.id}>
-        {job.state !== 'queued' && job.state !== 'running' ? <label className="download-row-select"><Checkbox type="checkbox" checked={selected.has(job.id)} onChange={event => setSelected(current => { const next = new Set(current); if (event.target.checked) next.add(job.id); else next.delete(job.id); return next })} aria-label={`选择下载 ${job.title}`} /></label> : <span aria-hidden="true" />}
-        <div className="download-state-icon" aria-hidden="true">{job.state === 'running' ? <LoaderCircle size={17} className="spin" /> : job.state === 'completed' ? <Check size={17} /> : job.mode === 'audio' ? <FileAudio size={17} /> : <Video size={17} />}</div>
-        <div className="download-copy"><h3>{job.title}</h3><p><span className="download-state-label">{labels[job.state]}</span> <span>{job.mode === 'audio' ? job.audioFormat === 'best' || !job.audioFormat ? '音频' : job.audioFormat.toUpperCase() : `${job.container?.toUpperCase() ?? '视频'} · ${job.maxHeight ? `最高 ${job.maxHeight}p` : '原画'}`} · {formatDate(job.createdAt)}</span></p>{job.fileSize ? <p className="download-file-size">{bytes(job.fileSize)}{job.compressed && job.originalSize && job.originalSize > job.fileSize ? ` · 已节省 ${bytes(job.originalSize - job.fileSize)}` : ''}</p> : null}{job.message && <p className="download-message">{job.message}</p>}{(job.state === 'running' || job.state === 'queued') && <span className="download-progress" aria-hidden="true"/>}</div>
-        <div className="download-actions">{(job.state === 'queued' || job.state === 'running') ? <Button variant="quiet" iconOnly className="icon-button" title="取消下载" aria-label={`取消下载 ${job.title}`} onClick={() => void downloads.cancel(job.id)}><X size={17} /></Button> : job.state === 'completed' ? <>{canRead(job) ? <Button variant="quiet" iconOnly className="icon-button download-play" title="播放与阅读" data-content-id={`download:${job.id}`} aria-label={`在阅读页播放 ${job.title}`} onClick={() => onRead(job)}><Play size={16} /></Button> : <a className="icon-button download-play" title="播放文件" aria-label={`播放文件 ${job.title}`} href={`/api/downloads/${encodeURIComponent(job.id)}/media`} target="_blank" rel="noopener noreferrer"><Play size={16} /></a>}<a className="icon-button" title={job.fileName ?? '保存文件'} aria-label={`保存文件 ${job.fileName ?? job.title}`} href={`/api/downloads/${encodeURIComponent(job.id)}/file`} download><ArrowDownToLine size={17} /></a>{job.files?.filter(file => file !== job.fileName).map(file => <a className="icon-button" key={file} title={file} aria-label={`保存附属文件 ${file}`} href={`/api/downloads/${encodeURIComponent(job.id)}/files/${encodeURIComponent(file)}`} download><Subtitles size={17} /></a>)}</> : <Button variant="quiet" iconOnly className="icon-button" title="重新下载" disabled={downloads.submitting} onClick={() => void downloads.start(job.url, job.title, job.maxHeight, jobOptions(job), { subdirectory: job.subdirectory, outputDirectory: job.outputDirectory })} aria-label={`重新下载 ${job.title}`}><RefreshCw size={17} /></Button>}{job.state !== 'queued' && job.state !== 'running' && <Button variant="quiet" iconOnly className="icon-button" title="删除记录" aria-label={`删除下载记录 ${job.title}`} onClick={() => setDeleteDialog({ ids: [job.id], clear: false })}><Trash2 size={16} /></Button>}<a className="icon-button" title="打开原链接" href={job.url} rel="noopener noreferrer" target="_blank" aria-label={`打开下载原视频 ${job.title}`}><ExternalLink size={16} /></a></div>
-      </article>)}</section>}
+      {downloads.loading ? <p className="loading-state" role="status">正在读取任务…</p> : jobs.length === 0 ? <section className="empty-state compact-empty"><ArrowDownToLine size={24} strokeWidth={1.4} aria-hidden="true" /><h2>{downloads.jobs.length ? '没有符合条件的任务' : '还没有下载任务'}</h2><p>粘贴一个视频或音频链接，开始建立你的离线资料库。</p></section> : <div className="download-library" aria-label="下载任务">
+        {activeJobs.length > 0 && <section className="download-library-section download-active-section" aria-labelledby="download-active-title"><div className="download-section-heading"><div><h2 id="download-active-title">正在下载</h2><span>{activeJobs.length} 个任务</span></div><span className="download-live-mark"><i aria-hidden="true"/>实时更新</span></div><div className="download-active-list">{activeJobs.map(job => { const progress = typeof job.progress === 'number' ? Math.max(0, Math.min(100, job.progress)) : 0; return <article className={`download-active-card state-${job.state}`} key={job.id}><DownloadCover job={job}/><div className="download-active-copy"><div className="download-active-kicker"><span>{job.state === 'running' ? '正在下载' : '排队中'}</span><span>{sourceName(job.url)}</span></div><h3>{job.title}</h3><p>{job.mode === 'audio' ? '音频' : `${job.container?.toUpperCase() ?? '视频'} · ${job.maxHeight ? `最高 ${job.maxHeight}p` : '原画'}`} · {formatDate(job.createdAt)}</p><div className="download-progress" role="progressbar" aria-label={`下载进度 ${job.title}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress} style={{ '--download-progress': `${progress}%` } as CSSProperties}><span/></div><small>{job.message || (job.state === 'queued' ? '等待下载工具…' : progress > 0 ? `已下载 ${Math.round(progress)}%` : '正在连接媒体源…')}</small></div><div className="download-active-actions"><Button variant="quiet" iconOnly className="icon-button" title="取消下载" aria-label={`取消下载 ${job.title}`} onClick={() => void downloads.cancel(job.id)}><X size={17}/></Button></div></article> })}</div></section>}
+        {completedJobs.length > 0 && <section className="download-library-section" aria-labelledby="download-completed-title"><div className="download-section-heading"><div><h2 id="download-completed-title">已完成</h2><span>{completedJobs.length} 个文件</span></div><span className="download-storage-note"><Folder size={14}/>已保存到本机</span></div><div className="download-library-grid">{completedJobs.map(job => <article className={`download-library-card state-${job.state}`} key={job.id}>
+          <div className="download-library-card-select"><Checkbox type="checkbox" checked={selected.has(job.id)} onChange={event => setSelected(current => { const next = new Set(current); if (event.target.checked) next.add(job.id); else next.delete(job.id); return next })} aria-label={`选择下载 ${job.title}`}/></div>
+          <DownloadCover job={job}/>
+          <div className="download-library-card-body"><div className="download-library-card-source">{sourceName(job.url)}<span>{job.mode === 'audio' ? '音频' : job.container?.toUpperCase() ?? '视频'}</span></div><h3 title={job.title}>{job.title}</h3><p>{job.fileSize ? bytes(job.fileSize) : '大小未知'} · {formatDate(job.createdAt)}</p></div>
+          <div className="download-library-card-actions">
+            {canRead(job) ? <Button variant="quiet" iconOnly className="icon-button download-play" title="播放与阅读" data-content-id={`download:${job.id}`} aria-label={`在阅读页播放 ${job.title}`} onClick={() => onRead(job)}><Play size={16}/></Button> : <a className="icon-button download-play" title="播放文件" aria-label={`播放文件 ${job.title}`} href={`/api/downloads/${encodeURIComponent(job.id)}/media`} target="_blank" rel="noopener noreferrer"><Play size={16}/></a>}
+            <a className="icon-button" title={job.fileName ?? '保存文件'} aria-label={`保存文件 ${job.fileName ?? job.title}`} href={`/api/downloads/${encodeURIComponent(job.id)}/file`} download><ArrowDownToLine size={17}/></a>
+            <DownloadAttachments job={job}/>
+            <Button variant="quiet" iconOnly className="icon-button" title="删除记录" aria-label={`删除下载记录 ${job.title}`} onClick={() => setDeleteDialog({ ids: [job.id], clear: false })}><Trash2 size={16}/></Button>
+            <a className="icon-button" title="打开原链接" href={job.url} rel="noopener noreferrer" target="_blank" aria-label={`打开下载原视频 ${job.title}`}><ExternalLink size={16}/></a>
+          </div>
+        </article>)}</div></section>}
+        {failedJobs.length > 0 && <section className="download-library-section download-retry-section" aria-labelledby="download-retry-title"><div className="download-section-heading"><div><h2 id="download-retry-title">需处理</h2><span>{failedJobs.length} 条记录</span></div></div><div className="download-retry-list">{failedJobs.map(job => <article className={`download-retry-row state-${job.state}`} key={job.id}>
+          <Checkbox type="checkbox" checked={selected.has(job.id)} onChange={event => setSelected(current => { const next = new Set(current); if (event.target.checked) next.add(job.id); else next.delete(job.id); return next })} aria-label={`选择下载 ${job.title}`}/>
+          <div className="download-retry-status" aria-hidden="true">{job.state === 'cancelled' ? <X size={16}/> : <CircleHelp size={16}/>}</div>
+          <div className="download-retry-copy"><h3>{job.title}</h3><p><span>{labels[job.state]}</span> · {sourceName(job.url)} · {formatDate(job.createdAt)}</p>{job.message && <small>{job.message}</small>}</div>
+          <div className="download-retry-actions"><Button variant="secondary" className="button button-secondary" disabled={downloads.submitting} onClick={() => void downloads.start(job.url, job.title, job.maxHeight, jobOptions(job), { subdirectory: job.subdirectory, outputDirectory: job.outputDirectory, thumbnailUrl: job.thumbnailUrl })}><RefreshCw size={15}/>重新下载</Button><Button variant="quiet" iconOnly className="icon-button" title="删除记录" aria-label={`删除下载记录 ${job.title}`} onClick={() => setDeleteDialog({ ids: [job.id], clear: false })}><Trash2 size={16}/></Button></div>
+        </article>)}</div></section>}
+      </div>}
     </div>
     {deleteDialog && <Dialog open className="download-delete-dialog" aria-modal="true" aria-labelledby="download-delete-title" onCancel={event => event.preventDefault()} onClose={() => setDeleteDialog(null)}><div className="download-delete-panel"><h2 id="download-delete-title">{deleteDialog.clear ? '清空下载历史' : `删除 ${deleteDialog.ids.length} 条记录`}</h2><p>请选择是否同时删除已经下载到本机的文件。默认只删除记录。</p><div className="download-delete-actions"><Button variant="secondary" className="button button-secondary" onClick={() => setDeleteDialog(null)}>取消</Button><Button variant="secondary" className="button button-secondary" onClick={() => void confirmDelete(false)}><Trash2 size={15}/>只删记录</Button><Button variant="danger" className="button button-danger" onClick={() => void confirmDelete(true)}><Trash2 size={15}/>记录和文件</Button></div></div></Dialog>}
   </div>

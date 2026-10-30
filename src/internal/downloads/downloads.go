@@ -25,11 +25,13 @@ type Job struct {
 	ID              string   `json:"id"`
 	URL             string   `json:"url"`
 	Title           string   `json:"title"`
+	ThumbnailURL    string   `json:"thumbnailUrl,omitempty"`
 	Subdirectory    string   `json:"subdirectory,omitempty"`
 	OutputDirectory string   `json:"outputDirectory,omitempty"`
 	MaxHeight       int      `json:"maxHeight"`
 	State           string   `json:"state"`
 	Message         string   `json:"message,omitempty"`
+	Progress        float64  `json:"progress,omitempty"`
 	FileName        string   `json:"fileName,omitempty"`
 	Files           []string `json:"files,omitempty"`
 	FileSize        int64    `json:"fileSize,omitempty"`
@@ -43,6 +45,7 @@ type Request struct {
 	Options
 	URL             string `json:"url"`
 	Title           string `json:"title,omitempty"`
+	ThumbnailURL    string `json:"thumbnailUrl,omitempty"`
 	MaxHeight       int    `json:"maxHeight"`
 	Subdirectory    string `json:"subdirectory,omitempty"`
 	OutputDirectory string `json:"outputDirectory,omitempty"`
