@@ -4,10 +4,17 @@ on:
   push:
     tags:
       - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to build and publish
+        required: true
+        type: string
 
 env:
   GO_VERSION: '1.27.1'
   NODE_VERSION: '24.21.0'
+  RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
 
 permissions:
   contents: write
@@ -17,8 +24,18 @@ jobs:
     name: Verify source and server build
     runs-on: ubuntu-24.04
     steps:
+      - name: Validate release tag
+        shell: bash
+        run: |
+          if [[ ! "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z][0-9A-Za-z.-]*)?$ ]]; then
+            echo "::error::Provide an existing version tag, such as v0.0.3.5."
+            exit 1
+          fi
+
       - name: Check out source
         uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ env.RELEASE_TAG }}
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -53,10 +70,12 @@ jobs:
   desktop:
     name: Build desktop packages
     needs: verify
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - name: Check out source
         uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ env.RELEASE_TAG }}
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -76,7 +95,7 @@ jobs:
         run: brew install ffmpeg whisper-cpp
 
       - name: Set desktop app version from tag
-        run: echo "TANGENTRY_VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+        run: echo "TANGENTRY_VERSION=${RELEASE_TAG#v}" >> "$GITHUB_ENV"
 
       - name: Check updater signing secret
         env:
@@ -102,7 +121,7 @@ jobs:
           GITHUB_WORKSPACE: ${{ github.workspace }}
         run: |
           set -euo pipefail
-          version="${GITHUB_REF_NAME#v}"
+          version="${RELEASE_TAG#v}"
           mkdir -p release-assets
 
           # Keep runtime files together with their application. Uploading
@@ -164,7 +183,7 @@ jobs:
       - name: Upload desktop packages
         uses: actions/upload-artifact@v4
         with:
-          name: tangentry-desktop-${{ github.ref_name }}
+          name: tangentry-desktop-${{ env.RELEASE_TAG }}
           path: release-assets/*
           if-no-files-found: error
 
@@ -177,6 +196,8 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ env.RELEASE_TAG }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -202,7 +223,7 @@ jobs:
       - name: Compute release version
         id: version
         shell: bash
-        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+        run: echo "version=${RELEASE_TAG#v}" >> "$GITHUB_OUTPUT"
 
       - name: Compute image tags
         id: meta
@@ -234,12 +255,13 @@ jobs:
       - name: Check out source and release tags
         uses: actions/checkout@v4
         with:
+          ref: refs/tags/${{ env.RELEASE_TAG }}
           fetch-depth: 0
 
       - name: Download desktop packages
         uses: actions/download-artifact@v4
         with:
-          name: tangentry-desktop-${{ github.ref_name }}
+          name: tangentry-desktop-${{ env.RELEASE_TAG }}
           path: release-assets
 
       - name: Find previous release tag
@@ -247,13 +269,13 @@ jobs:
         shell: bash
         run: |
           git fetch --force --tags
-          previous="$(git tag --merged "${GITHUB_REF_NAME}^" --list 'v*.*.*' --sort=-version:refname | head -n 1 || true)"
+          previous="$(git tag --merged "${RELEASE_TAG}^" --list 'v*.*.*' --sort=-version:refname | head -n 1 || true)"
           echo "tag=${previous}" >> "$GITHUB_OUTPUT"
 
       - name: Compute release version
         id: version
         shell: bash
-        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+        run: echo "version=${RELEASE_TAG#v}" >> "$GITHUB_OUTPUT"
 
       - name: Prepare Chinese release notes
         env:
@@ -261,7 +283,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          notes="docs/releases/${GITHUB_REF_NAME}.md"
+          notes="docs/releases/${RELEASE_TAG}.md"
           if [ -s "$notes" ]; then
             cp "$notes" release-notes.md
           else
@@ -269,12 +291,13 @@ jobs:
           fi
           if [ -n "$PREVIOUS_TAG" ]; then
             printf '\n[完整变更记录](https://github.com/%s/compare/%s...%s)\n' \
-              "$GITHUB_REPOSITORY" "$PREVIOUS_TAG" "$GITHUB_REF_NAME" >> release-notes.md
+              "$GITHUB_REPOSITORY" "$PREVIOUS_TAG" "$RELEASE_TAG" >> release-notes.md
           fi
 
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ env.RELEASE_TAG }}
           generate_release_notes: false
           draft: false
           make_latest: true
