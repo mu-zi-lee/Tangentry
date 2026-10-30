@@ -32,7 +32,8 @@ type discoveryHandler struct {
 type libraryHandler struct{ library LibraryDependencies }
 type aiHandler struct{ ai AIDependencies }
 type mediaHandler struct {
-	media MediaDependencies
+	media     MediaDependencies
+	audioHTTP HTTPClient
 }
 type transcriptionHandler struct {
 	ai AIDependencies

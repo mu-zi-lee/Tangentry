@@ -156,6 +156,18 @@ func (f *publicFixtureTransport) RoundTrip(r *http.Request) (*http.Response, err
 		}
 		body = `<html><head><title>给好奇心留一页空白</title></head><body><nav>无关平台导航</nav><article><h1>给好奇心留一页空白</h1><p>` + beginning + `</p><p>` + strings.Repeat("沿着好奇心继续阅读，慢慢建立自己的理解。", 35) + `</p><h2>让思考留下痕迹</h2><p>第二段😀在这里，阅读原文的同时写下自己的想法，引用与 Markdown 编辑一起保存。</p><blockquote><p>知识不是收集更多，而是多理解一点。</p></blockquote><ul><li>保留自己的观点</li><li>重读值得停留的段落</li></ul><pre>read → think → write</pre><p>` + strings.Repeat("让内容在自己的节奏里成为一部分，继续理解与发现。", 25) + `</p><img src="https://private.example/tracker" onerror="alert(1)"><script>危险脚本</script></article></body></html>`
 	case "rss-fixture.example":
+		if r.URL.Path == "/audio.mp3" {
+			data, err := os.ReadFile("tests/fixtures/player.mp4")
+			if err != nil {
+				return nil, err
+			}
+			w := httptest.NewRecorder()
+			w.Header().Set("Content-Type", "audio/mp4")
+			http.ServeContent(w, r, "podcast.m4a", time.Time{}, bytes.NewReader(data))
+			res := w.Result()
+			res.Request = r
+			return res, nil
+		}
 		if strings.Contains(r.URL.Path, "fail") {
 			return &http.Response{StatusCode: 503, Body: io.NopCloser(strings.NewReader("")), Request: r}, nil
 		}
@@ -364,7 +376,7 @@ func main() {
 		return playback.Source{URL: "https://fixture.bilivideo.com/player.mp4", Quality: 64}, nil
 	}, Recommendations: func(ctx context.Context, source string) (discovery.Feed, error) {
 		return discovery.Feed{Items: []content.Item{}, Page: 1, SourceTitle: source}, ctx.Err()
-	}, Platform: &fixturePlatform{calls: make(map[string]int)}, PublicHTTP: &http.Client{Transport: &publicFixtureTransport{calls: make(map[string]int)}, Timeout: time.Second}})
+	}, Platform: &fixturePlatform{calls: make(map[string]int)}, PublicHTTP: &http.Client{Transport: &publicFixtureTransport{calls: make(map[string]int)}, Timeout: time.Second}, AudioHTTP: &http.Client{Transport: &publicFixtureTransport{calls: make(map[string]int)}}})
 	if err != nil {
 		panic(err)
 	}

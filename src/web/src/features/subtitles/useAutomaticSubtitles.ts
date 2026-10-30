@@ -118,8 +118,8 @@ export function useAutomaticSubtitles({ contentId, enabled = true, hasFormalTrac
   useEffect(() => {
     let active = true
     const controller = new AbortController()
-    void request<{ session: AutomaticSession | null }>(`/transcription/automatic?contentId=${encodeURIComponent(contentId)}`, { signal: controller.signal }).then(value => {
-      if (active && value.session) { setSession(value.session); void refresh(value.session.id, controller.signal) }
+    void request<{ session: AutomaticSession | null }>(`/transcription/automatic?contentId=${encodeURIComponent(contentId)}`, { signal: controller.signal }).then(async value => {
+      if (active && value.session) { setSession(value.session); await refresh(value.session.id, controller.signal) }
     }).catch(() => {})
     return () => { active = false; controller.abort() }
   }, [contentId, refresh])

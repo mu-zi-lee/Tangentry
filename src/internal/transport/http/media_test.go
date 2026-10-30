@@ -8,8 +8,10 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"tangentry/internal/adapters/sqlite"
 	"tangentry/internal/downloads"
@@ -243,6 +245,43 @@ func TestMediaUsesCompletedFileBoundaryAndHTTPRanges(t *testing.T) {
 	os.Remove(filepath.Join(directory, job.FileName))
 	if w := send("GET", "/media", ""); w.Code != 404 {
 		t.Fatal("missing file reported playable")
+	}
+}
+
+func TestAudioProxyPreservesNativeMediaRangeContract(t *testing.T) {
+	const payload = "0123456789 podcast audio fixture"
+	transport := roundTripperFunc(func(r *http.Request) (*http.Response, error) {
+		headers := http.Header{"Content-Type": {"audio/mp4"}, "Accept-Ranges": {"bytes"}}
+		body := payload
+		status := http.StatusOK
+		if r.Header.Get("Range") == "bytes=4-9" {
+			headers.Set("Content-Range", "bytes 4-9/"+strconv.Itoa(len(payload)))
+			headers.Set("Content-Length", "6")
+			body = payload[4:10]
+			status = http.StatusPartialContent
+		} else {
+			headers.Set("Content-Length", strconv.Itoa(len(payload)))
+		}
+		return &http.Response{StatusCode: status, Header: headers, Body: io.NopCloser(strings.NewReader(body)), Request: r}, nil
+	})
+	h := New(nil, nil, nil, Options{AudioHTTP: &http.Client{Transport: transport}})
+	request := func(rang string) *httptest.ResponseRecorder {
+		r := httptest.NewRequest(http.MethodGet, "http://127.0.0.1/api/media/audio?url="+url.QueryEscape("https://media.example/episode.m4a"), nil)
+		r.Header.Set("Origin", "http://127.0.0.1")
+		if rang != "" {
+			r.Header.Set("Range", rang)
+		}
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, r)
+		return w
+	}
+	full := request("")
+	if full.Code != http.StatusOK || full.Body.String() != payload || full.Header().Get("Content-Type") != "audio/mp4" || full.Header().Get("Accept-Ranges") != "bytes" {
+		t.Fatalf("full audio response: %d %v %q", full.Code, full.Header(), full.Body.String())
+	}
+	rangeResponse := request("bytes=4-9")
+	if rangeResponse.Code != http.StatusPartialContent || rangeResponse.Body.String() != payload[4:10] || rangeResponse.Header().Get("Content-Range") != "bytes 4-9/"+strconv.Itoa(len(payload)) {
+		t.Fatalf("range audio response: %d %v %q", rangeResponse.Code, rangeResponse.Header(), rangeResponse.Body.String())
 	}
 }
 

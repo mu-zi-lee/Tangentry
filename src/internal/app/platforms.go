@@ -36,6 +36,7 @@ type platforms struct {
 
 type platformNetwork struct {
 	public  *http.Client
+	audio   *http.Client
 	cookies *credentials.Store
 	toolkit *tools.Toolkit
 	papers  *paperadapter.Client
@@ -83,6 +84,10 @@ func newPlatforms(dataDir string, configuration config.Config, toolkit *tools.To
 	if public == nil {
 		public = netpolicy.NewClient()
 	}
+	audio := option.AudioHTTP
+	if audio == nil {
+		audio = netpolicy.NewStreamingClient()
+	}
 	client := bilibili.NewClient(&http.Client{Timeout: 15 * time.Second}, configuration.BilibiliCookie, toolkit)
 	client.PageFetcher = option.PlatformPageFetcher
 	client.SetCookieProvider(func(rawURL string) string { return cookies.Header("bilibili", rawURL) })
@@ -116,7 +121,7 @@ func newPlatforms(dataDir string, configuration config.Config, toolkit *tools.To
 	notesClient := &xiaohongshu.Client{HTTP: public, Cookie: cookieFor(cookies, "xiaohongshu"), UserAgent: userAgentFor(cookies, "xiaohongshu"), Page: option.PlatformPageFetcher}
 	forumClient := &discourse.Client{HTTP: public, UserAgent: userAgentFor(cookies, "linuxdo"), Session: cookies.PrepareLinuxdoSession, UserKey: cookies.LinuxdoUserKey, Page: option.PlatformPageFetcher}
 	return &platforms{
-		network:       platformNetwork{public: public, cookies: cookies, toolkit: toolkit, papers: paperClient},
+		network:       platformNetwork{public: public, audio: audio, cookies: cookies, toolkit: toolkit, papers: paperClient},
 		discovery:     platformDiscovery{creators: creators, bilibili: client, douyin: douyinClient, notes: notesClient, forum: forumClient, podcasts: podcasts, youtube: youtubeClient},
 		imports:       platformImports{feeds: feedClient, youtube: youtubeClient, douyin: douyinClient, notes: notesClient, forum: forumClient, podcasts: podcasts, toolkit: toolkit, noteImages: noteImages},
 		subscriptions: platformSubscriptions{feeds: feedClient, youtube: youtubeClient, creators: creators, toolkit: toolkit, papers: paperClient},

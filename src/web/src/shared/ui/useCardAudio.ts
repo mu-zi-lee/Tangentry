@@ -4,6 +4,7 @@ import type { ContentItem } from '../api/types'
 import { request } from '../api/client'
 import { formatDuration } from './ContentCard'
 import { announcePlayback, mediaStartEvent } from '../media/playback'
+import { podcastAudioSource } from '../media/audioSource'
 
 interface CardPlayback {
   owner: string
@@ -16,9 +17,9 @@ interface CardPlayback {
 export function useCardAudio(item: ContentItem, playback: CardPlayback) {
   const audio = useRef<HTMLAudioElement | null>(null)
   const lastAudio = useRef<HTMLAudioElement | null>(null)
-  const audioSource = useRef({ id: item.id, url: item.mediaUrl, kind: item.kind })
   const [audioDetail, setAudioDetail] = useState<{ id: string; url: string } | null>(null)
-  const audioURL = item.mediaUrl || (audioDetail?.id === item.id ? audioDetail.url : undefined)
+  const audioURL = podcastAudioSource(item.platform, item.mediaUrl || (audioDetail?.id === item.id ? audioDetail.url : undefined))
+  const audioSource = useRef({ id: item.id, url: audioURL, kind: item.kind })
   const audioRequest = useRef<AbortController | null>(null)
   const [audioLoading, setAudioLoading] = useState(false)
   const [audioError, setAudioError] = useState('')
@@ -109,7 +110,7 @@ export function useCardAudio(item: ContentItem, playback: CardPlayback) {
     return () => {
       const node = lastAudio.current
       node?.pause()
-      if (node) {
+      if (node && !node.isConnected) {
         node.removeAttribute('src')
         node.load()
       }

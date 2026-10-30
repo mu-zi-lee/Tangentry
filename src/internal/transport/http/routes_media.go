@@ -12,6 +12,7 @@ func (h *Handler) registerMediaRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/downloads/{id}/cancel", h.media.downloadCancel)
 	mux.HandleFunc("GET /api/downloads/{id}/file", h.media.downloadFile)
 	mux.HandleFunc("GET /api/downloads/{id}/media", h.media.downloadMedia)
+	mux.HandleFunc("GET /api/media/audio", h.media.audioProxy)
 	mux.HandleFunc("GET /api/subtitles/bilibili", h.media.subtitleRead)
 	mux.HandleFunc("GET /api/subtitles/youtube", h.media.youtubeSubtitleRead)
 	mux.HandleFunc("GET /api/saved-subtitles", h.media.savedSubtitleList)

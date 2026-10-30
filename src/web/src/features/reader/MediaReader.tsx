@@ -24,6 +24,7 @@ import { AudioControls } from './AudioControls'
 import { ReadingNotebook } from '../../shared/reader/ReadingNotebook'
 import { XiaohongshuSourceForm } from './XiaohongshuSourceForm'
 import { PodcastArtwork } from '../../shared/ui/PodcastArtwork'
+import { podcastAudioSource } from '../../shared/media/audioSource'
 import { ReaderPublication } from './ReaderPublication'
 import { PaperInfoCard } from '../documents/PaperInfoCard'
 import { DiscussionReader } from './DiscussionReader'
@@ -174,7 +175,19 @@ export function MediaReader({ id, initialItem, jobs, jobsLoading = false, video,
     if (node) captureAudioStream(node)
     else onAudioStreamChange?.(null)
   }, [mediaRef, onAudioStreamChange])
-  useEffect(()=>{return()=>{const node=lastMedia.current;node?.pause();if(node){node.removeAttribute('src');node.load()}onAudioStreamChange?.(null);onReady?.(false);onPosition?.(null)}},[id,onReady,onPosition,onAudioStreamChange])
+  useEffect(() => () => {
+    const node = lastMedia.current
+    node?.pause()
+    // StrictMode also cleans up effects while the player is still mounted.
+    // Only release the source after the media element has left the document.
+    if (node && !node.isConnected) {
+      node.removeAttribute('src')
+      node.load()
+    }
+    onAudioStreamChange?.(null)
+    onReady?.(false)
+    onPosition?.(null)
+  }, [id, onReady, onPosition, onAudioStreamChange])
   const captureQuote=()=>{
     if (item?.kind==='article'||item?.kind==='image'||item?.kind==='pdf') { setQuote(''); return }
     const selection=window.getSelection()
@@ -275,6 +288,7 @@ export function MediaReader({ id, initialItem, jobs, jobsLoading = false, video,
   const onlineVideoRequired = Boolean(item?.kind === 'video' && !video && !local && ((item.platform === 'rss' || item.platform === 'xiaohongshu') && item.mediaUrl || item.platform === 'douyin'))
   const compatibilityMessage = item?.platform === 'douyin' ? (douyinPlayback.error || '正在准备抖音视频…') : compatibility.message
   const douyinDetails = douyinPlayback.diagnostics.length > 0 && <details className="douyin-playback-details"><summary>详情</summary><ol>{douyinPlayback.diagnostics.map((stage, index) => <li key={`${stage.stage}-${index}`}><div className="douyin-diagnostic-heading"><strong>{diagnosticStageName(stage.stage)}</strong><span data-outcome={stage.outcome}>{diagnosticOutcomeName(stage.outcome)}</span></div>{diagnosticStageFacts(stage).length > 0 && <p>{diagnosticStageFacts(stage).join(' · ')}</p>}</li>)}</ol></details>
+  const audioSource = item?.kind === 'audio' ? podcastAudioSource(item.platform, item.mediaUrl) : undefined
   const onlineSource = item?.platform === 'douyin' ? douyinPlayback.source : (compatibility.source || item?.mediaUrl || '')
   return <section className={`media-reader${item?.kind === 'article' ? ' article-workspace' : ''}${item?.kind === 'pdf' ? ' document-workspace' : ''}${videoLayout ? ' video-workspace' : ''}${audioLayout ? ' audio-workspace' : ''}`}>
     <div className="reading-nav"><Button variant="secondary" className="button button-secondary" title="返回列表" onClick={onReturn}><ArrowLeft size={16}/>返回列表</Button><span>{item?mediaLabel(item):'内容阅读'}</span><ReaderNavigationSlot/><ReaderActionsSlot/>{item?.platform==='xiaohongshu'&&<Button variant="quiet" iconOnly className="icon-button" aria-label="刷新笔记详情" title="刷新笔记详情" disabled={detailLoading} onClick={refreshDetails}><RotateCw size={16}/></Button>}{item && <a className="button button-secondary reader-original-link" aria-label={item.kind==='pdf'?'打开 PDF 原文件':'打开原内容'} title={item.kind==='pdf'?'打开 PDF 原文件':'打开原内容'} href={item.kind==='pdf' ? (item.platform === 'pdf' ? '/api/documents/'+item.platformId+'/file' : item.mediaUrl || item.url) : item.url} target="_blank" rel="noopener noreferrer"><span className="visually-hidden">{item.kind==='pdf'?'打开 PDF 原文件':'打开原内容'}</span><ExternalLink size={15} aria-hidden="true"/></a>}</div>
@@ -290,7 +304,7 @@ export function MediaReader({ id, initialItem, jobs, jobsLoading = false, video,
       {detailLoading && item?.platform === 'xiaohongshu' && <p className="field-hint" role="status">正在读取笔记正文与图片…</p>}
       {detailError && item?.platform === 'xiaohongshu' && <div className="error-panel reader-source-error" role="alert"><p>{detailError}</p><div className="reader-source-error-actions"><Button variant="secondary" className="button button-secondary" onClick={refreshDetails}><RotateCw size={14}/>重新获取笔记</Button><Button variant="secondary" className="button button-secondary" onClick={()=>setSourceEditing(true)}>更新链接</Button><a className="button button-secondary" href="/tools#accounts">检查登录</a></div></div>}
       {item && (item.kind==='pdf'?((item.platform==='pdf' || item.paper?.documentId)?<PDFReader id={item.paper?.documentId ?? item.platformId} contentId={item.id} paper={item.paper} {...pdfAnnotations}/>:item.paper?.pdfUrl || item.mediaUrl ? <FeedDocumentReader url={item.paper?.pdfUrl ?? item.mediaUrl!} annotations={pdfAnnotations}/>:<p className="field-hint">来源没有提供 PDF 文件地址。</p>):<>
-        {item.kind==='audio'&&<div className="audio-reader">{item.mediaUrl?<><audio ref={bindMedia} aria-label="播客播放器" controls preload="none" src={item.mediaUrl} onLoadedMetadata={audioLoaded} onTimeUpdate={report} onSeeking={report} onSeeked={report} onPause={report} onError={()=>{setAudioError(true);onReady?.(false);onPosition?.(null)}}/>{audioError&&<div className="audio-playback-error" role="alert"><p>音频暂时无法播放，可重新连接或打开原内容收听。</p><Button variant="secondary" type="button" className="button button-secondary" onClick={reconnectAudio}><RotateCw size={14}/>重新连接音频</Button></div>}</>:<p className="field-hint">这份内容没有可播放的公开音频地址，可在原站收听。</p>}</div>}
+        {item.kind==='audio'&&<div className="audio-reader">{item.mediaUrl?<><audio ref={bindMedia} aria-label="播客播放器" controls preload="metadata" src={audioSource} onLoadedMetadata={audioLoaded} onTimeUpdate={report} onSeeking={report} onSeeked={report} onPause={report} onError={()=>{setAudioError(true);onReady?.(false);onPosition?.(null)}}/>{audioError&&<div className="audio-playback-error" role="alert"><p>音频暂时无法播放，可重新连接或打开原内容收听。</p><Button variant="secondary" type="button" className="button button-secondary" onClick={reconnectAudio}><RotateCw size={14}/>重新连接音频</Button></div>}</>:<p className="field-hint">这份内容没有可播放的公开音频地址，可在原站收听。</p>}</div>}
         {item.kind==='audio'&&item.mediaUrl&&<AudioControls media={native} identity={`${id}:${item.mediaUrl}`}/>}
         {item.kind==='audio'&&item.mediaUrl&&<NativeReadingProgress contentId={id} media={native} identity={`${id}:${item.mediaUrl}`}/>}
         {audioLayout && description}

@@ -100,7 +100,7 @@ func httpMediaDependencies(s *services, adapters httpAdapterBundle) httptranspor
 	return httptransport.MediaDependencies{
 		Subtitles: s.features.api.subtitles, SavedSubtitles: s.features.api.savedSubtitles, Downloads: s.features.downloads,
 		ToolStatus: adapters.toolStatus, UpdateYTDLP: adapters.updateYTDLP,
-		Playback: s.features.api.playback, Compatibility: compatibility,
+		Playback: s.features.api.playback, Compatibility: compatibility, AudioHTTP: s.adapters.network.audio,
 	}
 }
 

@@ -42,7 +42,7 @@ func public(ip netip.Addr) bool {
 	}
 	return true
 }
-func NewClient() *http.Client {
+func newClient(timeout time.Duration) *http.Client {
 	transport := &http.Transport{Proxy: nil, ResponseHeaderTimeout: 15 * time.Second, MaxIdleConns: 10, IdleConnTimeout: time.Minute}
 	transport.DialContext = func(ctx context.Context, network, address string) (net.Conn, error) {
 		host, port, err := net.SplitHostPort(address)
@@ -66,7 +66,7 @@ func NewClient() *http.Client {
 		}
 		return nil, errors.New("destination unavailable")
 	}
-	return &http.Client{Transport: transport, Timeout: 25 * time.Second, CheckRedirect: func(req *http.Request, via []*http.Request) error {
+	return &http.Client{Transport: transport, Timeout: timeout, CheckRedirect: func(req *http.Request, via []*http.Request) error {
 		if len(via) >= 5 {
 			return errors.New("too many redirects")
 		}
@@ -77,3 +77,11 @@ func NewClient() *http.Client {
 		return nil
 	}}
 }
+
+// NewClient is intended for bounded metadata and image requests.
+func NewClient() *http.Client { return newClient(25 * time.Second) }
+
+// NewStreamingClient keeps the same public-network and redirect policy as
+// NewClient but does not apply an end-to-end deadline to a media response.
+// The request context still controls cancellation when the browser goes away.
+func NewStreamingClient() *http.Client { return newClient(0) }

@@ -37,6 +37,7 @@ type Options struct {
 	Automatic               AutomaticSubtitleService
 	Playback                PlaybackService
 	Compatibility           CompatibilityService
+	AudioHTTP               HTTPClient
 	Recommendations         func(context.Context, string) (discovery.Feed, error)
 	RecommendationPage      func(context.Context, string, int) (discovery.Feed, error)
 	DiscoveryBatch          DiscoveryBatchService
@@ -141,6 +142,7 @@ type MediaDependencies struct {
 	UpdateYTDLP    func() error
 	Playback       PlaybackService
 	Compatibility  CompatibilityService
+	AudioHTTP      HTTPClient
 }
 
 // PodcastDependencies isolates transcript acquisition from general media

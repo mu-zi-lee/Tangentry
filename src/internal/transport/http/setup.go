@@ -37,7 +37,7 @@ func New(library *content.Service, discover *discovery.Service, assets fs.FS, op
 		Media: MediaDependencies{
 			Subtitles: optionsValue.Subtitles, SavedSubtitles: optionsValue.SavedSubtitles,
 			Downloads: optionsValue.Downloads, ToolStatus: optionsValue.ToolStatus, UpdateYTDLP: optionsValue.UpdateYTDLP,
-			Playback: optionsValue.Playback, Compatibility: optionsValue.Compatibility,
+			Playback: optionsValue.Playback, Compatibility: optionsValue.Compatibility, AudioHTTP: optionsValue.AudioHTTP,
 		},
 		Notes: NoteDependencies{
 			Notes: optionsValue.Notes, NoteFrames: optionsValue.NoteFrames, NoteExports: optionsValue.NoteExports,
@@ -56,12 +56,15 @@ func NewWithDependencies(deps Dependencies, assets fs.FS) http.Handler {
 	if deps.Library.ArticleImageHTTP == nil {
 		deps.Library.ArticleImageHTTP = netpolicy.NewClient()
 	}
+	if deps.Media.AudioHTTP == nil {
+		deps.Media.AudioHTTP = netpolicy.NewStreamingClient()
+	}
 	h := &Handler{
 		accounts:      &accountsHandler{accounts: deps.Accounts},
 		discovery:     &discoveryHandler{browse: deps.Browse, browsing: limits.browsing, importing: limits.importing},
 		library:       &libraryHandler{library: deps.Library},
 		ai:            &aiHandler{ai: deps.AI},
-		media:         &mediaHandler{media: deps.Media},
+		media:         &mediaHandler{media: deps.Media, audioHTTP: deps.Media.AudioHTTP},
 		transcription: &transcriptionHandler{ai: deps.AI},
 		podcast:       &podcastHandler{podcast: deps.Podcast, browsing: limits.browsing},
 		notes:         &notesHandler{notes: deps.Notes},

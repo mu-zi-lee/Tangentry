@@ -59,6 +59,7 @@ type Options struct {
 	Recommendations     func(context.Context, string) (discovery.Feed, error)
 	Platform            discovery.Provider
 	PublicHTTP          *http.Client
+	AudioHTTP           *http.Client
 	// PlatformPageFetcher lets a native shell execute same-origin requests in
 	// the platform's authenticated WebView. A nil value keeps headless/server
 	// builds on their existing HTTP clients.
