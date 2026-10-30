@@ -118,7 +118,7 @@ export function useSubtitles(videoId: string, source: 'bilibili' | 'youtube' | '
   const reloadSaved = async () => { if (mutation.current) return; const values = await readSaved(); if (values?.length) useSaved() }
   const cancel = () => { controller.current?.abort(); localReader.current?.abort(); setLoading(false); setLocalLoading(false) }
 
-  async function save(track: SubtitleTrack) {
+  async function save(track: SubtitleTrack, selected = false) {
     if (!localKnown || localLoading || mutation.current) return
     const current = new AbortController()
     mutation.current = current
@@ -126,10 +126,10 @@ export function useSubtitles(videoId: string, source: 'bilibili' | 'youtube' | '
     const revision = saved.find(value => value.track.language === track.language)?.revision ?? 0
     try {
       const result = await request<SavedSubtitle>(`/saved-subtitles/${encodeURIComponent(contentId)}/${encodeURIComponent(track.language)}`, {
-        method: 'PUT', body: JSON.stringify({ track, revision }), signal: current.signal,
+        method: 'PUT', body: JSON.stringify({ track, revision, selected }), signal: current.signal,
       })
       if (!current.signal.aborted) {
-        setSaved(previous => [...previous.filter(value => value.track.language !== track.language), result].sort((a, b) => a.track.language.localeCompare(b.track.language)))
+        setSaved(previous => [...previous.filter(value => value.track.language !== track.language).map(value => selected ? { ...value, selected: false } : value), result].sort((a, b) => a.track.language.localeCompare(b.track.language)))
         setNotice('这份字幕已保存到本机。')
       }
     } catch (cause) {
@@ -158,5 +158,5 @@ export function useSubtitles(videoId: string, source: 'bilibili' | 'youtube' | '
   const document: SubtitleDocument | null = origin === 'platform' ? platform : saved.length ? {
     ...(platform ?? {}), videoId, part: 1, status: platform?.status ?? 'available', tracks: saved.map(value => value.track),
   } : null
-  return { document, saved, origin, loading: loading || localLoading, localLoading, localKnown, pending, error, localError, writeError, notice, languageRead, read, cancel, save, remove, useSaved, reloadSaved }
+  return { document, platformDocument: platform, saved, origin, loading: loading || localLoading, localLoading, localKnown, pending, error, localError, writeError, notice, languageRead, read, cancel, save, remove, useSaved, reloadSaved }
 }

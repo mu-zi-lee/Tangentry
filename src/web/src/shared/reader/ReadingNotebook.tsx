@@ -23,6 +23,12 @@ export function ReadingNotebook({ enabled = true, ai, contentLabel = '内容', c
     return hasNotes && typeof window !== 'undefined' && !window.matchMedia('(max-width: 960px)').matches ? 'notes' : 'content'
   })
   const [theater, setTheater] = useState(false)
+  useEffect(() => {
+    const mobile = window.matchMedia('(max-width: 960px)')
+    const leaveTheater = () => { if (mobile.matches) setTheater(false) }
+    mobile.addEventListener('change', leaveTheater)
+    return () => mobile.removeEventListener('change', leaveTheater)
+  }, [])
   const [registeredAI, setRegisteredAI] = useState<ReactNode | null>(null)
   const aiContent = registeredAI ?? ai
   const notebookEnabled = enabled || Boolean(aiContent)

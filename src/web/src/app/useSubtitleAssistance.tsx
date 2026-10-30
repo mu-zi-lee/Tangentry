@@ -8,6 +8,7 @@ import type { SubtitleLanguage, SubtitleTrack } from '../shared/api/types'
 import { preferredSubtitleLanguage, subtitleTargetLabel } from '../features/subtitles/subtitleLanguageMatch'
 import type { SubtitleAssistance } from '../shared/ui/subtitleAssistance'
 import { ReaderActions } from '../shared/reader/ReaderActions'
+const noPlatformLanguages: SubtitleLanguage[] = []
 export function useSubtitleAssistance(contentId: string, track: SubtitleTrack | null, onSeek?: (seconds: number) => void, source?: SummarySource, showSummary = true): SubtitleAssistance | undefined {
   const [platformState, setPlatformState] = useState<{ contentId: string; languages: SubtitleLanguage[]; ready: boolean }>(() => ({ contentId, languages: [], ready: !contentId.startsWith('bilibili:') && !contentId.startsWith('youtube:') }))
   const [selectedTarget, setSelectedTarget] = useState('zh-Hans')
@@ -22,7 +23,7 @@ export function useSubtitleAssistance(contentId: string, track: SubtitleTrack | 
   const translation = useSubtitleTranslation(contentId, trustedTrack ?? undefined, undefined, selectedTarget, availableLanguages, platformLanguagesReady)
   const summary = useSummary(contentId, 'subtitle', trustedTrack ?? undefined, onSeek)
   const updatePlatformLanguages = useCallback((languages: SubtitleLanguage[], ready: boolean, manualSelection = false) => {
-    const available = manualSelection ? [] : languages
+    const available = manualSelection ? noPlatformLanguages : languages
     setPlatformState(previous => {
       if (previous.contentId === contentId && previous.ready === ready && previous.languages === available) return previous
       return { contentId, languages: available, ready }

@@ -2,45 +2,55 @@
 /* One toolbar for every medium: where you came from on the left, what you can do with
    this item on the right. Status messages take their own line instead of pushing buttons. */
 .reading-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; padding: 4px 0 12px; border-bottom: 1px solid var(--line); }
-.reading-nav > .button:first-child { min-height: 34px; padding: 5px 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); box-shadow: none; color: var(--muted); }
+.reading-nav > .button:first-child { min-height: 34px; padding: 5px 8px; border: 0; border-radius: var(--radius); background: transparent; box-shadow: none; color: var(--muted); }
 .reading-nav > .button:first-child:hover { color: var(--ink); background: var(--surface); }
-.reading-nav > span { min-width: 0; margin-right: auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--faint); font-size: 12.5px; }
-.reading-nav > span::before { content: '/'; margin-right: 8px; color: var(--line-strong); }
+.reading-nav > span { display: none; }
+.reading-nav-title { display: flex; align-items: center; gap: 10px; flex: 1 1 0; min-width: 0; margin-right: auto; overflow: hidden; }
+.reading-nav .reading-nav-title .bilingual-reader-heading { display: flex; flex: 0 1 auto; flex-wrap: nowrap; align-items: center; gap: 6px; min-width: 0; margin: 0; }
+.reading-nav-title .bilingual-reader-heading > h1,
+.video-workspace .reading-nav .reading-nav-title .bilingual-reader-heading > h1 { min-width: 0; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; line-height: 1.4; font-weight: 600; }
+.reading-nav-title .bilingual-reader-heading .text-translation-control { flex: 0 0 auto; }
+.reader-title-toggle { display: block; max-width: 100%; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: inherit; cursor: pointer; }
+.reader-title-toggle:hover { color: var(--muted); }
+.reader-title-toggle:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; border-radius: 2px; }
+.reader-title-toggle[aria-busy='true'] { opacity: .65; }
+.reading-nav .reading-nav-title > p.reading-meta { flex: 0 0 auto; min-width: 0; max-width: 40%; margin: 0; overflow: hidden; text-overflow: ellipsis; color: var(--faint); font-size: 11px; white-space: nowrap; }
 .reading-nav .button { min-height: 34px; height: 34px; padding: 5px 11px; font-size: 12.5px; }
 .reading-nav .button-secondary { box-shadow: none; }
 .reading-nav-actions { min-width: 0; display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 6px; }
 .reading-nav-modes { display: flex; flex: 0 1 auto; min-width: 0; align-items: center; }
-.reading-nav-modes .reading-notebook-navigation { display: flex; align-items: center; gap: 0; min-width: 0; overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); scrollbar-width: none; }
+.reading-nav-modes .reading-notebook-navigation { display: flex; align-items: center; gap: 2px; min-width: 0; overflow-x: auto; border: 0; border-radius: var(--radius); background: transparent; scrollbar-width: none; }
 .reading-nav-modes .reading-notebook-navigation::-webkit-scrollbar { display: none; }
 .reading-nav-modes .reading-notebook-navigation button { display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 32px; padding: 4px 10px; border: 0; border-radius: 0; color: var(--muted); background: transparent; font-size: 12px; white-space: nowrap; }
-.reading-nav-modes .reading-notebook-navigation button[aria-pressed='true'] { background: var(--surface); color: var(--ink); box-shadow: inset 0 -2px var(--accent); }
+.reading-nav-modes .reading-notebook-navigation button[aria-pressed='true'] { background: var(--surface); color: var(--ink); box-shadow: none; border-radius: 4px; }
 .reading-nav-modes .reading-notebook-navigation button:hover { color: var(--ink); background: var(--hover); }
-.reading-nav-modes .reading-notebook-navigation .reading-theater-toggle { margin-left: 0; border-left: 1px solid var(--line); }
+.reading-nav-modes .reading-notebook-navigation .reading-theater-toggle { margin-left: 4px; }
 .reading-nav-actions .reader-read-state { flex-wrap: nowrap; }
 .reading-nav-actions .reader-read-state .button,
 .reading-nav-actions > .button,
 .reading-nav-actions .ai-inline-trigger,
 .reading-nav-actions .icon-button,
 .reading-nav-actions .toolbar-popover-trigger,
-.reading-nav > .icon-button { width: 34px; min-width: 34px; height: 34px; min-height: 34px; padding: 0; gap: 0; justify-content: center; overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); font-size: 0; }
+.reading-nav > .icon-button { width: 32px; min-width: 32px; height: 32px; min-height: 32px; padding: 0; gap: 0; justify-content: center; overflow: hidden; border: 0; border-radius: 4px; background: transparent; color: var(--muted); font-size: 0; box-shadow: none; }
 .reading-nav-actions :is(.reader-read-state .button, .button, .ai-inline-trigger) svg { flex: 0 0 auto; }
 .reading-nav-actions .toolbar-popover-trigger { color: var(--muted); }
 .reading-nav-actions .toolbar-popover-trigger:hover, .reading-nav-actions .icon-button:hover, .reading-nav > .icon-button:hover { background: var(--surface); }
 .reading-nav-actions .toolbar-popover { display: inline-flex; }
 .reading-nav-actions :is(.reader-read-state .button, .button, .ai-inline-trigger, .icon-button, .toolbar-popover-trigger):disabled { opacity: .5; }
-.reading-nav .reader-original-link { width: 34px; min-width: 34px; height: 34px; min-height: 34px; padding: 0; justify-content: center; gap: 0; overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); box-shadow: none; font-size: 0; }
+.reading-nav .reader-original-link { width: 32px; min-width: 32px; height: 32px; min-height: 32px; padding: 0; justify-content: center; gap: 0; overflow: hidden; border: 0; border-radius: 4px; background: transparent; color: var(--muted); box-shadow: none; font-size: 0; }
 .reading-nav .reader-original-link:hover { background: var(--surface); }
-.reader-read-state { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px; }
-.reader-read-state .button[aria-pressed='true'] { border-color: var(--accent-line); background: var(--accent-soft); color: var(--accent-ink); }
+.reader-read-state { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 2px; padding-right: 6px; margin-right: 2px; border-right: 1px solid var(--line); }
+.reader-read-state .button[aria-pressed='true'] { background: transparent; color: var(--ink); }
 .immersive-reader .reading-nav { position: static; }
 @media (max-width: 760px) {
   .reading-nav { padding: 2px 0 8px; gap: 4px 6px; }
+  .reading-nav-title { flex-basis: calc(100% - 48px); }
   .reading-nav > span { display: none; }
   .reading-nav-actions { flex: 0 1 auto; margin-left: auto; }
   .reading-nav-modes { order: 5; flex: 1 0 100%; overflow: hidden; }
   .reading-nav-modes .reading-notebook-navigation { width: 100%; }
   .reading-nav-modes .reading-notebook-navigation > button { flex: 1 1 auto; min-height: 40px; }
-  .reading-nav-modes .reading-notebook-navigation .reading-theater-toggle { display: inline-flex; flex: 0 0 auto; margin-left: 2px; }
+  .reading-nav-modes .reading-notebook-navigation .reading-theater-toggle { display: none; }
   .reading-nav-actions .reader-read-state { flex: 0 1 auto; }
 }
 
@@ -100,6 +110,12 @@
 /* Keep the video and a readable transcript in the same desktop viewport. */
 .immersive-reader .reading-video-title, .immersive-reader .media-reader h1 { font-size: 20px; line-height: 1.45; margin-top: 12px; }
 .immersive-reader .reading-meta { margin: 6px 0 0; font-size: 12px; }
+.immersive-reader .watch-details { white-space: nowrap; }
+.immersive-reader .watch-details .bilingual-reader-heading { display: inline-flex; vertical-align: baseline; align-items: center; gap: 8px; max-width: 100%; }
+.immersive-reader .watch-details .bilingual-reader-heading > h1 { display: inline; max-width: min(70vw, 900px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.immersive-reader .watch-details .reading-meta { display: inline; margin: 0 0 0 12px; white-space: nowrap; }
+.immersive-reader .watch-details .reader-description { white-space: normal; }
+.immersive-reader .video-workspace .watch-details { margin-top: 0; }
 .immersive-reader .reading-nav :is(button, a) { scroll-margin-top: calc(var(--nav-height, 64px) + 12px); }
 .immersive-reader .reading-columns { margin-top: 14px; gap: 28px; }
 .online-video-stage, .immersive-reader .online-play, .immersive-reader .online-player .platform-video { width: 100%; height: auto; aspect-ratio: 16 / 9; background: #111; border-radius: 8px; }
@@ -108,6 +124,10 @@
 .online-video-stage > p { display: flex; align-items: center; gap: 8px; font-size: 13px; }
 .online-video-stage:has(video) { aspect-ratio: auto; background: transparent; }
 .online-video-stage .local-video { height: auto; max-height: var(--reader-player-height, 40dvh); }
+.immersive-reader .player-capture-stage,
+.immersive-reader .online-video-stage { width: 100%; min-width: 0; min-height: clamp(240px, 38vw, 520px); aspect-ratio: 16 / 9; background: #111; }
+.immersive-reader .player-capture-stage > .local-video,
+.immersive-reader .online-video-stage > .local-video { width: 100%; height: 100%; max-height: none; object-fit: contain; }
 .online-playback-error { padding-top: 10px; font-size: 12px; }
 .online-playback-error p { margin: 0 0 8px; }
 .reader-description { flex-shrink: 0; font-size: 12px; color: var(--muted); margin-top: 10px; }
@@ -173,21 +193,12 @@
 }
 @media (min-width:961px) and (max-height:740px) {
   .immersive-reader .subtitle-reader { position: relative; }
-  .immersive-reader .subtitle-reader-loaded[data-settings-open=true] .subtitle-settings-bar { min-height: 0; height: 0; }
-  .immersive-reader .subtitle-reader-loaded[data-settings-open=true] .subtitle-settings-bar h2 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-  .immersive-reader .subtitle-reader-loaded[data-settings-open=true] .subtitle-settings-toggle { position: absolute; top: 4px; right: 0; }
-  .immersive-reader .subtitle-reader-loaded[data-settings-open=true] .subtitle-heading { padding-right: 112px; }
-  .immersive-reader .subtitle-settings-bar,
-  .immersive-reader .subtitle-settings-toggle { min-height: 24px; }
-  .immersive-reader .subtitle-settings-panel { padding-block: 0 4px; }
-  .immersive-reader .subtitle-heading,
   .immersive-reader .subtitle-modes button,
-  .immersive-reader .subtitle-toolbar .subtitle-language select,
-  .immersive-reader .subtitle-toolbar .subtitle-search input { min-height: 28px; }
+  .immersive-reader .subtitle-reading-tools .subtitle-language select,
+  .immersive-reader .subtitle-reading-tools .subtitle-search input { min-height: 28px; }
   .immersive-reader .subtitle-modes button,
-  .immersive-reader .subtitle-toolbar .subtitle-language select,
-  .immersive-reader .subtitle-toolbar .subtitle-search input { padding-block: 4px; }
-  .immersive-reader .subtitle-toolbar { margin-top: 2px; }
+  .immersive-reader .subtitle-reading-tools .subtitle-language select,
+  .immersive-reader .subtitle-reading-tools .subtitle-search input { padding-block: 4px; }
   .immersive-reader .subtitle-study { padding: 4px 8px; margin-bottom: 4px; }
   .immersive-reader .subtitle-study > p { font-size: 14px; line-height: 1.5; margin-block: 2px; max-height: 3em; }
   .immersive-reader .subtitle-study-heading button { min-height: 24px; }
@@ -198,7 +209,6 @@
   .immersive-reader .subtitle-page .reading-nav { padding-block: 4px; }
   .immersive-reader .subtitle-page .reading-video-title { margin-top: 8px; }
   .immersive-reader .reading-columns:has(.subtitle-reader) { margin-top: 8px; }
-  .immersive-reader .subtitle-summary { margin-block: 2px; }
   .immersive-reader .subtitle-study-actions .icon-button { width: 30px; height: 30px; min-height: 30px; }
   .immersive-reader .player-heading-actions .icon-button { width: 32px; height: 32px; min-height: 32px; }
   .immersive-reader .reader-primary:has(.subtitle-reader) .player-heading { margin-bottom: 4px; }
@@ -209,7 +219,6 @@
   .immersive-reader .local-player .player-source-label { grid-column: 2; grid-row: 1; margin: 0; }
   .immersive-reader .local-player > .local-video, .immersive-reader .local-player > .player-error { grid-column: 1 / -1; }
   .immersive-reader .reader-primary .subtitle-reader { margin-top: 6px; padding-top: 4px; }
-  .immersive-reader .subtitle-toolbar { margin-top: 4px; }
   .immersive-reader .subtitle-study { row-gap: 2px; }
   .immersive-reader .reading-progress { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; align-items: center; }
   .immersive-reader .progress-header { grid-column: 1 / -1; grid-row: 1; }
@@ -366,8 +375,8 @@
   .immersive-reader .bilingual-reader-heading > h1 { font-size: 20px; }
   .immersive-reader .bilingual-reader-heading > .text-translation-control { display: inline-flex; margin: 0 0 0 4px; vertical-align: middle; }
   .immersive-reader .bilingual-reader-heading > p { margin-top: 4px; }
-  .immersive-reader .reading-progress[data-playing="true"]:not(:has(.progress-error)) { display: none; }
-  .immersive-reader .subtitle-reader[data-playing="true"][data-settings-open="false"] .subtitle-summary,
+  .immersive-reader .player-capture-stage,
+  .immersive-reader .online-video-stage { min-height: 0; }
   .immersive-reader .subtitle-reader[data-playing="true"][data-settings-open="false"] > .subtitle-note,
   .immersive-reader .subtitle-reader[data-playing="true"][data-settings-open="false"] > .subtitle-empty,
   .immersive-reader .subtitle-reader[data-playing="true"][data-settings-open="false"] > .transcription-controls { display: none; }

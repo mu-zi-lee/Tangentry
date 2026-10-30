@@ -14,6 +14,10 @@ test.afterEach(async ({ request }) => {
 
 for (const [id, url] of [['bilibili:BVnone000000', '/reader?video=BVnone000000'], ['youtube:Nocaps00001', '/reader?contentId=youtube%3ANocaps00001']]) {
  test(`${id}: manual transcription starts explicitly, saves timed text, and survives reopening`, async ({ page, request }) => {
+  const platform = id.split(':')[0]
+  await page.route(`**/api/subtitles/${platform}?**`, route => route.fulfill({ json: {
+   videoId: id.split(':')[1], part: 1, status: 'none', tracks: [], selectedLanguage: '',
+  } }))
   const savedURL='/api/saved-subtitles?contentId='+encodeURIComponent(id)
   for(const saved of (await (await request.get(savedURL)).json()).tracks) await request.delete('/api/saved-subtitles/'+encodeURIComponent(id)+'/'+saved.track.language+'?revision='+saved.revision)
   let starts=0; page.on('request',r=>{if(r.method()==='POST'&&r.url().endsWith('/api/transcription/jobs'))starts++})
@@ -32,8 +36,7 @@ for (const [id, url] of [['bilibili:BVnone000000', '/reader?video=BVnone000000']
 test('transcription failures show the failed stage and keep explicit retry controls',async({page})=>{
  await page.route('**/api/transcription/jobs?*',route=>route.fulfill({json:{job:{id:'explicit-failure-fixture',contentId:'bilibili:BVnone000000',state:'failed',preview:false,failedStage:'fetching',errorCode:'audio_download',error:'yt-dlp 未能下载完整音轨，请检查网络，或重新获取媒体连接后重试。'}}}))
  await page.goto('/reader?video=BVnone000000')
- await openSubtitleSettings(page)
- await page.getByText('字幕选项',{exact:true}).click()
+ await openSubtitleSettings(page, 'transcription')
  await expect(page.getByRole('status').filter({hasText:'暂存音频：yt-dlp 未能下载完整音轨'})).toBeVisible()
  await expect(page.getByRole('button',{name:'开始转录视频',exact:true})).toBeEnabled()
  await expect(page.getByRole('button',{name:'取消转写',exact:true})).toHaveCount(0)

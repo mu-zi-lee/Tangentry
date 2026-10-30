@@ -1,4 +1,6 @@
 .reading-progress { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 12px; font-size: 12px; color: var(--muted); }
+.reader-primary > .reading-progress:has(~ .online-player),
+.reader-primary > .reading-progress:has(~ .local-player) { margin: 0 0 10px; padding-top: 0; border-top: 0; }
 .progress-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .progress-header > div { display: flex; align-items: center; gap: 8px; font-variant-numeric: tabular-nums; }
 .progress-header svg { flex-shrink: 0; }

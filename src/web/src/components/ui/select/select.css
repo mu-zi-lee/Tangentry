@@ -12,3 +12,4 @@
 }
 :where(.ui-select:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
 :where(.ui-select:disabled) { opacity: .45; cursor: not-allowed; }
+:where(.ui-select option, .ui-select optgroup) { color: var(--ink); background-color: var(--card); }

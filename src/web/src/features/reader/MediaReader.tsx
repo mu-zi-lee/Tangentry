@@ -12,7 +12,6 @@ import { FullTextArticle } from './FullTextArticle'
 import { ImageAlbum } from './ImageAlbum'
 import { IframePlayer } from './IframePlayer'
 import type { PlaybackHandle } from '../../shared/media/types'
-import { mediaLabel } from '../../shared/ui/ContentCard'
 import { BilingualTitle } from '../ai/TextTranslation'
 import { ReaderActionsSlot, ReaderNavigationSlot } from '../../shared/reader/ReaderActions'
 import { useNativePlaybackClock } from '../player/useNativePlaybackClock'
@@ -24,8 +23,8 @@ import { AudioControls } from './AudioControls'
 import { ReadingNotebook } from '../../shared/reader/ReadingNotebook'
 import { XiaohongshuSourceForm } from './XiaohongshuSourceForm'
 import { PodcastArtwork } from '../../shared/ui/PodcastArtwork'
-import { podcastAudioSource } from '../../shared/media/audioSource'
 import { ReaderPublication } from './ReaderPublication'
+import { podcastAudioSource } from '../../shared/media/audioSource'
 import { PaperInfoCard } from '../documents/PaperInfoCard'
 import { DiscussionReader } from './DiscussionReader'
 import { DiscussionFallback } from './DiscussionFallback'
@@ -284,14 +283,14 @@ export function MediaReader({ id, initialItem, jobs, jobsLoading = false, video,
   const audioLayout = item?.kind === 'audio'
   const heading = <>{item ? <BilingualTitle heading contentId={item.id} text={item.title}/> : <h1>内容阅读</h1>}{item && <p className="reading-meta">{item.authorId && onCreator && creatorViewSupported(item.platform) ? <Button variant="quiet" type="button" className="reader-author-link" aria-label={`查看 ${item.author || '未知作者'} 的最近内容`} title={`查看 ${item.author || '未知作者'} 的最近内容`} onClick={() => onCreator(item.platform, item.authorId)}>{item.author || '未知作者'}</Button> : item.author || '未知作者'} · <ReaderPublication key={item.id} item={item}/></p>}</>
   const player = video
-  const videoDetails = <div className="watch-details">{heading}{description}</div>
+  const videoDetails = <div className="watch-details">{description}</div>
   const onlineVideoRequired = Boolean(item?.kind === 'video' && !video && !local && ((item.platform === 'rss' || item.platform === 'xiaohongshu') && item.mediaUrl || item.platform === 'douyin'))
   const compatibilityMessage = item?.platform === 'douyin' ? (douyinPlayback.error || '正在准备抖音视频…') : compatibility.message
   const douyinDetails = douyinPlayback.diagnostics.length > 0 && <details className="douyin-playback-details"><summary>详情</summary><ol>{douyinPlayback.diagnostics.map((stage, index) => <li key={`${stage.stage}-${index}`}><div className="douyin-diagnostic-heading"><strong>{diagnosticStageName(stage.stage)}</strong><span data-outcome={stage.outcome}>{diagnosticOutcomeName(stage.outcome)}</span></div>{diagnosticStageFacts(stage).length > 0 && <p>{diagnosticStageFacts(stage).join(' · ')}</p>}</li>)}</ol></details>
-  const audioSource = item?.kind === 'audio' ? podcastAudioSource(item.platform, item.mediaUrl) : undefined
   const onlineSource = item?.platform === 'douyin' ? douyinPlayback.source : (compatibility.source || item?.mediaUrl || '')
+  const audioSource = item?.kind === 'audio' ? podcastAudioSource(item.platform, item.mediaUrl) : undefined
   return <section className={`media-reader${item?.kind === 'article' ? ' article-workspace' : ''}${item?.kind === 'pdf' ? ' document-workspace' : ''}${videoLayout ? ' video-workspace' : ''}${audioLayout ? ' audio-workspace' : ''}`}>
-    <div className="reading-nav"><Button variant="secondary" className="button button-secondary" title="返回列表" onClick={onReturn}><ArrowLeft size={16}/>返回列表</Button><span>{item?mediaLabel(item):'内容阅读'}</span><ReaderNavigationSlot/><ReaderActionsSlot/>{item?.platform==='xiaohongshu'&&<Button variant="quiet" iconOnly className="icon-button" aria-label="刷新笔记详情" title="刷新笔记详情" disabled={detailLoading} onClick={refreshDetails}><RotateCw size={16}/></Button>}{item && <a className="button button-secondary reader-original-link" aria-label={item.kind==='pdf'?'打开 PDF 原文件':'打开原内容'} title={item.kind==='pdf'?'打开 PDF 原文件':'打开原内容'} href={item.kind==='pdf' ? (item.platform === 'pdf' ? '/api/documents/'+item.platformId+'/file' : item.mediaUrl || item.url) : item.url} target="_blank" rel="noopener noreferrer"><span className="visually-hidden">{item.kind==='pdf'?'打开 PDF 原文件':'打开原内容'}</span><ExternalLink size={15} aria-hidden="true"/></a>}</div>
+    <div className="reading-nav"><Button variant="secondary" className="button button-secondary" title="返回列表" onClick={onReturn}><ArrowLeft size={16}/>返回列表</Button>{(videoLayout || audioLayout) && <div className="reading-nav-title">{heading}</div>}<ReaderNavigationSlot/><ReaderActionsSlot/>{item?.platform==='xiaohongshu'&&<Button variant="quiet" iconOnly className="icon-button" aria-label="刷新笔记详情" title="刷新笔记详情" disabled={detailLoading} onClick={refreshDetails}><RotateCw size={16}/></Button>}{item && <a className="button button-secondary reader-original-link" aria-label={item.kind==='pdf'?'打开 PDF 原文件':'打开原内容'} title={item.kind==='pdf'?'打开 PDF 原文件':'打开原内容'} href={item.kind==='pdf' ? (item.platform === 'pdf' ? '/api/documents/'+item.platformId+'/file' : item.mediaUrl || item.url) : item.url} target="_blank" rel="noopener noreferrer"><span className="visually-hidden">{item.kind==='pdf'?'打开 PDF 原文件':'打开原内容'}</span><ExternalLink size={15} aria-hidden="true"/></a>}</div>
     {!videoLayout && !audioLayout && heading}
     {item?.paper && <PaperInfoCard paper={item.paper}/>}
     {error&&<div className={`error-panel${social?.[0]==='xiaohongshu'?' reader-source-error':''}`} role="alert"><p>{error}</p>{localReadFailed?<div className="reader-source-error-actions"><Button variant="secondary" className="button button-secondary" onClick={retryLocalRead}><RotateCw size={14}/>重新读取</Button></div>:social?.[0]==='xiaohongshu'?<div className="reader-source-error-actions"><Button variant="secondary" className="button button-secondary" onClick={refreshDetails}>重新读取</Button><Button variant="secondary" className="button button-secondary" onClick={()=>setSourceEditing(true)}>更新链接</Button><a className="button button-secondary" href="/tools#accounts">检查登录</a></div>:<div className="reader-source-error-actions"><Button variant="secondary" className="button button-secondary" onClick={refreshDetails}>重新读取</Button>{errorRequiresVerification && id.startsWith('linuxdo:') && capabilities.platformWebViewLogin && <Button variant="secondary" className="button button-secondary" onClick={() => { void verifyLinuxdo() }}>重新验证</Button>}</div>}</div>}
@@ -300,7 +299,7 @@ export function MediaReader({ id, initialItem, jobs, jobsLoading = false, video,
     }}/>}
     {!item&&!error&&<p role="status" className="field-hint">正在读取内容…</p>}
       <ReadingNotebook enabled={Boolean(notes || insights || reading)} ai={insights} contentLabel={videoLayout ? '字幕与正文' : audioLayout ? '逐字稿与正文' : '正文'}><div className="reader-primary" ref={body} onMouseUp={captureQuote} onKeyUp={captureQuote}>{videoLayout && videoDetails}{player}{(!item||item.kind==='video'&&Boolean(video))&&reading}
-      {audioLayout && item && <div className="listen-heading"><PodcastArtwork key={item.id + item.thumbnailUrl} item={item} className="listen-artwork" resolveMissing={Boolean(item.mediaUrl)}/><div>{heading}</div></div>}
+      {audioLayout && item && <div className="listen-heading"><PodcastArtwork key={item.id + item.thumbnailUrl} item={item} className="listen-artwork" resolveMissing={Boolean(item.mediaUrl)}/></div>}
       {detailLoading && item?.platform === 'xiaohongshu' && <p className="field-hint" role="status">正在读取笔记正文与图片…</p>}
       {detailError && item?.platform === 'xiaohongshu' && <div className="error-panel reader-source-error" role="alert"><p>{detailError}</p><div className="reader-source-error-actions"><Button variant="secondary" className="button button-secondary" onClick={refreshDetails}><RotateCw size={14}/>重新获取笔记</Button><Button variant="secondary" className="button button-secondary" onClick={()=>setSourceEditing(true)}>更新链接</Button><a className="button button-secondary" href="/tools#accounts">检查登录</a></div></div>}
       {item && (item.kind==='pdf'?((item.platform==='pdf' || item.paper?.documentId)?<PDFReader id={item.paper?.documentId ?? item.platformId} contentId={item.id} paper={item.paper} {...pdfAnnotations}/>:item.paper?.pdfUrl || item.mediaUrl ? <FeedDocumentReader url={item.paper?.pdfUrl ?? item.mediaUrl!} annotations={pdfAnnotations}/>:<p className="field-hint">来源没有提供 PDF 文件地址。</p>):<>

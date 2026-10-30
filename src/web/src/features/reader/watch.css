@@ -27,6 +27,7 @@
 .experience-reading .video-workspace .local-video { display: block; width: 100%; max-height: min(60dvh, 640px); }
 .experience-reading .video-workspace :is(.online-video-stage, .online-play, .online-player .platform-video, .online-video-stage .local-video) { max-height: none; }
 .experience-reading .video-workspace .watch-details { margin-block: 0 18px; min-width: 0; }
+.experience-reading .video-workspace .watch-details { order: 0; }
 .experience-reading .video-workspace .bilingual-reader-heading { margin: 0; }
 .experience-reading .video-workspace .bilingual-reader-heading > h1 { font-size: 21px; font-weight: 600; line-height: 1.5; }
 .experience-reading .video-workspace .reading-meta { font-size: 13px; margin-top: 8px; }
@@ -40,11 +41,7 @@
 .experience-reading .video-workspace .notes-workspace { max-height: calc(100dvh - var(--nav-height) - 40px); }
 .experience-reading .video-workspace .reading-notebook-v2 > .reading-notebook-navigation { display: flex; align-items: center; gap: 8px; grid-column: 1 / -1; border-bottom: 1px solid var(--line); padding-bottom: 8px; margin: 0; }
 .experience-reading .video-workspace .reading-columns[data-theater=true] { grid-template-columns: minmax(0, 1fr); }
-.video-workspace [data-theater=true] > .reading-notes,
-.video-workspace [data-theater=true] > .reader-primary > .subtitle-reader,
-.video-workspace [data-theater=true] > .reader-primary > .podcast-transcript { display: none; }
-.experience-reading .video-workspace [data-theater=true] .online-player { max-width: 1100px; margin-inline: auto; }
-.experience-reading .video-workspace [data-theater=true] .local-video { max-height: 72dvh; }
+.video-workspace [data-theater=true] > .reading-notes { display: none; }
 @media (min-width: 961px) {
   .experience-reading .video-workspace .reading-columns { grid-template-columns: minmax(0, 1fr) minmax(360px, clamp(380px, 25vw, 480px)); gap: 16px 24px; margin-top: 12px; }
   .experience-reading .video-workspace .reader-primary > .online-player,
@@ -56,9 +53,6 @@
   .experience-reading .video-workspace .watch-details .reader-description { margin-top: 10px; padding: 8px 12px; }
   .experience-reading .video-workspace .reading-notebook-navigation { padding-bottom: 6px; }
   .experience-reading .video-workspace .reading-columns[data-theater=true] { grid-template-columns: minmax(0, 1fr); }
-  .experience-reading .video-workspace [data-theater=true] .reader-primary > .online-player,
-  .experience-reading .video-workspace [data-theater=true] .reader-primary > .local-player { width: 100%; max-width: 1100px; }
-  .experience-reading .video-workspace [data-theater=true] .local-video { max-height: 72dvh; }
 }
 @media (max-width: 1100px) {
   .experience-reading { --sidebar-width: 72px; }
@@ -89,6 +83,10 @@
   .experience-reading .video-workspace .reader-primary > .podcast-transcript { order: 2; }
   .experience-reading .video-workspace .bilingual-reader-heading > h1 { font-size: 19px; }
   .experience-reading .video-workspace .reading-meta { font-size: 12px; }
+  .experience-reading .video-workspace .watch-details { white-space: normal; }
+  .experience-reading .video-workspace .watch-details .bilingual-reader-heading { display: flex; }
+  .experience-reading .video-workspace .watch-details .bilingual-reader-heading > h1 { max-width: 100%; }
+  .experience-reading .video-workspace .watch-details .reading-meta { display: block; margin: 4px 0 0; }
   .experience-reading .video-workspace .subtitle-cues { --watch-transcript-height: 45dvh; min-height: 160px; }
   .experience-reading .video-workspace .reading-notes { padding-top: 16px; }
   .experience-reading .video-workspace .reading-notebook-v2[data-notebook-panel=content] > .reading-notes,

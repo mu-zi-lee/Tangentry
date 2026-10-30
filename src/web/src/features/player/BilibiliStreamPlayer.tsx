@@ -163,7 +163,7 @@ export const BilibiliStreamPlayer = forwardRef<PlaybackHandle, {
         onTimeUpdate={() => { report(); checkpoint() }} onSeeking={() => { engaged.current = true; clearBufferTimer(); report() }} onSeeked={() => { report(); checkpoint(true) }}
         onPlay={() => { engaged.current = true; onPlaying?.(true); checkpoint(true) }}
         onPause={() => { clearBufferTimer(); onPlaying?.(false); report(); checkpoint(true) }} onEnded={() => { clearBufferTimer(); onPlaying?.(false); report(); checkpoint(true); onEnded?.() }}
-        onError={() => failPlayback(mediaFailureReason(video.current))}>{captionURL&&captions&&<track key={captionURL} kind="captions" src={captionURL} srcLang={captions.language==='ai-zh'?'zh':captions.language} label={captions.label} default/>}</video> : <p role="status"><LoaderCircle size={18} className="spin"/>{error || '正在连接视频…'}</p>}
+        onError={() => failPlayback(mediaFailureReason(video.current))}>{captionURL&&captions&&<track key={captionURL} kind="captions" src={captionURL} srcLang={captions.language==='ai-zh'?'zh':captions.language} label={captions.label}/>}</video> : <p role="status"><LoaderCircle size={18} className="spin"/>{error || '正在连接视频…'}</p>}
     </div>
     <Button variant="quiet" iconOnly className="icon-button online-player-switch" aria-label="使用 B站官方播放器" title="使用 B站官方播放器" onClick={() => { resume.current = getPosition() ?? resume.current; setEmbedded(true) }}><MonitorPlay size={16}/></Button>
   </div>
