@@ -1,1 +1,0 @@
-{"protocol":"openai","baseUrl":"https://ai-fixture.example/v1","model":"fixture-bilingual","enabledModels":["fixture-bilingual"],"availableModels":["fixture-bilingual"],"summaryTemplate":{"system":"","user":""},"translationTemplate":{"system":"","user":""},"chatTemplate":{"system":"","user":""},"key":"","revision":2}
