@@ -1,5 +1,5 @@
-import { Button, Select } from '../components/ui'
-import { AlertCircle, ArrowRight, Bookmark, Check, Compass, Grid2X2, List, Plus } from 'lucide-react'
+import { Button, Input, Select } from '../components/ui'
+import { AlertCircle, ArrowRight, Bookmark, Check, Compass, Grid2X2, List, RefreshCw, Search } from 'lucide-react'
 import { lazy, useEffect, useMemo, useRef, useState } from 'react'
 import { ReaderActionsProvider } from '../shared/reader/ReaderActions'
 import { DiscoveryGallery } from '../features/discovery/DiscoveryGallery'
@@ -10,7 +10,7 @@ import type { LibrarySource } from '../features/favorites/FavoriteSyncPanel'
 import { useFavoriteSync } from '../features/favorites/useFavoriteSync'
 import { PageHeader } from '../shared/ui/PageHeader'
 import { useViewingHistory } from '../features/history/useViewingHistory'
-import { ViewingHistoryPage } from '../features/history/ViewingHistoryPage'
+import { ViewingHistoryPage, ViewingHistoryToolbar } from '../features/history/ViewingHistoryPage'
 import { UnifiedSearchPage } from '../features/search/UnifiedSearchPage'
 import { ModernGalleryCard } from '../shared/ui/ModernGalleryCard'
 import { PaperCard } from '../features/documents/PaperCard'
@@ -19,7 +19,7 @@ import { useFeed } from '../features/discovery/useFeed'
 import { useLibrary } from '../features/library/useLibrary'
 import { useGlobalNotes } from '../features/notes/useGlobalNotes'
 import { supportsProgress, useProgressOverview } from '../features/progress/useProgressOverview'
-import { CardProgress, ProgressOverviewControls } from '../features/progress/ProgressOverview'
+import { CardProgress } from '../features/progress/ProgressOverview'
 import { useDownloads } from '../features/downloads/useDownloads'
 import { useReadState, supportsReadState } from '../features/readstate/useReadState'
 import { useSubscriptionInbox } from '../features/subscriptions/useSubscriptionInbox'
@@ -29,7 +29,6 @@ import { useSubscriptions } from '../features/subscriptions/useSubscriptions'
 import type { ContentItem, DownloadJob, ReadingNote } from '../shared/api/types'
 import { ContentCard } from '../shared/ui/ContentCard'
 import { CardCollection } from '../shared/ui/CardCollection'
-import { MediaFilters } from '../shared/ui/MediaFilters'
 import { ExperienceShell } from './ExperienceShell'
 import { creatorReturnFromPath, readerPath, readerPathForItem } from './navigation'
 import { BackToTop } from '../shared/ui/BackToTop'
@@ -45,8 +44,6 @@ import { RestoreViewport, selectedSavedViewFromURL, useAppNavigation } from './u
 import { useCollectionView } from './useCollectionView'
 import type { ContentView } from './useCollectionView'
 import { UpdaterNotice } from '../features/settings/UpdaterNotice'
-
-const kindNames: Record<string, string> = { video: '视频', article: '图文', image: '短图文', audio: '音频', pdf: 'PDF' }
 
 const GlobalNotesPage = lazy(() => import('../features/notes/GlobalNotesPage').then(module => ({ default: module.GlobalNotesPage })))
 const DownloadsPage = lazy(() => import('../features/downloads/DownloadsPage').then(module => ({ default: module.DownloadsPage })))
@@ -64,6 +61,8 @@ export function App() {
   const discovery = useFeed()
   const library = useLibrary()
   const viewingHistory = useViewingHistory()
+  const [historyQuery, setHistoryQuery] = useState('')
+  const [confirmClearHistory, setConfirmClearHistory] = useState(false)
   const downloads = useDownloads()
   const input = useRef<HTMLInputElement>(null)
   const navigation = useAppNavigation(input)
@@ -144,8 +143,8 @@ export function App() {
   const libraryIDs = useMemo(() => library.items.filter(item => item.kind === 'video' || item.kind === 'audio').map(item => item.id), [library.items])
   const progressOverview = useProgressOverview(libraryIDs, view === 'library' && !library.loading && !library.error)
   const savedIDs = useMemo(() => new Set(library.items.map(item => item.id)), [library.items])
-  const collection = useCollectionView({ view, libraryItems: library.items, discoveryItems: discovery.feed?.items ?? [], progressOverview })
-  const { contentView, libraryKind, setLibraryKind, filters, setFilters, layouts, setLayouts, sorts, setSorts, sourceItems, items } = collection
+  const collection = useCollectionView({ view, libraryItems: library.items, discoveryItems: discovery.feed?.items ?? [] })
+  const { contentView, filters, setFilters, layouts, setLayouts, sorts, setSorts, sourceItems, items } = collection
   const loading = contentView === 'library' ? library.loading : discovery.loading
   const error = contentView === 'library' ? library.error : discovery.error
   const savingUnavailable = library.loading || Boolean(library.error)
@@ -323,13 +322,21 @@ export function App() {
         navigate('reader', true, lastReader.path)
       }}
       onDismissResume={() => setLastReader(null)}
+      toolbar={view === 'library' ? <div className="library-toolbar">
+        <LibrarySources favorites={favorites} mode={libraryMode} localCount={library.items.length} onLocal={() => setLibraryMode('local')} onFolder={id => { favorites.setSelected(id); setLibraryMode('folder') }} onSetup={() => setLibraryMode('setup')}/>
+        {showLocal && <div className="library-toolbar-controls">
+          <label className="library-search"><Search size={15} aria-hidden="true"/><Input type="search" aria-label="搜索当前列表" placeholder="搜索收藏" value={filters.library} onChange={event => setFilters(current => ({ ...current, library: event.target.value }))}/></label>
+          <Button variant="quiet" iconOnly type="button" className="icon-button" aria-label="刷新收藏" title="刷新收藏" disabled={library.loading || progressOverview.loading} onClick={() => { void library.reload(); void progressOverview.reload() }}><RefreshCw size={16} className={library.loading || progressOverview.loading ? 'spin' : undefined}/></Button>
+          <div className="layout-switch segmented" role="group" aria-label="布局选择"><Button variant="quiet" type="button" onClick={() => setLayouts(current => ({ ...current, library: 'grid' }))} aria-label="画廊布局" title="画廊布局" aria-pressed={layouts.library === 'grid'}><Grid2X2 size={15}/></Button><Button variant="quiet" type="button" onClick={() => setLayouts(current => ({ ...current, library: 'list' }))} aria-label="列表布局" title="列表布局" aria-pressed={layouts.library === 'list'}><List size={16}/></Button></div>
+        </div>}
+      </div> : view === 'history' ? <ViewingHistoryToolbar history={viewingHistory} query={historyQuery} onQuery={setHistoryQuery} onClear={() => setConfirmClearHistory(true)}/> : undefined}
     >
     <ReaderActionsProvider><main id="main" className={`main-workspace ${view === 'reader' ? 'immersive-reader' : ''}`} tabIndex={-1}>
       <div className="content-container">
       <div className="active-page-container">
       <PageLoadBoundary key={`page-${view}`}>
       {view === 'reader' && <AppReaderActions item={cachedReadingItem ?? null} saved={cachedReadingItem ? savedIDs.has(cachedReadingItem.id) : false} savingUnavailable={savingUnavailable} libraryPending={library.pending} library={library} downloads={downloads} readState={readStates} readingID={readingID} supportsReadState={supportsReadState(readingID)} onDownload={onDownload} onNotice={toast.success}/>}
-      {view === 'history' ? <ViewingHistoryPage history={viewingHistory} onRead={openReader} onSave={item => void library.toggle(item)} savedIDs={savedIDs} pending={library.pending} unavailable={savingUnavailable}/>
+      {view === 'history' ? <ViewingHistoryPage history={viewingHistory} query={historyQuery} onQuery={setHistoryQuery} confirmClear={confirmClearHistory} onCancelClear={() => setConfirmClearHistory(false)} onRead={openReader} onSave={item => void library.toggle(item)} savedIDs={savedIDs} pending={library.pending} unavailable={savingUnavailable}/>
       : view === 'discovery' ? <DiscoveryGallery active={discoveryActive} query={galleryQuery} onClearQuery={() => updateDiscoveryQuery('')} onQueryChange={setGalleryQuery} onRouteChange={path => navigate('discovery', false, path)} notice={library.notice} noticeError={library.noticeError} gallery={gallery} savedIDs={savedIDs} pending={library.pending} savingUnavailable={savingUnavailable} onSave={item => void library.toggle(item)} onRead={openReader} onDownload={onDownload} onCreator={openCreator} onSearch={focusSource} onSubscriptions={() => navigate('subscriptions')} onSettings={() => navigate('tools', true, '/tools#accounts')} onBilibili={openBilibili} />
       : view === 'bilibili' ? <BilibiliPage browser={bilibili} savedIDs={savedIDs} pending={library.pending} unavailable={savingUnavailable} notice={library.notice} noticeError={library.noticeError} onRead={openReader} onSave={item => void library.toggle(item)} onReturn={() => returnToPath(bilibiliReturnPath.current, 'discovery')} onLogin={() => navigate('tools', true, '/tools#accounts')} onLibrary={() => navigate('library')} />
       : view === 'notes' ? <GlobalNotesPage browser={globalNotes} savedItems={library.items} onRead={openNoteReader} /> : view === 'reader' ? (
@@ -337,28 +344,23 @@ export function App() {
         : readerQuery.includes(':') ? (library.loading && !cachedReadingItem ? <p className="field-hint" role="status">正在读取本机内容…</p> : <ContentReadingWorkspace key={readerQuery} id={readerQuery} linkedNoteId={readerNoteId} initialItem={cachedReadingItem} jobs={downloads.jobs} jobsLoading={downloads.loading} onItem={setReadingItem} onCreator={openCreator} onReturn={returnFromReader} />)
         : <ReadingWorkspace key={readerQuery} query={readerQuery} linkedNoteId={readerNoteId} initialItem={cachedReadingItem} onReturn={returnFromReader} sources={localVideos} loading={downloads.loading} error={downloads.error} onDownloads={() => navigate('downloads')} onRefresh={() => void downloads.reload()} />
       ) : view === 'subscriptions' ? <SubscriptionsPage inbox={inbox} selectedViewID={subscriptionView} onSelectView={id=>{inbox.selectSavedView();skipDefaultSubscriptionView.current=false;setSubscriptionView(id);setSubscriptionMode('history');navigate('subscriptions',false,`/subscriptions?view=${encodeURIComponent(id)}`)}} onApplyFilters={applyInboxFilters} mode={subscriptionMode} onMode={mode=>{skipDefaultSubscriptionView.current=false;setSubscriptionView('');setSubscriptionMode(mode);navigate('subscriptions',false,mode==='history'?'/subscriptions?mode=history':mode==='health'?'/subscriptions#health':'/subscriptions');if(mode==='history'&&inbox.confirmed)void inbox.reload()}} views={savedViews.views} onSaveView={async (name,filters)=>{const definition={version:1,filters};const existing=savedViews.views.find(item=>item.id===subscriptionView&&!item.builtin);if(existing){await savedViews.update(existing.id,{name,definition});await inbox.updateSavedView(filters)}else{const saved=await savedViews.create(name,definition);inbox.selectSavedView();setSubscriptionView(saved.id);setSubscriptionMode('history');navigate('subscriptions',false,`/subscriptions?view=${encodeURIComponent(saved.id)}`)}}} onUpdateView={(id,edit)=>void savedViews.update(id,edit)} onDeleteView={id=>{void savedViews.remove(id);if(id===subscriptionView){inbox.selectSavedView();setSubscriptionView('');navigate('subscriptions',false,'/subscriptions?mode=history')}}} readStates={readStates} readFilter={subscriptionReadFilter} onReadFilter={updateSubscriptionReadFilter} subscriptions={subscriptions} savedIDs={savedIDs} savingUnavailable={savingUnavailable} savingIDs={library.pending} onSave={item => void library.toggle(item)} onRead={openReader} filter={subscriptionFilter} onFilter={updateSubscriptionFilter} saveNotice={library.notice} saveError={library.noticeError} /> : view === 'search' ? <UnifiedSearchPage initialQuery={new URLSearchParams(location.search).get('q') ?? ''} routeSearch={location.search} savedIDs={savedIDs} pending={library.pending} onRead={openReader} onSave={item => void library.toggle(item)} onCreator={openCreator} onReturnCreator={() => { const target = creatorReturnFromPath(creatorReturnPath.current); returnToPath(target.path, target.view) }} onReturnCreatorLabel={creatorReturnFromPath(creatorReturnPath.current).label} onRouteChange={path => navigate('search', false, path)} onSubscribe={(platform, authorID) => { if (platform === 'bilibili' || platform === 'youtube') void subscriptions.create(authorID, '', platform) }} /> : view === 'downloads' ? <DownloadsPage downloads={downloads} onRead={openDownloadReader} intent={downloadIntent} /> : view === 'tools' ? <ToolsPage downloads={downloads} columns={galleryLayout.columns} onColumns={galleryLayout.setColumns} onCookieChanged={platform => { gallery.invalidate(platform); if (platform === 'bilibili') bilibili.invalidate() }} onYouTubeFeed={feed => gallery.accept('youtube', feed)} onDiscover={() => navigate('discovery')} /> : <>
-        {view === 'library' ? <PageHeader title="收藏" summary={library.loading ? '正在读取本机收藏…' : library.items.length ? `${library.items.length} 条收藏${(() => { const kinds = Object.entries(kindNames).map(([kind, name]) => [name, library.items.filter(item => item.kind === kind).length] as const).filter(([, count]) => count > 0); return kinds.length > 1 ? ' · ' + kinds.map(([name, count]) => `${name} ${count}`).join(' · ') : '' })()}` : '把想继续看、听、读的内容留在本机。'} actions={<Button variant="primary" className="button button-primary collection-add" onClick={() => navigate('search')}><Plus size={16}/><span>添加内容</span></Button>}/>
-        : <PageHeader title="添加内容" summary="粘贴视频、播客、文章或 RSS 链接，也可以导入本机 PDF。识别后可直接阅读或收藏。"/>}
-        {view === 'library' && <LibrarySources favorites={favorites} mode={libraryMode} localCount={library.items.length} onLocal={() => setLibraryMode('local')} onFolder={id => { favorites.setSelected(id); setLibraryMode('folder') }} onSetup={() => setLibraryMode('setup')}/>}
+        {view !== 'library' && <PageHeader title="添加内容" summary="粘贴视频、播客、文章或 RSS 链接，也可以导入本机 PDF。识别后可直接阅读或收藏。"/>}
         {view === 'library' && libraryMode === 'setup' && <FavoriteSetup favorites={favorites} onFollowed={() => setLibraryMode('folder')}/>}
         {view === 'library' && libraryMode === 'folder' && <FavoriteFolder favorites={favorites} savedIDs={savedIDs} savingUnavailable={savingUnavailable} savingIDs={library.pending} onSave={item => void library.toggle(item)} onRead={openReader} onDownload={onDownload} onRemoved={() => setLibraryMode('local')}/>}
         {!showLocal && library.notice && <p className="inline-feedback collection-save-feedback" role={library.noticeError ? 'alert' : 'status'}>{library.noticeError ? <AlertCircle size={17} /> : <Check size={17} />}{library.notice}</p>}
         {showLocal && <>
         {error && <div className="error-panel" role="alert"><AlertCircle size={19} /><div><strong>这次没能完成</strong><p>{error}</p></div><Button variant="secondary" className="button button-secondary" onClick={() => view === 'library' ? void library.reload() : void discovery.retry()} disabled={loading}>重试</Button></div>}
-        {(view === 'library' || sourceItems.length > 0) && <div className={`collection-toolbar ${view === 'library' ? 'library-toolbar' : 'results-toolbar'}`}>
-          {view === 'library' ? <MediaFilters value={libraryKind} onChange={setLibraryKind} counts={Object.fromEntries(['all', 'video', 'article', 'image', 'audio', 'pdf'].map(kind => [kind, library.items.filter(item => kind === 'all' || item.kind === kind).length]))}/>
-            : <div className="results-heading">{discovery.feed ? <><span className="status-dot" aria-hidden="true"/><strong>{discovery.feed.sourceTitle || '获取结果'}</strong><span>已加载 {discovery.feed.items.length} 条{discovery.feed.total > discovery.feed.items.length ? `，共 ${discovery.feed.total} 条` : ''}</span></> : <strong>获取结果</strong>}</div>}
+        {view !== 'library' && sourceItems.length > 0 && <div className="collection-toolbar results-toolbar">
+          <div className="results-heading">{discovery.feed ? <><span className="status-dot" aria-hidden="true"/><strong>{discovery.feed.sourceTitle || '获取结果'}</strong><span>已加载 {discovery.feed.items.length} 条{discovery.feed.total > discovery.feed.items.length ? `，共 ${discovery.feed.total} 条` : ''}</span></> : <strong>获取结果</strong>}</div>
           <div className="collection-controls">
-            {view === 'library' && <ProgressOverviewControls overview={progressOverview} search={filters.library} onSearch={value => setFilters(current => ({ ...current, library: value }))} />}
-            <Select className="sort-control" aria-label="内容排序" value={sorts[contentView]} onChange={event => setSorts(current => ({ ...current, [contentView]: event.target.value as 'default' | 'oldest' }))}><option value="default">{view === 'library' ? '最近收藏' : '最新发布'}</option><option value="oldest">从早到晚</option></Select>
+            <Select className="sort-control" aria-label="内容排序" value={sorts[contentView]} onChange={event => setSorts(current => ({ ...current, [contentView]: event.target.value as 'default' | 'oldest' }))}><option value="default">最新发布</option><option value="oldest">从早到晚</option></Select>
             <div className="layout-switch segmented" role="group" aria-label="布局选择"><Button variant="quiet" type="button" onClick={() => setLayouts(current => ({ ...current, [contentView]: 'grid' }))} aria-label="画廊布局" title="画廊布局" aria-pressed={layouts[contentView] === 'grid'}><Grid2X2 size={15} /></Button><Button variant="quiet" type="button" onClick={() => setLayouts(current => ({ ...current, [contentView]: 'list' }))} aria-label="列表布局" title="列表布局" aria-pressed={layouts[contentView] === 'list'}><List size={16} /></Button></div>
           </div>
         </div>}
         {library.notice && <p className="inline-feedback collection-save-feedback" role={library.noticeError ? 'alert' : 'status'}>{library.noticeError ? <AlertCircle size={17} /> : <Check size={17} />}{library.notice}</p>}
-        {items.length > 0 && <CardCollection masonry={layouts[contentView] === 'grid' && libraryKind !== 'video' && libraryKind !== 'audio'} data-media={view === 'library' ? libraryKind : 'all'} className={`content-collection ${layouts[contentView] === 'list' ? 'list-layout' : 'gallery-layout modern-gallery'}`} aria-label={view === 'library' ? '收藏内容' : '发现内容'}>{items.map(renderCollectionItem)}</CardCollection>}
+        {items.length > 0 && <CardCollection masonry={layouts[contentView] === 'grid'} data-media="all" className={`content-collection ${layouts[contentView] === 'list' ? 'list-layout' : 'gallery-layout modern-gallery'}`} aria-label={view === 'library' ? '收藏内容' : '发现内容'}>{items.map(renderCollectionItem)}</CardCollection>}
         {loading && sourceItems.length === 0 && (view === 'library' || discovery.feed || discovery.loading) && <SkeletonGallery count={layouts[contentView] === 'grid' ? 8 : 6} />}
-        {!loading && !error && items.length === 0 && view === 'library' && progressOverview.effectiveFilter !== 'all' && <section className="empty-state"><h2>没有符合当前进度的收藏</h2><p>进度与标题、作者搜索共同筛选；可以查看全部进度或调整关键词。</p><Button variant="secondary" className="button button-secondary" onClick={() => progressOverview.setFilter('all')}>查看全部进度</Button></section>}
-        {!loading && !error && items.length === 0 && !(view === 'library' && progressOverview.effectiveFilter !== 'all') && (view === 'library' || discovery.feed || filters.search) && <section className="empty-state"><div className="empty-art" aria-hidden="true">{filters[view as ContentView] ? <Compass size={26} strokeWidth={1.4} /> : view === 'library' ? <Bookmark size={26} strokeWidth={1.4} /> : <BrandMark className="empty-brand"/>}</div><h2>{filters[view as ContentView] ? '没有找到匹配的内容' : view === 'library' ? libraryKind !== 'all' ? `还没有收藏${kindNames[libraryKind] ?? ''}` : '给喜欢的内容留个位置' : '这位创作者暂时没有可见投稿'}</h2><p>{filters[view as ContentView] ? '搜索仅覆盖当前已加载的标题与作者，试试其他关键词。' : view === 'library' ? libraryKind !== 'all' ? '切换到其他类型，或从发现与订阅里收藏更多内容。' : '在发现、订阅或阅读时点击收藏，它们就会出现在这里。' : '换一位 UP 主，或直接输入视频地址。'}</p>{filters[view as ContentView] ? <Button variant="secondary" className="button button-secondary" onClick={() => setFilters(current => ({ ...current, [view]: '' }))}>清除搜索</Button> : view === 'library' && libraryKind !== 'all' ? <Button variant="secondary" className="button button-secondary" onClick={() => setLibraryKind('all')}>查看全部收藏</Button> : <Button variant="quiet" className="empty-link" onClick={view === 'library' ? () => navigate('discovery') : focusSource}>{view === 'library' ? '去发现内容' : '添加第一个来源'}<ArrowRight size={15} /></Button>}</section>}
+        {!loading && !error && items.length === 0 && (view === 'library' || discovery.feed || filters.search) && <section className="empty-state"><div className="empty-art" aria-hidden="true">{filters[view as ContentView] ? <Compass size={26} strokeWidth={1.4} /> : view === 'library' ? <Bookmark size={26} strokeWidth={1.4} /> : <BrandMark className="empty-brand"/>}</div><h2>{filters[view as ContentView] ? '没有找到匹配的内容' : view === 'library' ? '给喜欢的内容留个位置' : '这位创作者暂时没有可见投稿'}</h2><p>{filters[view as ContentView] ? '搜索仅覆盖当前已加载的标题与作者，试试其他关键词。' : view === 'library' ? '在发现、订阅或阅读时点击收藏，它们就会出现在这里。' : '换一位 UP 主，或直接输入视频地址。'}</p>{filters[view as ContentView] ? <Button variant="secondary" className="button button-secondary" onClick={() => setFilters(current => ({ ...current, [view]: '' }))}>清除搜索</Button> : <Button variant="quiet" className="empty-link" onClick={view === 'library' ? () => navigate('discovery') : focusSource}>{view === 'library' ? '去发现内容' : '添加第一个来源'}<ArrowRight size={15} /></Button>}</section>}
         </>}
       </>}
       </PageLoadBoundary>
@@ -368,6 +370,6 @@ export function App() {
     </main></ReaderActionsProvider>
     <BackToTop />
     <UpdaterNotice />
-    {toast.toasts.map(message => <Toast key={message.id} message={message.message} type={message.type} visible duration={0} onClose={() => toast.hide(message.id)} />)}
+    {toast.toasts.slice(-1).map(message => <Toast key={message.id} message={message.message} type={message.type} visible duration={0} onClose={() => toast.hide(message.id)} />)}
   </ExperienceShell>
 }
