@@ -1,6 +1,6 @@
 import { Button, Input, Select } from '../../components/ui'
 import { BookOpen, Check, ChevronUp, Clock3, Copy, LoaderCircle, MoreHorizontal, Pencil, Plus, RotateCw, Search, StickyNote, Trash2, X } from 'lucide-react'
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { MutableRefObject } from 'react'
 import type { ReadingNote, TextAnchor, PDFAnchor, SubtitleReference, SubtitleTrack } from '../../shared/api/types'
 import { subtitleTrackHash } from '../../shared/media/subtitleSource'
@@ -99,7 +99,9 @@ export function NotesPanel({ contentId, linkedNoteId = '', captureActionRef, edi
   const copyAttempt = useRef(0)
   const copyTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastTarget = useRef<NoteTarget | null>(null)
-  const actionsMenu = useRef<HTMLDetailsElement>(null)
+  const [actionsOpen, setActionsOpen] = useState(false)
+  const actionsButton = useRef<HTMLButtonElement>(null)
+  const actionsId = useId()
   const count = Array.from(draft.body).length
   const excerpt = draft.textAnchor?.quote ?? draft.pdfAnchor?.quote ?? draft.subtitleReferences?.[0]?.text ?? ''
   const saveBody = draft.body.trim() ? draft.body : excerpt ? '> ' + excerpt.replaceAll('\n', '\n> ') : ''
@@ -154,25 +156,6 @@ export function NotesPanel({ contentId, linkedNoteId = '', captureActionRef, edi
     try { sessionStorage.setItem(composerKey, composerOpen ? 'open' : 'closed'); sessionStorage.setItem(composerKey + '.expanded', String(expandedWriting)) }
     catch { /* Notebook visibility must not depend on optional browser storage. */ }
   }, [composerKey, composerOpen, expandedWriting])
-
-  useEffect(() => {
-    function dismiss(event: PointerEvent | KeyboardEvent) {
-      const menu = actionsMenu.current
-      if (!menu?.open) return
-      if (event instanceof KeyboardEvent) {
-        if (event.key !== 'Escape') return
-        event.preventDefault()
-        menu.open = false
-        menu.querySelector('summary')?.focus()
-      } else if (!menu.contains(event.target as Node)) menu.open = false
-    }
-    document.addEventListener('pointerdown', dismiss)
-    document.addEventListener('keydown', dismiss)
-    return () => {
-      document.removeEventListener('pointerdown', dismiss)
-      document.removeEventListener('keydown', dismiss)
-    }
-  }, [])
 
   useEffect(() => { onNotesChange?.(notes.notes) }, [notes.notes, onNotesChange])
   const { linkedHighlight } = useNoteNavigation({
@@ -448,15 +431,26 @@ export function NotesPanel({ contentId, linkedNoteId = '', captureActionRef, edi
 
   const composer = <NoteComposer open={composerOpen} draft={draft} setDraft={setDraft} contentId={contentId} sourceVersion={sourceVersion} pending={notes.pending} unavailable={unavailable} excerpt={excerpt} saveBody={saveBody} saveCount={saveCount} count={count} backupFailed={backupFailed} validationError={validationError} preview={preview} onPreviewChange={setPreview} editor={editor} onChangeBody={changeBody} onSave={() => void save()} showTime={showTime} playbackPosition={playbackPosition} onAttachCurrentTime={attachCurrentTime} playbackHint={playbackHint} hasDownload={Boolean(getDownloadID)} captureScreen={Boolean(captureScreen)} capturing={capturing} onScreenshot={() => void screenshot()} expandedWriting={expandedWriting} onToggleExpanded={() => setExpandedWriting(value => !value)} tagsOpen={tagsOpen} onOpenTags={openTags} onDiscardDraft={discardDraft} onDetachExcerpt={detachExcerpt} onRemoveTime={() => setDraft(current => ({ ...current, positionSeconds: null, timeDetached: true }))} onSaveAsNew={() => setDraft(current => ({ ...current, editingId: null, createId: undefined, frameSpec: undefined }))}/>
 
-  return <section className="notes-panel notes-workspace" data-media-notebook={Boolean(notebook)} data-expanded-writing={composerOpen && expandedWriting} aria-labelledby="notes-title">
+  return <section className="notes-panel notes-workspace" data-media-notebook={Boolean(notebook)} data-expanded-writing={composerOpen && expandedWriting} aria-labelledby="notes-title" onKeyDown={event => {
+    if (event.key === 'Escape' && actionsOpen && !event.defaultPrevented) {
+      event.preventDefault()
+      event.stopPropagation()
+      setActionsOpen(false)
+      actionsButton.current?.focus()
+    }
+  }}>
     <div className="notes-panel-heading">
       <h2 id="notes-title" aria-label="我的笔记"><StickyNote size={16} aria-hidden="true" />我的笔记<span className="count">{notes.notes.length}</span></h2>
       <div className="notes-panel-tools">
         <a className="icon-button" href="/notes" title="全部笔记" aria-label="查看全部笔记"><BookOpen size={16}/></a>
         <Button variant="quiet" iconOnly ref={composeButton} className="icon-button note-compose-toggle" aria-label={composerOpen ? '收起写作区' : hasDraft ? '继续草稿' : '写笔记'} title={composerOpen ? '收起写作区' : hasDraft ? '继续草稿' : '写笔记'} aria-expanded={composerOpen} aria-controls="note-composer" onClick={composerOpen ? closeComposer : openComposer}>{composerOpen ? <ChevronUp size={17}/> : <Plus size={17}/>}</Button>
         <Button variant="quiet" iconOnly className="icon-button" title="重新加载笔记" aria-label="重新加载笔记" disabled={notes.pending || notes.loading} onClick={() => void notes.reload()}><RotateCw size={15} /></Button>
-        <details className="note-more" ref={actionsMenu}><summary aria-label="笔记操作" title="笔记操作"><MoreHorizontal size={17} aria-hidden="true"/></summary><div className="note-menu-content"><Button variant="quiet" type="button" className="note-copy-source" disabled={unavailable || notes.notes.length === 0} onClick={() => void copySourceNotes()}>{copiedId === 'source' ? <Check size={14}/> : <Copy size={14}/>}复制本篇全部笔记</Button><NoteExport selection={{contentId}} label="导出来源笔记" disabled={notes.loading || Boolean(notes.readError) || notes.pending || notes.notes.length === 0}/></div></details>
+        <Button variant="quiet" iconOnly ref={actionsButton} className="icon-button" aria-label="笔记操作" title="笔记操作" aria-expanded={actionsOpen} aria-controls={actionsId} onClick={() => setActionsOpen(value => !value)}><MoreHorizontal size={17} aria-hidden="true"/></Button>
       </div>
+    </div>
+    <div id={actionsId} className="note-source-tools" role="region" aria-label="笔记复制与导出" hidden={!actionsOpen}>
+      <Button variant="quiet" type="button" className="note-copy-source" disabled={unavailable || notes.notes.length === 0} onClick={() => void copySourceNotes()}>{copiedId === 'source' ? <Check size={14}/> : <Copy size={14}/>}复制本篇全部笔记</Button>
+      <NoteExport selection={{contentId}} label="导出来源笔记" disabled={notes.loading || Boolean(notes.readError) || notes.pending || notes.notes.length === 0}/>
     </div>
     {playbackPosition !== null && <p className="note-playback-clock"><Clock3 size={13}/><span>当前播放</span><output aria-label="当前播放时间">{formatPosition(Math.floor(playbackPosition))}</output></p>}
     {notes.loading && <p className="notes-hint" role="status"><LoaderCircle size={16} className="spin" />正在打开笔记…</p>}

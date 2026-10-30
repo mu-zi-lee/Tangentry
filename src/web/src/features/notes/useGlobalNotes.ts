@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { request } from '../../shared/api/client'
+import { APIError, request } from '../../shared/api/client'
 import type { ReadingNote } from '../../shared/api/types'
 import { notifyNotesChanged, subscribeNotesChanged } from './changes'
 import { dateRange } from './timeline'
@@ -32,6 +32,9 @@ export function useGlobalNotes(active: boolean) {
   const [taskPending, setTaskPending] = useState<Set<string>>(new Set())
   const [taskError, setTaskError] = useState('')
   const taskRequests = useRef(new Map<string, AbortController>())
+  const [removePending, setRemovePending] = useState<Set<string>>(new Set())
+  const [removeError, setRemoveError] = useState<{ id: string; message: string } | null>(null)
+  const removeRequests = useRef(new Map<string, AbortController>())
   const reader = useRef<AbortController | null>(null)
   const tagReader = useRef<AbortController | null>(null)
   const desired = useRef({ query: '', filters: noFilters })
@@ -93,7 +96,7 @@ export function useGlobalNotes(active: boolean) {
     const unsubscribe = subscribeNotesChanged(reload)
     const refresh = () => { if (!document.hidden) reload() }
     window.addEventListener('focus', refresh); document.addEventListener('visibilitychange', refresh)
-    return () => { reader.current?.abort(); tagReader.current?.abort(); for (const controller of taskRequests.current.values()) controller.abort(); unsubscribe(); window.removeEventListener('focus', refresh); document.removeEventListener('visibilitychange', refresh) }
+    return () => { reader.current?.abort(); tagReader.current?.abort(); for (const controller of taskRequests.current.values()) controller.abort(); for (const controller of removeRequests.current.values()) controller.abort(); unsubscribe(); window.removeEventListener('focus', refresh); document.removeEventListener('visibilitychange', refresh) }
   }, [active, reload])
 
   function search() {
@@ -131,7 +134,7 @@ export function useGlobalNotes(active: boolean) {
     void load(query, desired.current.filters)
   }
   async function togglePin(note: ReadingNote) {
-    if (pinRequests.current.has(note.id)) return
+    if (pinRequests.current.has(note.id) || removeRequests.current.has(note.id)) return
     pinRequests.current.add(note.id); setPinPending(new Set(pinRequests.current)); setPinError('')
     try {
       const updated = await request<ReadingNote>(`/notes/${note.id}/pin`, { method: 'PUT', body: JSON.stringify({ pinned: !note.pinned }) })
@@ -145,7 +148,7 @@ export function useGlobalNotes(active: boolean) {
     }
   }
   async function toggleTask(note: ReadingNote, offset: number, checked: boolean) {
-    if (!activeRef.current || loading || error || taskRequests.current.has(note.id)) return
+    if (!activeRef.current || loading || error || taskRequests.current.has(note.id) || removeRequests.current.has(note.id)) return
     const body = changeTaskState(note.body, offset, checked)
     if (body === null || body === note.body) return
     const controller = new AbortController()
@@ -165,6 +168,31 @@ export function useGlobalNotes(active: boolean) {
       }
     }
   }
-  return { notes, query, draftQuery, setDraftQuery, draftTag, setDraftTag, fromDate, setFromDate, toDate, setToDate, filters, tags, tagsError, loading, error, hasResult, nextCursor, selectedContentId, setSelectedContentId, reload, cancel, search, applyView, filterTag, filterDates, filterPinned, togglePin, pinPending, pinError, toggleTask, taskPending, taskError, clear,
+  async function remove(note: ReadingNote, expectedUpdatedAt: number): Promise<boolean> {
+    if (!activeRef.current || loading || error || removeRequests.current.has(note.id) || pinRequests.current.has(note.id) || taskRequests.current.has(note.id)) return false
+    const controller = new AbortController()
+    removeRequests.current.set(note.id, controller)
+    setRemovePending(new Set(removeRequests.current.keys())); setRemoveError(null)
+    try {
+      await request<void>(`/notes/${encodeURIComponent(note.id)}?expectedUpdatedAt=${expectedUpdatedAt}`, { method: 'DELETE', signal: controller.signal })
+      if (controller.signal.aborted) return false
+      setNotes(current => current.filter(item => item.id !== note.id))
+      notifyNotesChanged(note.contentId)
+      return true
+    } catch (cause) {
+      if (!controller.signal.aborted) {
+        const conflict = cause instanceof APIError && cause.code === 'note_conflict'
+        setRemoveError({ id: note.id, message: (cause instanceof Error ? cause.message : '笔记没有删除，请重试。') + (conflict ? ' 请核对最新内容后重新确认删除。' : '') })
+        if (conflict) notifyNotesChanged(note.contentId)
+      }
+      return false
+    } finally {
+      if (removeRequests.current.get(note.id) === controller) {
+        removeRequests.current.delete(note.id)
+        setRemovePending(new Set(removeRequests.current.keys()))
+      }
+    }
+  }
+  return { notes, query, draftQuery, setDraftQuery, draftTag, setDraftTag, fromDate, setFromDate, toDate, setToDate, filters, tags, tagsError, loading, error, hasResult, nextCursor, selectedContentId, setSelectedContentId, reload, cancel, search, applyView, filterTag, filterDates, filterPinned, togglePin, pinPending, pinError, toggleTask, taskPending, taskError, remove, removePending, removeError, clearRemoveError: () => setRemoveError(null), clear,
     more: () => { if (!loading && !error && loaded.current.cursor) void load(query, filters, loaded.current.cursor) } }
 }

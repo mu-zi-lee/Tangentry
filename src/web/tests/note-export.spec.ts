@@ -39,7 +39,8 @@ with zipfile.ZipFile(sys.argv[1]) as z:
 `, path!], { encoding: 'utf8' })) as { selection: { q: string; tag: string; from: number; to: number; contentId: string }; entries: { note: ReadingNote; properties: Record<string, unknown> }[] }
 }
 
-test.beforeEach(async ({ request }) => {
+test.beforeEach(async ({ request, page }) => {
+  await page.setViewportSize({ width: 1844, height: 1098 })
   let cursor = ''
   do {
     const result = await (await request.get(`/api/notes/search?${new URLSearchParams({ cursor })}`)).json()
@@ -110,7 +111,26 @@ test('source export keeps fractional original time and anchors while excluding u
   await page.getByRole('button', { name: /^编辑来源笔记：.*视频导出/ }).click()
   const panel = page.getByRole('complementary', { name: '来源笔记编辑' })
   await panel.getByLabel('笔记正文').fill('正在输入的未保存笔记')
-  await panel.locator('.note-more > summary').click()
+  await page.getByRole('button', { name: /^查看来源上下文：/ }).click()
+  const context = page.getByRole('complementary', { name: '笔记来源上下文', exact: true })
+  await expect(context).toBeVisible()
+  await expect(panel.getByLabel('笔记正文')).toBeVisible()
+  const contextBox = (await context.boundingBox())!
+  expect(contextBox.x + contextBox.width).toBeLessThan((await panel.boundingBox())!.x)
+  await context.getByRole('button', { name: '关闭来源上下文', exact: true }).click()
+  await expect(context).toBeHidden()
+  await panel.getByRole('button', { name: '笔记操作', exact: true }).click()
+  const actions = panel.getByRole('region', { name: '笔记复制与导出', exact: true })
+  await expect(actions).toBeVisible()
+  expect(await actions.evaluate(element => getComputedStyle(element).position)).toBe('static')
+  const actionBox = (await actions.boundingBox())!
+  expect(actionBox.y + actionBox.height).toBeLessThanOrEqual((await panel.getByLabel('笔记正文').boundingBox())!.y)
+  await panel.getByLabel('笔记正文').click()
+  await expect(actions).toBeVisible()
+  await panel.getByLabel('笔记正文').press('Escape')
+  await expect(actions).toBeHidden()
+  await expect(panel.getByRole('button', { name: '笔记操作', exact: true })).toBeFocused()
+  await panel.getByRole('button', { name: '笔记操作', exact: true }).click()
   const downloaded = page.waitForEvent('download')
   await panel.getByRole('button', { name: '导出来源笔记', exact: true }).click()
   const manifest = await inspect(await downloaded)
