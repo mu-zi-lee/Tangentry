@@ -169,3 +169,22 @@ func TestSavedBilibiliCCAndAIMetadataRoundTrips(t *testing.T) {
 		t.Fatalf("saved metadata missing from API response: %d %s", listed.Code, listed.Body)
 	}
 }
+
+func TestSelectedYouTubeCaptionMetadataRoundTrips(t *testing.T) {
+	store, err := sqlite.Open(filepath.Join(t.TempDir(), "youtube-selected.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+	h := New(nil, nil, nil, Options{SavedSubtitles: subtitles.NewSavedService(store)})
+	path := "/api/saved-subtitles/youtube:N6FkmdL0Lg0/zh-Hans"
+	body := `{"revision":0,"selected":true,"track":{"language":"zh-Hans","label":"中文","automatic":true,"source":"youtube","translated":true,"sourceLanguage":"en","cues":[{"start":0,"end":2,"text":"手动选中的中文"}]}}`
+	response := storageRequest(h, "PUT", path, body, "application/json")
+	if response.Code != 200 || !strings.Contains(response.Body.String(), `"selected":true`) || !strings.Contains(response.Body.String(), `"translated":true`) || !strings.Contains(response.Body.String(), `"sourceLanguage":"en"`) {
+		t.Fatalf("manual YouTube selection rejected: %d %s", response.Code, response.Body)
+	}
+	listed := storageRequest(h, "GET", "/api/saved-subtitles?contentId=youtube:N6FkmdL0Lg0", "", "")
+	if listed.Code != 200 || !strings.Contains(listed.Body.String(), `"selected":true`) {
+		t.Fatalf("selection missing: %d %s", listed.Code, listed.Body)
+	}
+}

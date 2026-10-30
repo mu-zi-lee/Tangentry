@@ -318,6 +318,7 @@ export interface SavedSubtitle {
   track: SubtitleTrack
   revision: number
   savedAt: number
+  selected?: boolean
 }
 
 export interface TextAnchor {

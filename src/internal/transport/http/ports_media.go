@@ -44,6 +44,7 @@ type SubtitleService interface {
 type SavedSubtitleService interface {
 	List(context.Context, string) ([]subtitles.SavedTrack, error)
 	Save(context.Context, string, subtitles.Track, int64) (subtitles.SavedTrack, error)
+	SaveSelected(context.Context, string, subtitles.Track, int64) (subtitles.SavedTrack, error)
 	Capture(context.Context, string, subtitles.Document) error
 	Delete(context.Context, string, string, int64) error
 }

@@ -24,6 +24,7 @@ type SavedTrack struct {
 	Track     Track  `json:"track"`
 	Revision  int64  `json:"revision"`
 	SavedAt   int64  `json:"savedAt"`
+	Selected  bool   `json:"selected,omitempty"`
 }
 type SavedRepository interface {
 	ListSavedSubtitles(context.Context, string) ([]SavedTrack, error)
@@ -42,7 +43,18 @@ func (s *SavedService) List(ctx context.Context, id string) ([]SavedTrack, error
 	return s.repository.ListSavedSubtitles(ctx, id)
 }
 func (s *SavedService) Save(ctx context.Context, id string, track Track, revision int64) (SavedTrack, error) {
+	return s.save(ctx, id, track, revision, false)
+}
+
+func (s *SavedService) SaveSelected(ctx context.Context, id string, track Track, revision int64) (SavedTrack, error) {
+	return s.save(ctx, id, track, revision, true)
+}
+
+func (s *SavedService) save(ctx context.Context, id string, track Track, revision int64, selected bool) (SavedTrack, error) {
 	if !content.SpeechID(id) || !savedLanguage.MatchString(track.Language) || revision < 0 || revision >= MaxSavedRevision || (track.Source != "" && track.Source != "cc" && track.Source != "ai" && track.Source != "yt-dlp" && track.Source != "youtube" && track.Source != "automatic") || (track.Mismatch && track.Source != "ai") || !utf8.ValidString(track.Label) || strings.TrimSpace(track.Label) == "" || len(track.Cues) == 0 || len(track.Cues) > 10000 {
+		return SavedTrack{}, ErrSavedInvalid
+	}
+	if track.SourceLanguage != "" && !savedLanguage.MatchString(track.SourceLanguage) || track.Translated && (track.Source != "youtube" || track.SourceLanguage == "") {
 		return SavedTrack{}, ErrSavedInvalid
 	}
 	total, previous := 0, -1.0
@@ -56,7 +68,7 @@ func (s *SavedService) Save(ctx context.Context, id string, track Track, revisio
 		}
 		previous = cue.Start
 	}
-	value := SavedTrack{ContentID: id, Track: track, SavedAt: time.Now().Unix()}
+	value := SavedTrack{ContentID: id, Track: track, SavedAt: time.Now().Unix(), Selected: selected}
 	if archive, ok := s.repository.(interface {
 		ArchiveSubtitle(context.Context, SavedTrack) error
 	}); ok {

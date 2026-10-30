@@ -34,13 +34,16 @@ func (h *mediaHandler) savedSubtitleSave(w http.ResponseWriter, r *http.Request)
 	r.Body = http.MaxBytesReader(w, r.Body, 4<<20)
 	var input struct {
 		Revision *int64 `json:"revision"`
+		Selected bool   `json:"selected"`
 		Track    *struct {
-			Language  *string `json:"language"`
-			Label     *string `json:"label"`
-			Automatic *bool   `json:"automatic"`
-			Source    *string `json:"source"`
-			Mismatch  *bool   `json:"mismatch"`
-			Cues      []struct {
+			Language       *string `json:"language"`
+			Label          *string `json:"label"`
+			Automatic      *bool   `json:"automatic"`
+			Source         *string `json:"source"`
+			Mismatch       *bool   `json:"mismatch"`
+			Translated     bool    `json:"translated"`
+			SourceLanguage string  `json:"sourceLanguage"`
+			Cues           []struct {
 				Start *float64 `json:"start"`
 				End   *float64 `json:"end"`
 				Text  *string  `json:"text"`
@@ -53,7 +56,7 @@ func (h *mediaHandler) savedSubtitleSave(w http.ResponseWriter, r *http.Request)
 		fail(w, subtitles.ErrSavedInvalid)
 		return
 	}
-	track := subtitles.Track{Language: *input.Track.Language, Label: *input.Track.Label, Automatic: *input.Track.Automatic, Cues: make([]subtitles.Cue, 0, len(input.Track.Cues))}
+	track := subtitles.Track{Language: *input.Track.Language, Label: *input.Track.Label, Automatic: *input.Track.Automatic, Translated: input.Track.Translated, SourceLanguage: input.Track.SourceLanguage, Cues: make([]subtitles.Cue, 0, len(input.Track.Cues))}
 	if input.Track.Source != nil {
 		track.Source = *input.Track.Source
 	}
@@ -67,7 +70,11 @@ func (h *mediaHandler) savedSubtitleSave(w http.ResponseWriter, r *http.Request)
 		}
 		track.Cues = append(track.Cues, subtitles.Cue{Start: *cue.Start, End: *cue.End, Text: *cue.Text})
 	}
-	value, err := h.media.SavedSubtitles.Save(r.Context(), r.PathValue("contentId"), track, *input.Revision)
+	save := h.media.SavedSubtitles.Save
+	if input.Selected {
+		save = h.media.SavedSubtitles.SaveSelected
+	}
+	value, err := save(r.Context(), r.PathValue("contentId"), track, *input.Revision)
 	if err != nil {
 		fail(w, err)
 		return

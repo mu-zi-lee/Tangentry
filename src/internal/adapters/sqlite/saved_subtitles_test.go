@@ -108,3 +108,50 @@ func TestSavedYouTubeCaptionsStayIndependentAndDurable(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestManualSubtitleSelectionReplacesTrackAndSurvivesCaptureAndReopen(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "selected-captions.db")
+	store, err := Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.Background()
+	service := subtitles.NewSavedService(store)
+	id := "youtube:N6FkmdL0Lg0"
+	english := subtitles.Track{Language: "en", Label: "English", Source: "youtube", Cues: []subtitles.Cue{{Start: 0, End: 2, Text: "Original English"}}}
+	chinese := subtitles.Track{Language: "zh-Hans", Label: "中文", Source: "youtube", Translated: true, SourceLanguage: "en", Cues: []subtitles.Cue{{Start: 0, End: 2, Text: "平台中文"}}}
+	first, err := service.SaveSelected(ctx, id, english, 0)
+	if err != nil || !first.Selected {
+		t.Fatal(first, err)
+	}
+	second, err := service.SaveSelected(ctx, id, chinese, 0)
+	if err != nil || !second.Selected {
+		t.Fatal(second, err)
+	}
+	// A stale write must roll back the change to the selected language too.
+	if _, err := service.SaveSelected(ctx, id, english, 99); !errors.Is(err, subtitles.ErrSavedConflict) {
+		t.Fatal("stale selection accepted", err)
+	}
+	current, _ := service.List(ctx, id)
+	if len(current) != 2 || current[0].Selected || !current[1].Selected {
+		t.Fatal("selection changed after rejected write", current)
+	}
+	english.Cues[0].Text = "Manually selected replacement"
+	replacement, err := service.SaveSelected(ctx, id, english, first.Revision)
+	if err != nil || replacement.Revision != first.Revision+1 {
+		t.Fatal(replacement, err)
+	}
+	if err := service.Capture(ctx, id, subtitles.Document{Status: "available", Tracks: []subtitles.Track{chinese}}); err != nil {
+		t.Fatal(err)
+	}
+	store.Close()
+	store, err = Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+	current, err = subtitles.NewSavedService(store).List(ctx, id)
+	if err != nil || len(current) != 2 || !current[0].Selected || current[1].Selected || current[0].Track.Cues[0].Text != english.Cues[0].Text || !current[1].Track.Translated || current[1].Track.SourceLanguage != "en" {
+		t.Fatal("manual selection lost", current, err)
+	}
+}
