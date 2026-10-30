@@ -60,7 +60,7 @@ export function VideoGalleryCard({ item, origin, discoveryReason, discoveryType,
             <Play size={28} fill="currentColor" />
           </div>
         </div>
-        {!discovery && item.durationSeconds > 0 && <span className="card-duration">{formatDuration(item.durationSeconds)}</span>}
+        {item.durationSeconds > 0 && <span className="card-duration">{formatDuration(item.durationSeconds)}</span>}
         {progress && progressPercent > 0 && progressPercent < 99 && (
           <div className="card-progress-bar">
             <div className="card-progress-fill" style={{ width: `${progressPercent}%` }} />
@@ -68,13 +68,12 @@ export function VideoGalleryCard({ item, origin, discoveryReason, discoveryType,
         )}
       </div>
       <div className="modern-card-content">
-        {discovery && <div className="discovery-card-meta"><span className="discovery-card-labels">{item.durationSeconds > 0 && <span className="discovery-card-duration">{formatDuration(item.durationSeconds)}</span>}</span>{actions}</div>}
         <GalleryCardTitle item={item} onRead={onRead} />
         {excerpt}
         {item.likeCount ? <div className="discovery-card-stats">{item.likeCount} 赞</div> : null}
         <div className="modern-card-author">
           <AuthorLink item={item} onCreator={onCreator} discoveryType={discovery ? discoveryType : undefined} discoveryReason={discoveryReason}><AuthorPublication item={item} /></AuthorLink>
-          {!discovery && actions}
+          {actions}
         </div>
       </div>
     </GalleryCardFrame>

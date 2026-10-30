@@ -1,5 +1,6 @@
 import { Button, Input } from '../components/ui'
 import { ArrowLeft, ArrowRight, Menu, Moon, Plus, Search, Sun, X } from 'lucide-react'
+import type { ReactNode } from 'react'
 import type { View } from './navigation'
 import { viewNames } from './navigation'
 import { useThemeSwitch } from './useThemeSwitch'
@@ -33,7 +34,8 @@ export function TopBar({
   onAdd,
   discoveryQuery,
   onDiscoveryQuery,
-  onSearchQuery
+  onSearchQuery,
+  toolbar
 }: {
   view: View
   menuOpen: boolean
@@ -43,6 +45,7 @@ export function TopBar({
   discoveryQuery: string
   onDiscoveryQuery: (query: string) => void
   onSearchQuery: (query: string) => void
+  toolbar?: ReactNode
 }) {
   const { dark, switchTheme } = useThemeSwitch()
   const position = useHistoryPosition()
@@ -87,9 +90,11 @@ export function TopBar({
         </span>
         <span className="experience-location-title">
           {section && <span className="experience-location-section">{section}</span>}
-          <strong>{viewNames[view]}</strong>
+          {view === 'library' || view === 'history' ? <h1>{viewNames[view]}</h1> : <strong>{viewNames[view]}</strong>}
         </span>
       </div>
+
+      {toolbar}
 
       {view === 'discovery' && (
         <div className="discovery-search" role="search">

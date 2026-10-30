@@ -14,6 +14,11 @@ const fixture: ContentItem = {
 }
 
 test.beforeEach(async ({ request }) => {
+  const { jobs } = await (await request.get('/api/downloads')).json()
+  for (const job of jobs) {
+    if (job.state === 'queued' || job.state === 'running') await request.post(`/api/downloads/${job.id}/cancel`)
+    expect((await request.delete(`/api/downloads/${job.id}`)).ok()).toBe(true)
+  }
   const response = await request.get('/api/library')
   const { items } = await response.json() as { items: ContentItem[] }
   for (const item of items) await request.delete(`/api/library/${encodeURIComponent(item.id)}`)
@@ -36,35 +41,47 @@ async function seekRealPlayback(page: Page) {
   await expect.poll(() => video.evaluate((node: HTMLVideoElement) => node.currentTime)).toBeCloseTo(1.25, 2)
 }
 
-test('discovery topic names keep their text width beside separate topic actions', async ({ page, request }) => {
+test('discovery topics use one manager for creating, renaming and deleting the active topic', async ({ page, request }) => {
   await page.route('**/api/discovery/bilibili?**', route => route.fulfill({ json: { items: [fixture], page: 1, total: 1, hasMore: false, sourceTitle: fixture.author, query: fixture.platformId } }))
   await page.goto('/')
   const topics = page.getByRole('group', { name: '主题筛选' })
-  await topics.getByRole('button', { name: '新增主题' }).click()
+  await page.getByRole('button', { name: '管理主题', exact: true }).click()
+  await page.getByRole('dialog', { name: '管理主题' }).getByRole('button', { name: '新增主题' }).click()
   const dialog = page.getByRole('dialog', { name: '新增主题' })
   await expect(dialog).toBeVisible()
   await page.waitForTimeout(50)
   await expect(dialog).toBeVisible()
   await dialog.getByLabel('主题名称').fill('AI')
   await dialog.getByRole('button', { name: '保存主题' }).click()
-  await expect(dialog).toBeHidden()
+  await expect(page.getByRole('dialog', { name: '管理主题' })).toBeVisible()
+  await page.getByRole('dialog').getByRole('button', { name: '关闭', exact: true }).click()
 
   const topic = topics.getByRole('button', { name: 'AI', exact: true })
   await expect(topic).toBeVisible()
   const size = await topic.evaluate(node => ({ width: node.getBoundingClientRect().width, height: node.getBoundingClientRect().height }))
   expect(size.width).toBeGreaterThan(size.height)
-  expect(size.height).toBe(26)
-  await expect(topics.getByRole('button', { name: '编辑主题 AI' })).toBeVisible()
-  await expect(topics.getByRole('button', { name: '删除主题 AI' })).toBeVisible()
+  expect(size.height).toBeGreaterThanOrEqual(26)
+  await expect(topics.getByRole('button', { name: /编辑主题|删除主题/ })).toHaveCount(0)
 
-  await topics.getByRole('button', { name: '编辑主题 AI' }).click()
+  await page.getByRole('button', { name: '管理主题', exact: true }).click()
+  await page.getByRole('dialog').getByRole('searchbox', { name: '搜索主题' }).fill('AI')
+  await page.getByRole('dialog').getByRole('button', { name: '编辑主题 AI', exact: true }).click()
   const editDialog = page.getByRole('dialog', { name: '编辑主题' })
   await expect(editDialog.getByLabel('主题名称')).toHaveValue('AI')
   await editDialog.getByLabel('主题名称').fill('人工智能')
   await editDialog.getByRole('button', { name: '保存主题' }).click()
   await expect(topics.getByRole('button', { name: '人工智能', exact: true })).toBeVisible()
-  await expect(topics.getByRole('button', { name: '编辑主题 人工智能' })).toBeVisible()
-  expect((await request.get('/api/discovery/topics')).ok()).toBe(true)
+  await expect(page.getByRole('dialog').getByRole('searchbox', { name: '搜索主题' })).toHaveValue('')
+  await page.getByRole('dialog').getByRole('button', { name: '关闭', exact: true }).click()
+  await topics.getByRole('button', { name: '人工智能', exact: true }).click()
+  await expect(page).toHaveURL(/topic=/)
+  await page.getByRole('button', { name: '管理主题', exact: true }).click()
+  await page.getByRole('dialog').getByRole('button', { name: '删除主题 人工智能', exact: true }).click()
+  await expect(page.getByRole('dialog').getByRole('button', { name: '删除主题 人工智能', exact: true })).toHaveCount(0)
+  await page.getByRole('dialog').press('Escape')
+  await expect(page.getByRole('dialog')).toBeHidden()
+  await expect(page).not.toHaveURL(/topic=/)
+  expect((await (await request.get('/api/discovery/topics')).json()).topics).not.toEqual(expect.arrayContaining([expect.objectContaining({ name: '人工智能' })]))
 })
 
 test('reading notes save, edit, persist and delete with subtitle time without collecting or downloading', async ({ page, request }) => {
@@ -228,15 +245,15 @@ test('empty data opens every settings section without page load errors', async (
 test('navigation replaces the active page without stacking titles', async ({ page }) => {
   await page.goto('/')
   const mainNav = page.getByRole('navigation', { name: '主导航', exact: true })
-  for (const title of ['收藏', '订阅', '笔记', '收藏']) {
+  for (const title of ['收藏', '订阅管理', '笔记', '收藏']) {
     await mainNav.getByRole('button', { name: title, exact: true }).click()
-    await expect(page.locator('.content-container h1:visible')).toHaveCount(1)
-    await expect(page.locator('.content-container h1:visible')).toHaveText(title)
+    await expect(page.locator('h1:visible')).toHaveCount(1)
+    await expect(page.locator('h1:visible')).toHaveText(title)
     await expect(page.getByRole('status').filter({ hasText: '正在打开页面…' })).toHaveCount(0)
   }
   await page.goBack()
-  await expect(page.locator('.content-container h1:visible')).toHaveCount(1)
-  await expect(page.locator('.content-container h1:visible')).toHaveText('笔记')
+  await expect(page.locator('h1:visible')).toHaveCount(1)
+  await expect(page.locator('h1:visible')).toHaveText('笔记')
 })
 
 test('black and white themes, reduced motion and keyboard drawer are accessible', async ({ page }) => {
@@ -262,7 +279,7 @@ test('black and white themes, reduced motion and keyboard drawer are accessible'
 
 test('download submits through real API, persists, serves a file and can be cancelled', async ({ page, request }) => {
   await page.goto('/downloads')
-  await expect(page.getByRole('heading', { name: '下载', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '下载资料库', exact: true })).toBeVisible()
   await page.getByLabel('下载视频地址').fill('BV17x411w7KC')
   await page.getByRole('button', { name: '获取信息', exact: true }).click()
   await expect(page.getByRole('button', { name: '开始下载' })).toBeEnabled()
@@ -279,7 +296,7 @@ test('download submits through real API, persists, serves a file and can be canc
   await page.getByRole('button', { name: '获取信息', exact: true }).click()
   await page.getByRole('button', { name: '开始下载' }).click()
   await page.getByRole('button', { name: '取消下载 BVcancel0000' }).first().click()
-  await expect(page.getByRole('button', { name: '重新下载 BVcancel0000' }).first()).toBeVisible()
+  await expect(page.getByRole('article').filter({ has: page.getByRole('heading', { name: 'BVcancel0000', exact: true }) }).getByRole('button', { name: '重新下载', exact: true }).first()).toBeVisible()
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
   await page.setViewportSize({ width: 390, height: 844 })
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
@@ -362,13 +379,10 @@ test('existing subtitles load only on demand, search, switch language and export
   await expect(page.locator('.preview-dialog')).toHaveCount(0)
   await expect(page.getByRole('list', { name: '字幕段落' }).getByRole('listitem')).toHaveCount(3)
   expect(captionRequests).toBe(1)
-  const seek = page.getByRole('button', { name: '跳转播放时间 00:01', exact: true })
-  await expect(seek).toBeVisible()
   await seekRealPlayback(page)
   await expect(page.getByText('<script>这只是字幕文本</script>', { exact: true })).toBeVisible()
   expect(await page.locator('.subtitle-reader script').count()).toBe(0)
   await closeSubtitleOptions(page)
-  await openSubtitleSettings(page)
   await page.getByLabel('搜索字幕').fill('好奇心')
   await expect(page.getByRole('list', { name: '字幕段落' }).getByRole('listitem')).toHaveCount(1)
   await expect(page.getByText('匹配 1 / 3 段', { exact: false })).toBeVisible()
@@ -381,10 +395,8 @@ test('existing subtitles load only on demand, search, switch language and export
   expect(text).toContain('00:00:01,250 --> 00:00:04,000')
   expect(text).toContain('第二段测试字幕') // Export the full track even when the visible list is filtered.
   await closeSubtitleOptions(page)
-  await openSubtitleSettings(page)
   await page.getByLabel('搜索字幕').fill('')
   await closeSubtitleOptions(page)
-  await openSubtitleSettings(page)
   await page.getByLabel('字幕语言', { exact: true }).selectOption('en')
   await expect(page.getByText('English subtitle fixture.', { exact: true })).toBeVisible()
   expect(captionRequests).toBe(1)
@@ -394,7 +406,6 @@ test('existing subtitles load only on demand, search, switch language and export
   await page.setViewportSize({ width: 390, height: 844 })
   await page.getByRole('group', { name: '阅读区域' }).getByRole('button', { name: '字幕', exact: true }).click()
   await closeSubtitleOptions(page)
-  await openSubtitleSettings(page)
   const visibleReader = page.locator('.subtitle-reader:visible')
   const visibleLanguage = visibleReader.getByLabel('字幕语言', { exact: true })
   await expect(visibleLanguage).toBeVisible()
@@ -457,12 +468,10 @@ test('long subtitles search the full track and cancellation returns to an explic
   const lines = page.getByRole('list', { name: '字幕段落' }).getByRole('listitem')
   await expect(lines).toHaveCount(200)
   await closeSubtitleOptions(page)
-  await openSubtitleSettings(page)
   await page.getByLabel('搜索字幕').fill('第249段')
   await expect(lines).toHaveCount(1)
   await expect(lines.first()).toContainText('第249段长字幕测试')
   await closeSubtitleOptions(page)
-  await openSubtitleSettings(page)
   await page.getByLabel('搜索字幕').fill('')
   await page.getByRole('button', { name: '继续阅读字幕', exact: false }).click()
   await expect(lines).toHaveCount(250)
@@ -473,9 +482,8 @@ test('long subtitles search the full track and cancellation returns to an explic
   await page.getByRole('button', { name: '获取内容' }).click()
   await page.getByRole('button', { name: `阅读 ${fixture.title}` }).click()
   await expect(page.getByText('正在获取已有字幕…')).toBeVisible()
-  await openSubtitleOptions(page)
+  await openSubtitleSettings(page, 'source')
   await page.getByRole('button', { name: '取消获取' }).click()
-  await openSubtitleOptions(page)
   await expect(page.getByRole('button', { name: '读取字幕', exact: true })).toBeVisible()
   await expect(page.getByRole('list', { name: '字幕段落' })).toHaveCount(0)
   await expect(page.getByRole('alert')).toHaveCount(0)

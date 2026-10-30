@@ -1,7 +1,7 @@
 import { expect, test } from './e2e'
 import AxeBuilder from '@axe-core/playwright'
 import type { SubscriptionDetail, SubscriptionSource, ContentItem } from '../src/shared/api/types'
-import { openSubscriptionAdd } from './fixtures/subscription-options'
+import { closeSubscriptionSettings, openSubscriptionAdd } from './fixtures/subscription-options'
 
 // All subscription endpoints use the actual app / HTTP / SQLite. Only external
 // platform I/O is replaced by the test server's explicitly labelled provider.
@@ -20,11 +20,11 @@ test('subscriptions persist and update independently, keep successful content on
   })
   const beforeJobs = (await (await request.get('/api/downloads')).json()).jobs
   await page.goto('/subscriptions')
-  await expect(page.getByRole('heading', { name: '让发现有一个来处' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '全部订阅', exact: true })).toBeVisible()
   await page.getByLabel('订阅地址').fill('https://space.bilibili.com/12345')
   await page.getByLabel('订阅来源名称', { exact: true }).fill('知识视频')
   await page.getByRole('button', { name: '保存来源', exact: true }).click()
-  await expect(page.getByRole('status')).toContainText('来源已保存')
+  await expect(page.getByRole('status').filter({ hasText: '来源已保存' })).toBeVisible()
   const path = '/api/subscriptions/bilibili%3Acreator%3A12345'
   const local = await (await request.get(path)).json() as SubscriptionDetail
   expect(local.source.lastUpdatedAt).toBe(0)
@@ -32,7 +32,7 @@ test('subscriptions persist and update independently, keep successful content on
   await page.getByLabel('订阅地址').fill('12345')
   await page.getByLabel('订阅来源名称', { exact: true }).fill('重复不应改名')
   await page.getByRole('button', { name: '保存来源', exact: true }).click()
-  await expect(page.getByRole('status')).toContainText('这个来源已存在')
+  await expect(page.getByRole('status').filter({ hasText: '这个来源已存在' })).toBeVisible()
   expect((await (await request.get('/api/subscriptions')).json()).sources).toHaveLength(1)
   await expect(page.getByRole('heading', { name: '知识视频', exact: true })).toBeVisible()
   await page.getByRole('button', { name: '重命名来源' }).click()
@@ -40,6 +40,7 @@ test('subscriptions persist and update independently, keep successful content on
   await page.getByLabel('来源新名称').fill('知识视频 · 持续学习')
   await page.getByRole('button', { name: '保存名称' }).click()
   await expect(page.getByRole('heading', { name: '知识视频 · 持续学习', exact: true })).toBeVisible()
+  await closeSubscriptionSettings(page)
   await page.getByRole('button', { name: '更新投稿', exact: true }).click()
   await expect(page.getByTestId('content-card')).toHaveCount(1)
   await page.getByRole('button', { name: '更新投稿', exact: true }).click()
@@ -57,7 +58,7 @@ test('subscriptions persist and update independently, keep successful content on
   await expect(page.getByRole('heading', { name: '我的笔记' })).toBeVisible()
   await expect(page.getByRole('list', { name: '字幕段落' })).toBeVisible()
   await page.getByRole('button', { name: '返回列表' }).click()
-  await expect(page).toHaveURL('/subscriptions')
+  await expect(page).toHaveURL(`/subscriptions?${new URLSearchParams({ q: '更新后的标题' })}`)
   await expect(page.getByLabel('搜索订阅投稿')).toHaveValue('更新后的标题')
   await expect(page.getByRole('button', { name: '阅读 订阅测试样例：更新后的标题', exact: true })).toBeFocused()
   await expect.poll(() => page.evaluate(() => scrollY)).toBe(readingScroll)
@@ -66,7 +67,9 @@ test('subscriptions persist and update independently, keep successful content on
   await expect(page.getByRole('alert')).toContainText('订阅测试平台限制')
   await expect(page.getByTestId('content-card')).toHaveCount(2)
   const afterFailure = await (await request.get(path)).json() as SubscriptionDetail
-  expect(afterFailure).toEqual(successful)
+  expect(afterFailure.items).toEqual(successful.items)
+  expect(afterFailure.source).toEqual({ ...successful.source, refresh: afterFailure.source.refresh })
+  expect(afterFailure.source.refresh).toMatchObject({ failures: 1, status: 'rate_limited', contentRevision: successful.source.refresh.contentRevision })
   // Simulate another client updating the same source, then explicitly refresh the
   // local list. Both source metadata and cached items must be re-read together.
   const externalUpdate = await request.post(`${path}/update`)
@@ -122,7 +125,7 @@ test('subscription validation retains input, failed first update stays unsynced,
   await page.goto('/')
   await page.setViewportSize({ width: 390, height: 844 })
   await page.getByRole('button', { name: '菜单' }).click()
-  await page.getByRole('dialog', { name: '导航菜单' }).getByRole('button', { name: '订阅', exact: true }).press('Enter')
+  await page.getByRole('dialog', { name: '导航菜单' }).getByRole('button', { name: '订阅管理', exact: true }).press('Enter')
   await expect(page).toHaveURL('/subscriptions')
   await expect(page.getByRole('dialog', { name: '导航菜单' })).not.toBeVisible()
   await page.getByLabel('订阅地址').fill('BV17x411w7KC')
@@ -147,6 +150,7 @@ test('source refresh preserves an expanded add form and its unsaved draft', asyn
   const created = await request.post('/api/subscriptions', { data: { type: 'bilibili', query: '12345', name: '现有来源' } })
   expect(created.status()).toBe(201)
   await page.goto('/subscriptions')
+  await page.getByRole('navigation', { name: '选择订阅来源' }).getByRole('button', { name: /现有来源/ }).click()
   await expect(page.getByRole('heading', { name: '现有来源', exact: true })).toBeVisible()
   await openSubscriptionAdd(page)
   await page.getByLabel('订阅地址').fill('67890')
@@ -159,7 +163,7 @@ test('source refresh preserves an expanded add form and its unsaved draft', asyn
   await expect(page.getByLabel('订阅来源名称', { exact: true })).toHaveValue('未保存的第二个来源')
   await page.getByRole('button', { name: '历史收件箱', exact: true }).click()
   await expect(page.getByLabel('订阅地址')).toBeVisible()
-  await page.getByRole('button', { name: '来源与更新', exact: true }).click()
+  await page.getByRole('button', { name: '来源管理', exact: true }).click()
   await expect(page.getByLabel('订阅来源名称', { exact: true })).toHaveValue('未保存的第二个来源')
   expect((await (await request.get('/api/subscriptions')).json()).sources).toHaveLength(1)
 })

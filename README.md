@@ -13,7 +13,7 @@
 ![Go](https://img.shields.io/badge/Go-1.27-00ADD8?logo=go&logoColor=white)
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
 ![Platforms](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux%20%7C%20Docker-lightgrey)
-![Version](https://img.shields.io/badge/version-0.0.3.3-orange)
+![Version](https://img.shields.io/badge/version-0.0.3.4-orange)
 
 [功能](#-功能) · [快速开始](#-快速开始) · [使用指南](#-使用指南) · [配置](#%EF%B8%8F-配置) · [开发](#-开发) · [架构](docs/ARCHITECTURE.md) · [贡献](CONTRIBUTING.md)
 

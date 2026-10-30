@@ -36,26 +36,26 @@
 .discovery-platforms button[data-state='error'] { border-color: color-mix(in srgb, var(--danger) 40%, var(--line)); }
 .discovery-platforms button[data-state='error'] .platform-dot { background: var(--danger); }
 .discovery-topics { display: flex; align-items: center; gap: 6px; flex-shrink: 0; padding-left: 10px; border-left: 1px solid var(--line); }
-.discovery-topics > button:not(.discovery-topic-add) { min-height: 30px; padding: 3px 11px; border: 1px solid var(--line); border-radius: var(--radius-full); color: var(--muted); font-size: 12.5px; white-space: nowrap; }
-.discovery-topics > button:not(.discovery-topic-add)[aria-pressed='true'] { border-color: var(--accent-line); background: var(--accent-soft); color: var(--accent-ink); }
-.discovery-topic-chip { display: inline-flex; align-items: center; gap: 3px; min-height: 30px; padding: 2px 4px 2px 2px; border: 1px solid var(--line); border-radius: var(--radius-full); }
-.discovery-topic-chip > button:first-child { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; width: auto; min-width: 0; height: 26px; min-height: 26px; padding: 3px 9px; border: 0; border-radius: var(--radius-full); color: var(--muted); font-size: 12px; white-space: nowrap; }
-.discovery-topic-chip > button:first-child[aria-pressed='true'] { background: var(--accent-soft); color: var(--accent-ink); }
-.discovery-topic-chip .discovery-topic-action, .discovery-topic-add { display: inline-grid; place-items: center; flex: 0 0 28px; width: 28px; height: 28px; min-height: 28px; padding: 0; border: 0; border-radius: 50%; color: var(--faint); }
-.discovery-topic-add { border: 1px solid var(--line); }
-.discovery-topic-chip .discovery-topic-action:hover, .discovery-topic-add:hover { color: var(--ink); background: var(--line); }
+.discovery-topics > button { min-height: 30px; padding: 3px 11px; border: 1px solid var(--line); border-radius: var(--radius-full); color: var(--muted); font-size: 12.5px; white-space: nowrap; }
+.discovery-topics > button[aria-pressed='true'] { border-color: var(--accent-line); background: var(--accent-soft); color: var(--accent-ink); }
 .discovery-batch-controls { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; padding-left: 10px; border-left: 1px solid var(--line); }
 .discovery-batch-controls select, .discovery-batch-controls input[type='text'] { min-height: 30px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); color: var(--ink); padding: 3px 9px; font-size: 12.5px; }
 .discovery-batch-controls input[type='text'] { width: 116px; }
 .discovery-range { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; white-space: nowrap; }
 .discovery-range input { width: 76px; accent-color: var(--accent); }
 .discovery-topic-list { display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; }
-.discovery-topic-chip .discovery-topic-action:last-of-type:hover { color: var(--danger); background: var(--danger-soft); }
 .discovery-topic-dialog { width: min(420px, calc(100vw - 32px)); max-width: none; padding: 22px; border: 1px solid var(--line); border-radius: var(--radius-md); color: var(--ink); background: var(--canvas); box-shadow: var(--shadow-xl); }
 .discovery-topic-dialog::backdrop { background: rgb(0 0 0 / .42); }
 .discovery-topic-dialog form { display: grid; gap: 10px; }
 .discovery-topic-dialog-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
-.discovery-topic-dialog-heading h2 { margin: 0; font-size: 18px; font-weight: 600; }
+.discovery-topic-dialog-heading h2 { flex: 1; margin: 0; font-size: 18px; font-weight: 600; }
+.discovery-topic-manager-tools { display: flex; align-items: center; gap: 8px; margin: 16px 0 10px; }
+.discovery-topic-manager-tools input { flex: 1; min-width: 0; }
+.discovery-topic-manager-tools .button { flex-shrink: 0; }
+.discovery-topic-manager-list { max-height: min(50dvh, 400px); margin: 0; padding: 0; overflow-y: auto; list-style: none; }
+.discovery-topic-manager-list li { display: flex; align-items: center; gap: 4px; min-height: 48px; border-bottom: 1px solid var(--line); }
+.discovery-topic-manager-list li > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+.discovery-topic-manager-list .discovery-topic-remove:hover { color: var(--danger); background: var(--danger-soft); }
 .discovery-topic-dialog-field { color: var(--muted); font-size: 12.5px; }
 .discovery-topic-dialog input { width: 100%; min-height: 40px; padding: 8px 10px; border: 1px solid var(--control-line); border-radius: var(--radius-sm); color: var(--ink); background: var(--card); font: inherit; }
 .discovery-topic-dialog-error { margin: 0; color: var(--danger); font-size: 12.5px; }

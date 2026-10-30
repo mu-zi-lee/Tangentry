@@ -16,7 +16,7 @@ const destinations = [
 ] as const
 const quick = ['discovery', 'subscriptions', 'library', 'downloads'] as const
 
-export function ExperienceShell({ view, onNavigate, onNavigateSavedView, savedViews, onReorderSavedViews, onSearchQuery, onHome, activeDownloads, savedCount, onAdd, discoveryQuery, onDiscoveryQuery, resume, onResume, onDismissResume, children }: {
+export function ExperienceShell({ view, onNavigate, onNavigateSavedView, savedViews, onReorderSavedViews, onSearchQuery, onHome, activeDownloads, savedCount, onAdd, discoveryQuery, onDiscoveryQuery, resume, onResume, onDismissResume, toolbar, children }: {
   view: View
   onNavigate: (view: View) => void
   onSearchQuery: (query: string) => void
@@ -32,6 +32,7 @@ export function ExperienceShell({ view, onNavigate, onNavigateSavedView, savedVi
   resume: { title: string } | null
   onResume: () => void
   onDismissResume: () => void
+  toolbar?: ReactNode
   children: ReactNode
 }) {
   const go = (next: View) => onNavigate(next)
@@ -54,6 +55,7 @@ export function ExperienceShell({ view, onNavigate, onNavigateSavedView, savedVi
         resume={resume}
         onResume={onResume}
         onDismissResume={onDismissResume}
+        toolbar={toolbar}
       >
         {children}
       </AppShell>

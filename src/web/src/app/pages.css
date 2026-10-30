@@ -37,21 +37,19 @@
 .results-heading { display: inline-flex; align-items: center; gap: 8px; min-width: 0; font-size: 13px; color: var(--muted); }
 .results-heading strong { color: var(--ink); font-weight: 600; max-width: 32ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-/* Collection filters stay with the type, sort and layout controls they affect. */
-.progress-overview { flex: 1 1 360px; min-width: 0; margin: 0; }
-.progress-overview-controls { display: flex; align-items: center; flex-wrap: nowrap; gap: 8px; min-width: 0; }
-.progress-filter-select select { min-height: 36px; max-width: 148px; padding: 0 28px 0 10px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--card); color: var(--ink); font-size: 12px; }
-.progress-collection-search { display: flex; align-items: center; gap: 8px; flex: 1 1 220px; max-width: 360px; min-height: 36px; padding: 0 11px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--card); color: var(--muted); }
-.progress-collection-search:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-.progress-collection-search input { flex: 1; min-width: 0; min-height: 34px; background: transparent; outline: none; color: var(--ink); }
 .add-result-search { display: flex; align-items: center; gap: 8px; width: min(360px, 100%); min-height: 36px; margin: 0 0 14px; padding: 0 11px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--card); color: var(--muted); }
 .add-result-search:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .add-result-search input { flex: 1; min-width: 0; min-height: 34px; background: transparent; outline: none; color: var(--ink); }
-.progress-overview-error { display: flex; align-items: flex-start; gap: 8px; margin: 10px 0 0; color: var(--danger); font-size: 13px; }
-.progress-overview-error svg { flex-shrink: 0; margin-top: 3px; }
 
 /* ---------- 收藏 ---------- */
-.library-toolbar .media-filters { flex: 0 1 auto; }
+.experience-location-title h1 { margin: 0; font-size: 18px; font-weight: 600; }
+.library-toolbar { display: flex; align-items: center; gap: 16px; flex: 1; min-width: 0; }
+.library-toolbar .library-sources { flex: 1; min-width: 0; margin: 0; padding: 0; border: 0; }
+.library-toolbar-controls { display: flex; align-items: center; gap: 6px; min-width: 0; flex: 0 1 350px; }
+.library-toolbar-controls > .icon-button, .library-toolbar-controls .layout-switch { flex-shrink: 0; }
+.library-search { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 80px; min-height: 34px; padding: 0 10px; border: 1px solid var(--line); border-radius: var(--radius); color: var(--muted); background: var(--card); }
+.library-search:focus-within { border-color: var(--control-line); }
+.library-search input { width: 100%; min-width: 0; min-height: 32px; padding: 0; border: 0; outline: none; background: transparent; color: var(--ink); }
 
 
 /* ---------- 添加内容 ---------- */
@@ -105,11 +103,10 @@
 .creator-temporary-view > .results-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 
 /* ---------- 历史 ---------- */
-.history-workspace .page-heading { margin-bottom: 18px; }
-.history-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin: 0 0 14px; padding: 10px; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--card); }
-.history-toolbar .media-filters { flex: 1 1 440px; min-width: 0; }
-.history-toolbar .collection-query { flex: 0 1 260px; width: min(260px, 100%); }
-.history-clear { flex-shrink: 0; min-height: 36px; }
+.history-toolbar { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
+.history-count { margin-right: auto; color: var(--muted); font-size: 12px; white-space: nowrap; }
+.history-toolbar .library-search { flex: 0 1 260px; }
+.history-clear { flex-shrink: 0; }
 .history-day { position: relative; padding-top: 22px; }
 .history-day > h2 { position: sticky; z-index: 5; top: var(--header-height); display: flex; align-items: center; gap: 8px; margin: 0 0 12px; padding: 8px 0; background: var(--canvas); font-size: 13px; font-weight: 600; color: var(--muted); }
 .history-day > h2 svg { color: var(--accent); }
@@ -118,6 +115,8 @@
 .history-confirm { justify-content: space-between; }
 
 @media (max-width: 960px) {
+  .experience:is([data-view='library'], [data-view='history']) .experience-topbar { height: auto; min-height: var(--header-height); flex-wrap: wrap; gap: 8px; padding-block: 8px; }
+  .library-toolbar, .history-toolbar { order: 3; flex-basis: 100%; }
   .add-content-layout { grid-template-columns: minmax(0, 1fr); }
   .unified-search-filters { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .unified-search-filters > .segmented { grid-column: 1 / -1; justify-self: start; }
@@ -129,17 +128,12 @@
   .collection-controls { margin-left: 0; width: 100%; }
   .collection-controls .collection-query { flex: 1; width: auto; }
   .collection-controls { flex: 1 1 100%; width: 100%; margin-left: 0; }
-  .library-toolbar .collection-controls .progress-overview { flex-basis: 100%; }
-  .library-toolbar .progress-overview-controls { flex-wrap: wrap; }
-  .library-toolbar .progress-filter-select { flex: 0 0 auto; }
-  .library-toolbar .progress-collection-search { flex: 1 1 180px; }
-  .library-toolbar .collection-controls > .sort-control { flex: 1 1 180px; }
-  .library-toolbar .collection-controls .sort-control { flex: 1 1 auto; }
-  .history-toolbar { gap: 8px; padding: 8px; }
-  .history-toolbar .media-filters { flex-basis: 100%; }
-  .history-toolbar .collection-query { flex: 1 1 auto; width: auto; }
-  .history-clear { width: 38px; min-width: 38px; padding-inline: 0; justify-content: center; }
-  .history-clear span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .library-toolbar { flex-wrap: wrap; gap: 8px; }
+  .library-toolbar .library-sources { flex-basis: 100%; }
+  .library-toolbar-controls { flex-basis: 100%; }
+  .library-search { min-height: 40px; }
+  .history-toolbar { gap: 8px; }
+  .history-toolbar .library-search { flex: 1; }
   .source-composer { padding: 14px; }
   .source-composer form { flex-direction: column; }
   .unified-search-title-row { align-items: flex-start; flex-direction: column; gap: 12px; }
@@ -148,7 +142,4 @@
   .unified-search-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .unified-search-filters > .segmented { width: 100%; }
   .unified-search-filters > .segmented button { flex: 1; justify-content: center; }
-  .progress-collection-search { flex: 1 1 160px; max-width: none; min-height: 44px; order: -2; }
-  .progress-overview-controls > .icon-button { order: -1; }
-  .progress-filter-options { flex-basis: 100%; }
 }

@@ -1,5 +1,6 @@
 import { Button } from '../components/ui'
 import { Compass, Rss, Bookmark, Clock3, StickyNote, Download, Settings, PanelLeftClose, PanelLeftOpen, ChevronUp, ChevronDown, FileText, Play, Headphones, Image, Filter, Newspaper, Circle } from 'lucide-react'
+import { useRef, type PointerEvent as ReactPointerEvent } from 'react'
 import type { SavedView } from '../shared/api/types'
 import type { View } from './navigation'
 import { BrandMark } from '../shared/ui/BrandMark'
@@ -33,6 +34,8 @@ export function Sidebar({
   onNavigate,
   collapsed,
   setCollapsed,
+  sidebarWidth,
+  setSidebarWidth,
   savedViews,
   onNavigateSavedView,
   onReorderSavedViews,
@@ -44,6 +47,8 @@ export function Sidebar({
   onNavigate: (view: View) => void
   collapsed: boolean
   setCollapsed: (value: boolean | ((prev: boolean) => boolean)) => void
+  sidebarWidth: number
+  setSidebarWidth: (value: number | ((prev: number) => number)) => void
   savedViews: SavedView[]
   onNavigateSavedView: (id: string) => void
   onReorderSavedViews: (ids: string[]) => void
@@ -53,6 +58,25 @@ export function Sidebar({
 }) {
   const badge = (next: View) => next === 'library' && savedCount > 0 ? savedCount : next === 'downloads' && activeDownloads > 0 ? activeDownloads : 0
   const customSavedViews = savedViews.filter(savedView => !savedView.builtin)
+  const dragStart = useRef<{ x: number; width: number } | null>(null)
+
+  function resizeStart(event: ReactPointerEvent<HTMLDivElement>) {
+    if (collapsed) return
+    event.currentTarget.setPointerCapture?.(event.pointerId)
+    dragStart.current = { x: event.clientX, width: sidebarWidth }
+    const move = (moveEvent: globalThis.PointerEvent) => {
+      if (!dragStart.current) return
+      const next = Math.min(360, Math.max(144, dragStart.current.width + moveEvent.clientX - dragStart.current.x))
+      setSidebarWidth(next)
+    }
+    const stop = () => {
+      dragStart.current = null
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', stop)
+    }
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', stop, { once: true })
+  }
 
   const reorderCustomSavedViews = (ids: string[]) => {
     let index = 0
@@ -61,6 +85,7 @@ export function Sidebar({
 
   return (
     <aside id="desktop-sidebar" className="experience-sidebar" aria-label="个人内容空间">
+      {!collapsed && <div className="experience-sidebar-resize" role="separator" aria-label="调整侧栏宽度" aria-orientation="vertical" aria-valuemin={144} aria-valuemax={360} aria-valuenow={sidebarWidth} tabIndex={0} onPointerDown={resizeStart} onKeyDown={event => { if (event.key === 'ArrowLeft') { event.preventDefault(); setSidebarWidth(value => Math.max(144, value - 8)) } if (event.key === 'ArrowRight') { event.preventDefault(); setSidebarWidth(value => Math.min(360, value + 8)) } }} />}
       <div className="experience-sidebar-head">
         <Button variant="quiet"
           type="button"

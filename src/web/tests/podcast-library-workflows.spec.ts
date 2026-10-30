@@ -1,4 +1,5 @@
 import { expect, test } from './e2e'
+import { openSubscriptionAdd } from './fixtures/subscription-options'
 
 test('subscription inbox presets, filters, saved views, and podcast add stay in the intended context', async ({ page }) => {
   await page.goto('/subscriptions?mode=history')
@@ -21,10 +22,9 @@ test('subscription inbox presets, filters, saved views, and podcast add stay in 
   await expect(page).toHaveURL(/\/subscriptions\?view=/)
   await expect(page.getByRole('group', { name: '自定义订阅视图' }).getByRole('button', { name: /测试视图/ })).toBeVisible()
 
-  const podcasts = page.getByRole('button', { name: '播客', exact: true })
-  await podcasts.click()
-  await page.getByRole('button', { name: '添加播客', exact: true }).click()
-  await expect(page).toHaveURL('/subscriptions?add=rss')
+  await openSubscriptionAdd(page)
   await expect(page.locator('#subscription-add-toggle')).toHaveAttribute('aria-expanded', 'true')
-  await expect(page.getByLabel('订阅地址')).toBeVisible()
+  await page.getByLabel('订阅地址').fill('https://rss-fixture.example/feed.xml')
+  await expect(page.locator('.add-source-confirm')).toContainText('RSS / 播客')
+  await expect(page).toHaveURL(/\/subscriptions\?view=/)
 })

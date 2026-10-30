@@ -17,7 +17,7 @@ const updatePublicKey = existsSync(updatePublicKeyPath) ? readFileSync(updatePub
 export default {
   name: qa ? 'Tangentry QA' : 'Tangentry',
   identifier: qa ? 'dev.tangentry.qa' : 'dev.tangentry.desktop',
-  version: process.env.TANGENTRY_VERSION || '0.0.3.3',
+  version: process.env.TANGENTRY_VERSION || '0.0.3.4',
   main: './cmd/tangentry-desktop',
   out: '../build',
   frontendDist: './web/dist',

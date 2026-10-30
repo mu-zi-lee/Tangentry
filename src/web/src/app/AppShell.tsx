@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import type { SavedView } from '../shared/api/types'
 import type { View } from './navigation'
 import { useHistoryGestures } from './useHistoryGestures'
@@ -23,6 +23,7 @@ export function AppShell({
   resume,
   onResume,
   onDismissResume,
+  toolbar,
   children
 }: {
   view: View
@@ -40,6 +41,7 @@ export function AppShell({
   resume: { title: string } | null
   onResume: () => void
   onDismissResume: () => void
+  toolbar?: ReactNode
   children: ReactNode
 }) {
   const swipe = useHistoryGestures()
@@ -47,12 +49,22 @@ export function AppShell({
   const [collapsed, setCollapsed] = useState(() => {
     try { return localStorage.getItem('tangentry-sidebar-collapsed') !== 'false' } catch { return true }
   })
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    try {
+      const value = Number(localStorage.getItem('tangentry-sidebar-width'))
+      return Number.isFinite(value) ? Math.min(360, Math.max(144, value)) : 236
+    } catch { return 236 }
+  })
   const menu = useRef<HTMLDialogElement>(null)
   const trigger = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     try { localStorage.setItem('tangentry-sidebar-collapsed', String(collapsed)) } catch { /* Navigation remains usable without storage. */ }
   }, [collapsed])
+
+  useEffect(() => {
+    try { localStorage.setItem('tangentry-sidebar-width', String(sidebarWidth)) } catch { /* Keep the current size when storage is unavailable. */ }
+  }, [sidebarWidth])
 
   useEffect(() => {
     const keyboard = () => { document.documentElement.dataset.input = 'keyboard' }
@@ -82,7 +94,7 @@ export function AppShell({
   }, [menuOpen])
 
   return (
-    <div className={`experience ${view === 'reader' ? 'experience-reading' : ''}`} data-view={view} data-sidebar-collapsed={collapsed}>
+    <div className={`experience ${view === 'reader' ? 'experience-reading' : ''}`} data-view={view} data-sidebar-collapsed={collapsed} style={{ '--user-sidebar-width': `${sidebarWidth}px` } as CSSProperties}>
       <a href="#main" className="skip-link">跳到内容</a>
 
       <Sidebar
@@ -90,6 +102,8 @@ export function AppShell({
         onNavigate={onNavigate}
         collapsed={collapsed}
         setCollapsed={setCollapsed}
+        sidebarWidth={sidebarWidth}
+        setSidebarWidth={setSidebarWidth}
         savedViews={savedViews}
         onNavigateSavedView={onNavigateSavedView}
         onReorderSavedViews={onReorderSavedViews}
@@ -107,6 +121,7 @@ export function AppShell({
         discoveryQuery={discoveryQuery}
         onDiscoveryQuery={onDiscoveryQuery}
         onSearchQuery={onSearchQuery}
+        toolbar={toolbar}
       />
 
       <MobileMenu

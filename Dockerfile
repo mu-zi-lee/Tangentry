@@ -3,7 +3,7 @@
 # Multi-arch: docker buildx build --platform linux/amd64,linux/arm64 .
 ARG NODE_VERSION=24.21.0
 ARG GO_VERSION=1.27.1
-ARG VERSION=0.0.3.3
+ARG VERSION=0.0.3.4
 
 # The frontend is architecture-independent, so it builds once on the builder.
 FROM --platform=$BUILDPLATFORM node:${NODE_VERSION}-slim AS web

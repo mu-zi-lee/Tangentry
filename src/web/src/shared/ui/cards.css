@@ -32,7 +32,7 @@
 
 /* ---------- Gallery card surface ---------- */
 .modern-card {
-  position: relative; display: flex; flex-direction: column; min-width: 0; overflow: hidden;
+  position: relative; display: flex; flex-direction: column; min-width: 0; overflow: hidden; container-type: inline-size; container-name: card;
   border: 1px solid var(--line); border-radius: var(--card-radius); background: var(--card);
   cursor: pointer; transition: border-color 160ms var(--ease-out), box-shadow 160ms var(--ease-out), transform 160ms var(--ease-out);
 }
@@ -69,6 +69,7 @@
 .modern-card-title { margin: 0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; font-size: var(--card-title-size, 14px); font-weight: 600; line-height: 1.45; overflow-wrap: anywhere; }
 .card-excerpt, .bilingual-excerpt { margin: 0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; color: var(--muted); font-size: 12.5px; line-height: 1.6; overflow-wrap: anywhere; }
 .modern-card-author { display: flex; align-items: center; gap: 8px; min-width: 0; margin-top: 2px; }
+.modern-card-author > .author-info { min-width: 0; }
 .author-link { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; padding: 0; border-radius: var(--radius-xs); color: inherit; text-align: left; }
 .author-link .author-info { flex: 1; }
 .author-link:hover .author-name { text-decoration: underline; color: var(--accent-ink); }
@@ -89,12 +90,16 @@
 .discovery-card-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 22px; margin-bottom: -2px; }
 .modern-card { position: relative; }
 .discovery-feedback-menu { position: absolute; z-index: 8; top: 8px; right: 8px; opacity: 0; transition: opacity 140ms var(--ease-out); }
-.modern-card:hover .discovery-feedback-menu, .modern-card:focus-within .discovery-feedback-menu, .discovery-feedback-menu:has(.discovery-feedback-popover) { opacity: 1; }
+.modern-card:hover .discovery-feedback-menu, .modern-card:focus-within .discovery-feedback-menu, .discovery-feedback-menu:has([aria-expanded=true]) { opacity: 1; }
 .discovery-feedback-menu > .card-action-button { background: color-mix(in srgb, var(--card) 88%, transparent); backdrop-filter: blur(6px); }
-.modern-card:has(.discovery-feedback-menu) .modern-card-content { padding-right: 52px; }
-.discovery-feedback-popover { position: absolute; top: 34px; right: 0; display: grid; gap: 2px; width: 168px; padding: 8px; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--card); box-shadow: var(--shadow-lg); color: var(--ink); font-size: 12px; }
-.discovery-feedback-popover strong, .discovery-feedback-popover span { padding: 4px 6px; color: var(--muted); font-size: 11px; font-weight: 600; }
-.discovery-feedback-popover button { min-height: 30px; padding: 5px 6px; border-radius: var(--radius-xs); color: var(--ink); text-align: left; }
+.discovery-feedback-popover { position: fixed; inset: auto; margin: 0; width: min(270px, calc(100vw - 16px)); max-height: calc(100dvh - 16px); overflow: auto; padding: 8px; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--card); box-shadow: var(--shadow-lg); color: var(--ink); font-size: 12px; }
+.discovery-feedback-popover:popover-open { display: grid; gap: 8px; }
+.discovery-feedback-popover strong { padding: 6px; font-size: 12px; font-weight: 600; }
+.discovery-feedback-section { display: flex; flex-wrap: wrap; gap: 4px; padding: 0 6px 8px; border-bottom: 1px solid var(--line); }
+.discovery-feedback-section > span { flex-basis: 100%; padding-bottom: 2px; color: var(--muted); font-size: 11px; }
+.discovery-feedback-popover button { min-height: 32px; padding: 6px 8px; border-radius: var(--radius-xs); color: var(--ink); text-align: left; font-size: 12px; }
+.discovery-feedback-section button { background: var(--surface); }
+.discovery-feedback-dismiss { display: grid; }
 .discovery-feedback-popover button:hover, .discovery-feedback-popover button:focus-visible { background: var(--hover); }
 .discovery-card-labels { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
 .discovery-card-duration { color: var(--faint); font: 500 11px/1 var(--font-display); font-variant-numeric: tabular-nums; }
@@ -108,7 +113,22 @@
 .discovery-card-meta .card-action-button { width: 28px; height: 28px; }
 
 /* Video */
-.card-video .modern-card-content { padding-top: 10px; }
+.card-video .modern-card-content { padding-top: 12px; gap: 10px; }
+@container card (max-width: 290px) {
+  .modern-card-content { padding: 10px 12px 12px; }
+  .modern-card-author { flex-wrap: wrap; gap: 6px; }
+  .modern-card-author > .author-link { flex-basis: calc(100% - 28px); }
+  .modern-card-author > .author-info { flex-basis: calc(100% - 36px); }
+  .modern-card-author .modern-card-actions { flex-basis: 100%; justify-content: flex-end; }
+  .card-source-line { flex-wrap: wrap; gap: 3px 6px; }
+  .card-source-line .author-name { flex-basis: 100%; }
+  .modern-card-title { -webkit-line-clamp: 3; }
+}
+@container card (min-width: 380px) {
+  .modern-card-content { padding: 14px 16px 16px; gap: 10px; }
+  .modern-card-title { font-size: 15px; }
+}
+@media (hover: none) { .discovery-feedback-menu { opacity: 1; } }
 
 /* Image notes: portrait media, text kept short. */
 .card-image .modern-card-thumbnail { aspect-ratio: auto; min-height: 140px; max-height: 420px; }

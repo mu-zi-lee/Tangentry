@@ -9,6 +9,8 @@
   --ink-hover: var(--action-hover);
 }
 .experience { min-height: 100vh; min-height: 100dvh; background: var(--canvas); }
+.experience { --sidebar-width: var(--user-sidebar-width, 236px); --shell-offset: var(--sidebar-width); }
+.experience-reading .experience-topbar { display: none; }
 .experience[data-sidebar-collapsed='true'] { --shell-offset: var(--sidebar-rail); }
 
 /* Sidebar */
@@ -52,6 +54,10 @@
 .experience-local { display: inline-flex; align-items: center; gap: 8px; min-width: 0; color: var(--faint); font-size: 12px; white-space: nowrap; overflow: hidden; }
 .local-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); flex-shrink: 0; }
 .experience-sidebar-toggle { display: inline-grid; place-items: center; width: 34px; height: 34px; flex-shrink: 0; border-radius: var(--radius); color: var(--muted); }
+.experience-sidebar-resize { position: absolute; z-index: 2; inset: 0 -4px 0 auto; width: 9px; cursor: col-resize; touch-action: none; }
+.experience-sidebar-resize::after { position: absolute; inset: 0 3px; content: ''; background: transparent; transition: background-color 140ms var(--ease-out); }
+.experience-sidebar-resize:hover::after, .experience-sidebar-resize:focus-visible::after { background: var(--accent); opacity: .35; }
+.experience-sidebar-resize:focus-visible { outline: 0; }
 @media (hover: hover) and (pointer: fine) {
   .experience-links button:not(.active):hover, .experience-mobile-links button:not(.active):hover, .experience-sidebar-toggle:hover, .brand-button:hover { background: var(--hover); color: var(--ink); }
 }
