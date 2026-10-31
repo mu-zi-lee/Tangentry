@@ -21,9 +21,13 @@ type recommender struct {
 
 const platformRecommendationCacheTTL = 10 * time.Minute
 
+// Pagination must not retain every visited platform page for the full TTL.
+const maxRecommendationCacheEntries = 16
+
 type recommendationCacheEntry struct {
 	feed      discovery.Feed
 	expiresAt time.Time
+	used      uint64
 }
 
 type recommendationCacheCall struct {
@@ -41,6 +45,7 @@ type recommendationCache struct {
 	ttl      time.Duration
 	entries  map[string]recommendationCacheEntry
 	inflight map[string]*recommendationCacheCall
+	sequence uint64
 }
 
 func newRecommendationCache() *recommendationCache {
@@ -71,6 +76,9 @@ func (c *recommendationCache) getLocked(key string) (discovery.Feed, bool) {
 		delete(c.entries, key)
 		return discovery.Feed{}, false
 	}
+	c.sequence++
+	entry.used = c.sequence
+	c.entries[key] = entry
 	return entry.feed, true
 }
 
@@ -106,7 +114,18 @@ func (c *recommendationCache) load(ctx context.Context, key string, fetch func(c
 				delete(c.entries, cachedKey)
 			}
 		}
-		c.entries[key] = recommendationCacheEntry{feed: feed, expiresAt: now.Add(c.ttl)}
+		for len(c.entries) >= maxRecommendationCacheEntries {
+			var oldestKey string
+			oldest := ^uint64(0)
+			for cachedKey, entry := range c.entries {
+				if entry.used < oldest {
+					oldestKey, oldest = cachedKey, entry.used
+				}
+			}
+			delete(c.entries, oldestKey)
+		}
+		c.sequence++
+		c.entries[key] = recommendationCacheEntry{feed: feed, expiresAt: now.Add(c.ttl), used: c.sequence}
 	}
 	delete(c.inflight, key)
 	close(call.done)

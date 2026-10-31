@@ -1,9 +1,10 @@
 import { Button, Dialog, Input } from '../../components/ui'
 import { AlertCircle, ArrowLeft, Edit3, LoaderCircle, LogIn, Plus, RefreshCw, SlidersHorizontal, Trash2, TvMinimal, X } from 'lucide-react'
-import { useEffect, useRef, useState, type FormEvent } from 'react'
-import type { ContentItem, DiscoveryTopicRule } from '../../shared/api/types'
+import { memo, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
+import type { ContentItem, DiscoveryBatchItem, DiscoveryTopicRule } from '../../shared/api/types'
 import { ModernGalleryCard } from '../../shared/ui/ModernGalleryCard'
 import { CardCollection } from '../../shared/ui/CardCollection'
+import { ViewportCard, ViewportCards } from '../../shared/ui/ViewportCards'
 import { gallerySources } from './useGallery'
 import type { GallerySource, useGallery } from './useGallery'
 import './discovery.css'
@@ -11,13 +12,31 @@ import { request } from '../../shared/api/client'
 import { useRecommendationExposure } from './useRecommendationExposure'
 import { SkeletonGallery } from '../../shared/ui/SkeletonLoading'
 import { openDesktopPlatformLogin, useCapabilities, type PlatformWebView } from '../../shared/api/desktop'
-import { discoveryBottomState, discoveryReasonType, getDiscoverySourceLabel, hasDiscoveryContinuation, readDiscoveryFilterState, updateDiscoveryFilterState, useDiscoveryBatch } from './useDiscoveryBatch'
+import { discoveryBottomState, discoveryReasonType, getDiscoverySourceLabel, readDiscoveryFilterState, updateDiscoveryFilterState, useDiscoveryBatch } from './useDiscoveryBatch'
+import { useDiscoveryPagination } from './useDiscoveryPagination'
 import { useDiscoveryTopics } from './useDiscoveryTopics'
 import { feedbackMessage, type DiscoveryFeedbackTarget, type DiscoveryFeedbackType } from './discoveryFeedback'
 import { PaperCard } from '../documents/PaperCard'
 import { canPollPlatformVerification } from './discoveryVerification'
 
 const labels: Record<GallerySource | 'huggingface', string> = { subscriptions: '我的订阅', bilibili: 'B站推荐', youtube: 'YouTube 推荐', xiaohongshu: '小红书推荐', linuxdo: 'Linux.do 话题', xiaoyuzhou: '小宇宙发现', douyin: '抖音推荐', huggingface: 'HF 每日论文' }
+
+const DiscoveryCard = memo(function DiscoveryCard({ entry, saved, pending, onRead, onSave, onCreator, onDownload, onFeedback }: {
+  entry: DiscoveryBatchItem
+  saved: boolean
+  pending: boolean
+  onRead: (item: ContentItem) => void
+  onSave: (item: ContentItem) => void
+  onCreator: (platform: string, authorID: string) => void
+  onDownload: (item: ContentItem) => void
+  onFeedback: (type: DiscoveryFeedbackType, target: DiscoveryFeedbackTarget, value: string, item: ContentItem) => void
+}) {
+  const { item, source, reason, carriedOver } = entry
+  const card = item.paper
+    ? <PaperCard item={item} saved={saved} pending={pending} onRead={onRead} onSave={onSave} />
+    : <ModernGalleryCard discovery item={item} origin={getDiscoverySourceLabel(source, reason, carriedOver)} discoveryReason={reason} discoveryType={discoveryReasonType(source, reason, carriedOver)} saved={saved} pending={pending} onRead={onRead} onSave={onSave} onCreator={item.authorId ? value => onCreator(value.platform, value.authorId) : undefined} onDownload={onDownload} onFeedback={(type, target, value) => onFeedback(type, target, value, item)} />
+  return <ViewportCard label={`阅读 ${item.title}`}>{card}</ViewportCard>
+})
 
 function DiscoveryTopicsDialog({ topics, error, onSave, onRemove, onClose }: {
   topics: DiscoveryTopicRule[]
@@ -99,12 +118,12 @@ export function DiscoveryGallery({ active, query, onClearQuery, onQueryChange, n
   const [feedbackError, setFeedbackError] = useState('')
   const sourceOptions = gallerySources.filter(source => source === 'subscriptions' || gallery.enabled?.[source] !== false)
   const sourceStatus = batchState.batch?.sourceStatus ?? {}
-  const selectedEntries = (batchState.batch?.items ?? []).filter(entry => platform === 'all' || entry.source === platform)
+  const selectedEntries = useMemo(() => (batchState.batch?.items ?? []).filter(entry => platform === 'all' || entry.source === platform), [batchState.batch?.items, platform])
   const search = query.trim().toLocaleLowerCase()
   // Discovery is intentionally one mixed stream. Media type is metadata on a
   // card, not a second navigation system competing with sources and topics.
-  const items = selectedEntries.filter(({ item, reason }) => !feedbackHidden.has(item.id) && (!search || `${item.title} ${item.author} ${item.description} ${item.previewText || ''} ${item.platform} ${reason}`.toLocaleLowerCase().includes(search)))
-  useRecommendationExposure(active, items.map(({ item }) => item.id).join(','), '[data-app-view="discovery"]')
+  const items = useMemo(() => selectedEntries.filter(({ item, reason }) => !feedbackHidden.has(item.id) && (!search || `${item.title} ${item.author} ${item.description} ${item.previewText || ''} ${item.platform} ${reason}`.toLocaleLowerCase().includes(search))), [selectedEntries, feedbackHidden, search])
+  useRecommendationExposure(active, sentinel)
   const loading = batchState.loading
   const errorCount = Object.values(sourceStatus).filter(status => status.status !== 'ok' && status.status !== 'disabled' && status.status !== 'loading').length
   const loadingCount = Object.values(sourceStatus).filter(status => status.status === 'loading').length
@@ -132,17 +151,10 @@ export function DiscoveryGallery({ active, query, onClearQuery, onQueryChange, n
     sync(); window.addEventListener('popstate', sync); return () => window.removeEventListener('popstate', sync)
   }, [batchState.options.source, batchState.options.topic, batchState.setOptions, onQueryChange])
 
-  useEffect(() => {
-    const target = sentinel.current
-    if (!active || !target || !hasDiscoveryContinuation(batchState.batch)) return
-    const observer = new IntersectionObserver(entries => { if (entries.some(entry => entry.isIntersecting)) batchState.nextBatch() }, { rootMargin: '720px 0px' })
-    observer.observe(target)
-    // Refresh can leave the sentinel in the same viewport position. Do not
-    // depend on a leave/re-enter event to discover the new continuation.
-    const rect = target.getBoundingClientRect()
-    if (rect.bottom >= -720 && rect.top <= window.innerHeight + 720) batchState.nextBatch()
-    return () => observer.disconnect()
-  }, [active, batchState.batch, batchState.nextBatch])
+  useDiscoveryPagination(sentinel, {
+    active, session: batchState.batch?.batchId, hasMore: batchState.hasMore,
+    loading, error: batchState.error, nextBatch: batchState.nextBatch,
+  })
 
   useEffect(() => () => {
     if (pollTimer.current !== undefined) window.clearTimeout(pollTimer.current)
@@ -189,6 +201,17 @@ export function DiscoveryGallery({ active, query, onClearQuery, onQueryChange, n
     if (['bilibili', 'youtube', 'xiaohongshu', 'linuxdo', 'xiaoyuzhou', 'douyin', 'huggingface'].includes(item.platform)) void request(`/recommendations/${item.platform}/marks`, { method: 'PUT', keepalive: true, body: JSON.stringify({ contentId: item.id, opened: true }) }).catch(() => {})
     onRead(item)
   }
+  // Cursor responses retain existing entry identities. Stable actions let the
+  // memoized cards skip all old text/media work when only a new page arrives.
+  const latestActions = useRef({ onRead: openRecommendation, onSave, onDownload, onCreator, onFeedback: sendFeedback })
+  latestActions.current = { onRead: openRecommendation, onSave, onDownload, onCreator, onFeedback: sendFeedback }
+  const cardActions = useMemo(() => ({
+    onRead: (item: ContentItem) => latestActions.current.onRead(item),
+    onSave: (item: ContentItem) => latestActions.current.onSave(item),
+    onDownload: (item: ContentItem) => latestActions.current.onDownload(item),
+    onCreator: (platform: string, authorID: string) => latestActions.current.onCreator(platform, authorID),
+    onFeedback: (type: DiscoveryFeedbackType, target: DiscoveryFeedbackTarget, value: string, item: ContentItem) => { void latestActions.current.onFeedback(type, target, value, item) },
+  }), [])
   async function sendFeedback(type: DiscoveryFeedbackType, target: DiscoveryFeedbackTarget, value: string, item: ContentItem) {
     try {
       setFeedbackError('')
@@ -233,12 +256,12 @@ export function DiscoveryGallery({ active, query, onClearQuery, onQueryChange, n
     {notice && <p className="inline-feedback collection-save-feedback" role={noticeError ? 'alert' : 'status'}>{notice}</p>}
     {savingUnavailable && <p className="field-hint" role="status">资料库暂不可用，收藏操作等待重新连接。</p>}
     {search && <p className="discovery-search-result" role="status">当前已加载内容中找到 {items.length} 条结果<Button variant="quiet" type="button" className="text-button" onClick={onClearQuery}>清除搜索</Button></p>}
-    {items.length > 0 ? <CardCollection masonry rowGap={20} data-media="all" className="mixed-gallery" aria-label="发现内容">{items.map(({ item, source, reason, carriedOver }) => item.paper ? <PaperCard key={item.id} item={item} saved={savedIDs.has(item.id)} pending={savingUnavailable || pending.has(item.id)} onRead={openRecommendation} onSave={onSave} /> : <ModernGalleryCard discovery key={item.id} item={item} origin={getDiscoverySourceLabel(source, reason, carriedOver)} discoveryReason={reason} discoveryType={discoveryReasonType(source, reason, carriedOver)} saved={savedIDs.has(item.id)} pending={savingUnavailable || pending.has(item.id)} onRead={openRecommendation} onSave={onSave} onCreator={item.authorId ? value => onCreator(value.platform, value.authorId) : undefined} onDownload={onDownload} onFeedback={(type, target, value) => void sendFeedback(type, target, value, item)} />)}</CardCollection> : loading ? <SkeletonGallery count={8} /> : search ? <section className="empty-state"><h2>没有找到匹配的内容</h2><p>试试其他关键词，或清除搜索查看当前内容。</p><Button variant="secondary" type="button" className="button button-secondary" onClick={onClearQuery}>查看全部内容</Button></section> : <section className="empty-state"><h2>还没有可浏览的推荐</h2><p>添加链接开始阅读，或连接平台和订阅来获取个性化内容。</p><div className="empty-state-actions"><Button variant="primary" className="button button-primary" onClick={onSearch}>添加内容</Button><Button variant="secondary" className="button button-secondary" onClick={onSettings}>连接平台</Button><Button variant="quiet" className="text-button" onClick={onSubscriptions}>管理订阅</Button></div></section>}
+    {items.length > 0 ? <ViewportCards enabled={items.length > 120}><CardCollection masonry rowGap={20} data-media="all" className="mixed-gallery" aria-label="发现内容">{items.map(entry => <DiscoveryCard key={entry.item.id} entry={entry} saved={savedIDs.has(entry.item.id)} pending={savingUnavailable || pending.has(entry.item.id)} {...cardActions} />)}</CardCollection></ViewportCards> : loading ? <SkeletonGallery count={8} /> : search ? <section className="empty-state"><h2>没有找到匹配的内容</h2><p>试试其他关键词，或清除搜索查看当前内容。</p><Button variant="secondary" type="button" className="button button-secondary" onClick={onClearQuery}>查看全部内容</Button></section> : <section className="empty-state"><h2>还没有可浏览的推荐</h2><p>添加链接开始阅读，或连接平台和订阅来获取个性化内容。</p><div className="empty-state-actions"><Button variant="primary" className="button button-primary" onClick={onSearch}>添加内容</Button><Button variant="secondary" className="button button-secondary" onClick={onSettings}>连接平台</Button><Button variant="quiet" className="text-button" onClick={onSubscriptions}>管理订阅</Button></div></section>}
     <div ref={sentinel} className="gallery-load-more discovery-feed-status" aria-live="polite">{(() => {
       const state = discoveryBottomState(batchState.error, loading, batchState.batch, items.length)
       if (state.kind === 'error') return <><span role="alert">{state.message}</span><Button variant="secondary" className="button button-secondary" onClick={batchState.retry}><RefreshCw size={15} />重试</Button></>
       if (state.kind === 'loading') return <><LoaderCircle size={15} className="spin" />正在加载更多…</>
-      if (state.kind === 'more') return <span>继续下滑加载更多</span>
+      if (state.kind === 'more') return <Button variant="quiet" type="button" className="text-button" onClick={batchState.nextBatch}>加载更多</Button>
       if (state.kind === 'filtered') return <span>{state.message}</span>
       if (state.kind === 'ended') return <><span>{state.message}</span><Button variant="secondary" className="button button-secondary" onClick={batchState.retry}><RefreshCw size={15} />刷新</Button></>
       return null

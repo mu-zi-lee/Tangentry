@@ -20,6 +20,7 @@ func (h *Handler) registerDiscoveryRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/discovery/linuxdo/posts", h.discovery.linuxdoPosts)
 	mux.HandleFunc("GET /api/recommendations/{source}", h.discovery.recommendationRead)
 	mux.HandleFunc("GET /api/recommendations/{source}/pending", h.discovery.recommendationPending)
+	mux.HandleFunc("GET /api/recommendations/{source}/items/{id}", h.discovery.recommendationItem)
 	mux.HandleFunc("PUT /api/recommendations/{source}/marks", h.discovery.recommendationMark)
 	mux.HandleFunc("GET /api/settings/recommendations", h.discovery.recommendationSettingsRead)
 	mux.HandleFunc("PUT /api/settings/recommendations/{source}", h.discovery.recommendationSettingsSave)

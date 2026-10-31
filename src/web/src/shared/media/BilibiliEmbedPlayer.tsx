@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react'
 import type { PlaybackHandle } from './types'
 import { captureDisplayedElement } from './captureFrame'
 
@@ -18,6 +18,8 @@ export const BilibiliEmbedPlayer = forwardRef<PlaybackHandle, {
   const engaged = useRef(false)
   const seekPending = useRef<{ target: number; at: number } | null>(null)
   const sequence = useRef(-1)
+  const callbacks = useRef({ onPosition, onReady, onProgress, onPlaying })
+  useLayoutEffect(() => { callbacks.current = { onPosition, onReady, onProgress, onPlaying } }, [onPosition, onReady, onProgress, onPlaying])
   const [connected, setConnected] = useState(false)
   const valid = /^BV[0-9A-Za-z]{10}$/.test(id)
   const freshClock = () => clock.current && performance.now() - clock.current.at < 2500 ? clock.current : null
@@ -47,11 +49,22 @@ export const BilibiliEmbedPlayer = forwardRef<PlaybackHandle, {
   useEffect(() => {
     token.current = crypto.randomUUID()
     clock.current = null; engaged.current = false; seekPending.current = null; sequence.current = -1; setConnected(false)
+    if (!valid) { callbacks.current.onReady?.(false); callbacks.current.onPosition?.(null); return }
+    let timer: number | undefined
+    const stop = () => { window.clearTimeout(timer); timer = undefined }
+    const schedule = (delay: number) => {
+      stop()
+      if (!document.hidden) timer = window.setTimeout(connect, delay)
+    }
     const connect = () => {
-      frame.current?.contentWindow?.postMessage({ type: 'tangentry:bilibili:connect', token: token.current, id }, 'https://player.bilibili.com')
+      stop()
+      if (document.hidden) return
+      if (freshClock()) { schedule(2500); return }
       if (clock.current && !freshClock()) {
-        clock.current = null; seekPending.current = null; setConnected(false); onPosition?.(null); onPlaying?.(false)
+        clock.current = null; seekPending.current = null; setConnected(false); callbacks.current.onPosition?.(null); callbacks.current.onPlaying?.(false)
       }
+      frame.current?.contentWindow?.postMessage({ type: 'tangentry:bilibili:connect', token: token.current, id }, 'https://player.bilibili.com')
+      schedule(1000)
     }
     const message = (event: MessageEvent) => {
       if (event.origin !== 'https://player.bilibili.com' || event.source !== frame.current?.contentWindow) return
@@ -61,31 +74,34 @@ export const BilibiliEmbedPlayer = forwardRef<PlaybackHandle, {
         data.position < 0 || data.position > data.duration || typeof data.paused !== 'boolean' ||
         !Number.isSafeInteger(data.sequence) || data.sequence <= sequence.current) return
       sequence.current = data.sequence
-      if (data.seeking === true) { clock.current = null; onPosition?.(null); return }
+      // Clock messages act as the heartbeat; only reconnect when they stop.
+      if (data.seeking === true) { clock.current = null; callbacks.current.onPosition?.(null); return }
       const previous = clock.current
       clock.current = { position: data.position, duration: data.duration, paused: data.paused, at: performance.now() }
       setConnected(true)
-      onPlaying?.(!data.paused)
+      callbacks.current.onPlaying?.(!data.paused)
       if (!data.paused) engaged.current = true
       const moved = !previous || Math.abs(previous.position - data.position) > 0.05
       const request = seekPending.current
       const acknowledged = Boolean(request && Math.abs(data.position - request.target) <= 0.25)
       if (acknowledged || request && performance.now() - request.at > 3000) seekPending.current = null
-      onPosition?.(seekPending.current ? null : data.position)
+      callbacks.current.onPosition?.(seekPending.current ? null : data.position)
       const immediate = Boolean(previous && previous.paused !== data.paused || data.ended || acknowledged)
-      if (!seekPending.current && engaged.current && (moved || immediate)) onProgress?.(data.position, data.duration, immediate)
+      if (!seekPending.current && engaged.current && (moved || immediate)) callbacks.current.onProgress?.(data.position, data.duration, immediate)
     }
+    const visibility = () => { if (document.hidden) stop(); else connect() }
     window.addEventListener('message', message)
-    const timer = window.setInterval(connect, 1000)
+    document.addEventListener('visibilitychange', visibility)
     connect()
-    onPosition?.(null); onReady?.(valid)
+    callbacks.current.onPosition?.(null); callbacks.current.onReady?.(valid)
     return () => {
-      window.clearInterval(timer); window.removeEventListener('message', message)
-      if (getPosition() !== null && clock.current && engaged.current && !seekPending.current) onProgress?.(clock.current.position, clock.current.duration, true)
+      stop(); window.removeEventListener('message', message)
+      document.removeEventListener('visibilitychange', visibility)
+      if (getPosition() !== null && clock.current && engaged.current && !seekPending.current) callbacks.current.onProgress?.(clock.current.position, clock.current.duration, true)
       clock.current = null
-      onReady?.(false); onPosition?.(null); onPlaying?.(false)
+      callbacks.current.onReady?.(false); callbacks.current.onPosition?.(null); callbacks.current.onPlaying?.(false)
     }
-  }, [id, valid, target.revision, onReady, onPosition, onProgress, onPlaying])
+  }, [id, valid, target.revision])
   if (!valid) return <p role="alert">视频地址无效。</p>
   return <div className="bilibili-embed">
     <iframe ref={frame} key={target.revision} className="platform-video" title={'B站官方播放器 ' + title}

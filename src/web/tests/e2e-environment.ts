@@ -1,8 +1,9 @@
 import { fileURLToPath } from 'node:url'
+import { randomUUID } from 'node:crypto'
 
 // The runner sets the run id once; workers inherit it, so every process agrees
 // on the shared run directory and the prebuilt server binary.
-process.env.TANGENTRY_E2E_RUN ??= Date.now().toString()
+process.env.TANGENTRY_E2E_RUN ??= `${Date.now()}-${randomUUID()}`
 
 export const e2eRunDirectory = fileURLToPath(new URL(`../../data/e2e/${process.env.TANGENTRY_E2E_RUN}`, import.meta.url))
 export const e2eServerBinary = `${e2eRunDirectory}/tangentry-e2e-server`

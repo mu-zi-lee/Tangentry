@@ -69,7 +69,7 @@ export function GalleryCardFrame({ item, origin, discoveryReason, className, onR
       {onFeedback && <div className="discovery-feedback-menu" onClick={event => event.stopPropagation()}>
         <Button ref={trigger} variant="quiet" type="button" className="card-action-button" aria-label="调整发现偏好" title="调整发现偏好" aria-expanded={menuOpen} aria-controls={menuId} popoverTarget={menuId}><MoreVertical size={17} /></Button>
         <div ref={menu} id={menuId} popover="auto" className="discovery-feedback-popover" role="group" aria-label="调整发现偏好" onToggle={event => setMenuOpen(event.newState === 'open')}>
-          <strong>调整发现偏好</strong>
+          {menuOpen && <><strong>调整发现偏好</strong>
           <div className="discovery-feedback-section" role="group" aria-label="想多看看"><span>想多看看</span>
             <Button variant="quiet" type="button" onClick={() => feedback('more', 'source', item.platform)}>同来源</Button>
             <Button variant="quiet" type="button" onClick={() => feedback('more', 'creator', creator)}>同创作者</Button>
@@ -83,7 +83,7 @@ export function GalleryCardFrame({ item, origin, discoveryReason, className, onR
           <div className="discovery-feedback-dismiss">
             <Button variant="quiet" type="button" onClick={() => feedback('hide', 'item', item.id)}>不感兴趣</Button>
             <Button variant="quiet" type="button" onClick={() => feedback('block_creator', 'creator', creator)}>屏蔽此创作者</Button>
-          </div>
+          </div></>}
         </div>
       </div>}
       {children}

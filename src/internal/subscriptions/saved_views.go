@@ -128,6 +128,14 @@ func (s *SavedViewService) Get(ctx context.Context, id string) (SavedView, error
 }
 
 func (s *SavedViewService) Query(ctx context.Context, id, cursor string, limit int) (InboxPage, int, error) {
+	return s.query(ctx, id, cursor, limit, false)
+}
+
+func (s *SavedViewService) QueryCards(ctx context.Context, id, cursor string, limit int) (InboxPage, int, error) {
+	return s.query(ctx, id, cursor, limit, true)
+}
+
+func (s *SavedViewService) query(ctx context.Context, id, cursor string, limit int, cards bool) (InboxPage, int, error) {
 	view, err := s.Get(ctx, id)
 	if err != nil {
 		return InboxPage{}, 0, err
@@ -136,6 +144,7 @@ func (s *SavedViewService) Query(ctx context.Context, id, cursor string, limit i
 	if err != nil {
 		return InboxPage{}, 0, err
 	}
+	query.Cards = cards
 	page, err := s.inbox.List(ctx, query)
 	if err != nil {
 		return InboxPage{}, 0, err

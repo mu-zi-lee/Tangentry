@@ -29,7 +29,13 @@ export function SubtitleExcerptAction({ time, paragraph = false, radius, onExcer
   return <div className="subtitle-excerpt-action">
     <Button variant="quiet" type="button" className="subtitle-excerpt-button" aria-label={`摘录字幕原句 ${time}`} title={`摘录${choices[radius][1]}到笔记`} onClick={() => onExcerpt(radius)}><Quote size={14} aria-hidden="true"/><span>摘录</span></Button>
     <Button ref={trigger} variant="quiet" type="button" className="subtitle-excerpt-options" aria-label={`选择摘录范围 ${time}`} title="选择摘录范围" aria-controls={id} aria-expanded={open} popoverTarget={id}><ChevronDown size={12} aria-hidden="true"/></Button>
-    <div ref={panel} id={id} popover="auto" className="subtitle-excerpt-menu" role="group" aria-label={`摘录范围 ${time}`} onToggle={event => setOpen(event.newState === 'open')}>
+    <div ref={panel} id={id} popover="auto" className="subtitle-excerpt-menu" role="group" aria-label={`摘录范围 ${time}`} onToggle={event => setOpen(event.newState === 'open')} onKeyDown={event => {
+      if (event.key !== 'Escape') return
+      event.preventDefault()
+      event.stopPropagation()
+      panel.current?.hidePopover()
+      trigger.current?.focus({ preventScroll: true })
+    }}>
       <span>摘录到笔记</span>
       {choices.map(([value, label]) => <Button key={value} variant="quiet" type="button" onClick={() => { panel.current?.hidePopover(); onExcerpt(value) }}><span>{label}</span>{radius === value && <Check size={14} aria-hidden="true"/>}</Button>)}
     </div>

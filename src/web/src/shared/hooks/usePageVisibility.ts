@@ -1,11 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useSyncExternalStore } from 'react'
+
+const listeners = new Set<() => void>()
+const visible = () => document.visibilityState !== 'hidden'
+const update = () => { for (const listener of listeners) listener() }
+function subscribe(listener: () => void) {
+  if (!listeners.size) document.addEventListener('visibilitychange', update)
+  listeners.add(listener)
+  return () => {
+    listeners.delete(listener)
+    if (!listeners.size) document.removeEventListener('visibilitychange', update)
+  }
+}
 
 export function usePageVisibility() {
-  const [visible, setVisible] = useState(() => document.visibilityState !== 'hidden')
-  useEffect(() => {
-    const update = () => setVisible(document.visibilityState !== 'hidden')
-    document.addEventListener('visibilitychange', update)
-    return () => document.removeEventListener('visibilitychange', update)
-  }, [])
-  return visible
+  return useSyncExternalStore(subscribe, visible, () => true)
 }

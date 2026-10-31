@@ -26,7 +26,7 @@ export function ImageGalleryCard({ item, origin, discoveryReason, discoveryType,
         <GalleryCardTitle item={item} onRead={onRead} />
         {excerpt}
         <div className="modern-card-author">
-          <AuthorLink item={item} onCreator={onCreator} discoveryType={discovery ? discoveryType : undefined} discoveryReason={discoveryReason}><AuthorPublication item={item} /></AuthorLink>
+          <AuthorLink item={item} onCreator={onCreator} resolveMissing={!discovery} discoveryType={discovery ? discoveryType : undefined} discoveryReason={discoveryReason}><AuthorPublication item={item} resolveMissing={!discovery} /></AuthorLink>
           <div className="modern-card-actions"><SaveCardAction item={item} saved={saved} pending={pending} onSave={onSave} /></div>
         </div>
       </div>

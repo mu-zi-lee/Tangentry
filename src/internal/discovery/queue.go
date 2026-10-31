@@ -52,6 +52,26 @@ func (q *RecommendationQueue) Mark(ctx context.Context, platform, id string, ope
 	return q.repository.MarkQueuedRecommendation(ctx, scope, id, opened, q.clock().UnixMilli())
 }
 
+// Item reads the full local recommendation, including already opened items.
+// Card projections must not force a network fetch or cross account boundaries.
+func (q *RecommendationQueue) Item(ctx context.Context, platform, id string) (content.Item, error) {
+	scope := q.scope(platform)
+	if !ValidQueueScope(scope) || scope.Platform != platform || !content.ValidID(id) || !strings.HasPrefix(id, platform+":") {
+		return content.Item{}, ErrInvalidQuery
+	}
+	repository, ok := q.repository.(interface {
+		GetQueuedRecommendation(context.Context, QueueScope, string) (content.Item, error)
+	})
+	if !ok {
+		return content.Item{}, ErrUnavailable
+	}
+	item, err := repository.GetQueuedRecommendation(ctx, scope, id)
+	if q.scope(platform) != scope {
+		return content.Item{}, ErrUnavailable
+	}
+	return item, err
+}
+
 func (q *RecommendationQueue) Fetch(ctx context.Context, platform string, fetch func(context.Context) (Feed, error)) (Feed, error) {
 	scope := q.scope(platform)
 	if !ValidQueueScope(scope) || scope.Platform != platform {

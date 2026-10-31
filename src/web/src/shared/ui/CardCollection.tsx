@@ -29,28 +29,21 @@ export function CardCollection({ children, masonry = true, rowGap = 16, ...props
   const collection = useRef<HTMLDivElement>(null)
   const measurements = useRef(new WeakMap<HTMLElement, CardSize>())
   const spacingRef = useRef<number | undefined>(undefined)
+  const syncCards = useRef<(() => void) | undefined>(undefined)
   // Re-measure when the set of cards changes, not on every parent render:
   // ResizeObserver already follows each card's own height changes.
   const cards = Children.toArray(children).map(child => isValidElement(child) ? String(child.key) : '').join('\n')
   useLayoutEffect(() => {
     const node = collection.current
     if (!node) return
-    const cards = Array.from(node.children) as HTMLElement[]
     if (!masonry) {
-      cards.forEach(card => {
-        card.style.removeProperty('grid-row-end')
-      })
-      return
+      syncCards.current = () => Array.from(node.children).forEach(card => (card as HTMLElement).style.removeProperty('grid-row-end'))
+      return () => { syncCards.current = undefined }
     }
     // One-pixel tracks let each card keep its own height and fill earlier gaps.
     // Row spacing follows the user's card spacing relative to the standard 18px column gap.
-    const gap = parseFloat(getComputedStyle(node).columnGap)
-    const spacing = Number.isFinite(gap) && gap > 0 ? Math.max(4, rowGap + gap - 18) : rowGap
-    const spacingChanged = spacingRef.current !== spacing
-    spacingRef.current = spacing
-    if (spacingChanged) measurements.current = new WeakMap<HTMLElement, CardSize>()
-    const measuredCount = cards.filter(card => measurements.current.has(card) && card.style.gridRowEnd).length
-    const shouldMeasure = masonryNeedsMeasurement(cards.length, measuredCount, spacingChanged)
+    let spacing = rowGap
+    const observed = new Set<HTMLElement>()
     const resize = (entries: ResizeBoxEntry[]) => {
       const updates: Array<{ card: HTMLElement; width: number; height: number }> = []
       for (const entry of entries) {
@@ -73,19 +66,33 @@ export function CardCollection({ children, masonry = true, rowGap = 16, ...props
     // preserving the DOM. Existing spans keep the page geometry stable, so let
     // ResizeObserver refresh them asynchronously instead of synchronously
     // measuring every card during reveal.
-    const cardsToMeasure = shouldMeasure
-      ? cards.filter(card => spacingChanged || !measurements.current.has(card) || !card.style.gridRowEnd)
-      : []
-    if (cardsToMeasure.length) resize(cardsToMeasure.map(target => ({ target })))
     const observer = new ResizeObserver(resize)
     // Measuring a content-visibility placeholder makes grid spans oscillate as
     // cards enter the viewport. Keep the measured card box in layout instead.
-    cards.forEach(card => observer.observe(card))
+    syncCards.current = () => {
+      const cards = new Set(Array.from(node.children) as HTMLElement[])
+      const gap = parseFloat(getComputedStyle(node).columnGap)
+      spacing = Number.isFinite(gap) && gap > 0 ? Math.max(4, rowGap + gap - 18) : rowGap
+      if (spacingRef.current !== spacing) {
+        spacingRef.current = spacing
+        measurements.current = new WeakMap<HTMLElement, CardSize>()
+      }
+      for (const card of observed) {
+        if (!cards.has(card)) { observer.unobserve(card); observed.delete(card) }
+      }
+      const missing = [...cards].filter(card => !measurements.current.has(card) || !card.style.gridRowEnd)
+      if (missing.length) resize(missing.map(target => ({ target })))
+      for (const card of cards) {
+        if (!observed.has(card)) { observed.add(card); observer.observe(card) }
+      }
+    }
     return () => {
       observer.disconnect()
+      syncCards.current = undefined
       // Preserve track spans across React updates: collapsing the grid even
       // briefly clamps the document's scroll position before we can remeasure.
     }
-  }, [cards, masonry, rowGap])
+  }, [masonry, rowGap])
+  useLayoutEffect(() => { syncCards.current?.() }, [cards, masonry, rowGap])
   return <div {...props} data-masonry={masonry} ref={collection}>{children}</div>
 }

@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"errors"
+	"strconv"
 	"testing"
 	"time"
 
@@ -108,5 +109,30 @@ func TestRecommendationCacheDoesNotStoreErrors(t *testing.T) {
 	}
 	if calls != 2 {
 		t.Fatalf("error was cached: calls=%d", calls)
+	}
+}
+
+func TestRecommendationCacheBoundsPaginationAndKeepsRecentlyUsedPage(t *testing.T) {
+	cache := newRecommendationCache()
+	fetch := func(context.Context) (discovery.Feed, error) { return discovery.Feed{}, nil }
+	for page := 0; page < maxRecommendationCacheEntries; page++ {
+		if _, err := cache.load(context.Background(), strconv.Itoa(page), fetch); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, ok := cache.get("0"); !ok {
+		t.Fatal("first page not cached")
+	}
+	if _, err := cache.load(context.Background(), "next", fetch); err != nil {
+		t.Fatal(err)
+	}
+	if len(cache.entries) != maxRecommendationCacheEntries {
+		t.Fatalf("unbounded cache: %d entries", len(cache.entries))
+	}
+	if _, ok := cache.get("0"); !ok {
+		t.Fatal("recently used page evicted")
+	}
+	if _, ok := cache.get("1"); ok {
+		t.Fatal("least recently used page retained")
 	}
 }

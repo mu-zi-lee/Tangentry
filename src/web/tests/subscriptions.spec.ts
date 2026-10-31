@@ -13,6 +13,14 @@ test.beforeEach(async ({ request }) => {
 })
 
 test('subscriptions persist and update independently, keep successful content on failure, and restore reading context', async ({ page, request }) => {
+  // This test exercises local subscriptions and reader navigation, not the
+  // live platform subtitle service or its network-dependent fallback delay.
+  await page.route('**/api/subtitles/bilibili?**', route => route.fulfill({ json: {
+    videoId: 'BV17x411w7KC', part: 1, status: 'available', tracks: [{
+      language: 'zh-Hans', label: '明确标识的测试字幕',
+      cues: [{ start: 0, end: 4, text: '订阅阅读导航回归测试。' }],
+    }],
+  } }))
   await page.route('**/api/subscriptions/resolve', route => {
     const query = route.request().postDataJSON().query
     const id = query.includes('12345') ? '12345' : '67890'
@@ -63,6 +71,9 @@ test('subscriptions persist and update independently, keep successful content on
   await expect(page.getByRole('button', { name: '阅读 订阅测试样例：更新后的标题', exact: true })).toBeFocused()
   await expect.poll(() => page.evaluate(() => scrollY)).toBe(readingScroll)
   await page.getByLabel('搜索订阅投稿').fill('')
+  await expect(page.getByLabel('搜索订阅投稿')).toHaveValue('')
+  await expect(page).toHaveURL('/subscriptions')
+  await expect(page.getByTestId('content-card')).toHaveCount(2)
   await page.getByRole('button', { name: '更新投稿', exact: true }).click()
   await expect(page.getByRole('alert')).toContainText('订阅测试平台限制')
   await expect(page.getByTestId('content-card')).toHaveCount(2)
@@ -166,4 +177,64 @@ test('source refresh preserves an expanded add form and its unsaved draft', asyn
   await page.getByRole('button', { name: '来源管理', exact: true }).click()
   await expect(page.getByLabel('订阅来源名称', { exact: true })).toHaveValue('未保存的第二个来源')
   expect((await (await request.get('/api/subscriptions')).json()).sources).toHaveLength(1)
+})
+
+test('mobile subscription directory collapses around the reading stream', async ({ page, request }) => {
+  const created = await request.post('/api/subscriptions', { data: { type: 'bilibili', query: '12345', name: '移动端来源' } })
+  expect(created.status()).toBe(201)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/subscriptions')
+  await expect(page.getByRole('heading', { name: '全部订阅', exact: true })).toBeVisible()
+  const directory = page.locator('.subscription-directory')
+  const toggle = directory.getByRole('button', { name: /全部订阅/ })
+  await expect(toggle).toBeVisible()
+  await expect(page.locator('#subscription-source-directory')).toBeHidden()
+  await toggle.click()
+  await expect(page.locator('#subscription-source-directory')).toBeVisible()
+  await directory.getByRole('button', { name: /移动端来源/ }).click()
+  await expect(page.locator('#subscription-source-directory')).toBeHidden()
+  await expect(page.getByRole('heading', { name: '移动端来源', exact: true })).toBeVisible()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+})
+
+test('updating all sources refreshes the combined stream once after the batch completes', async ({ page, request }) => {
+  for (const query of ['54321', '54322']) {
+    const response = await request.post('/api/subscriptions', { data: { type: 'bilibili', query, name: `批量更新来源 ${query}` } })
+    expect(response.status()).toBe(201)
+  }
+  // Removing a source intentionally preserves its historical inbox entries.
+  const before = await (await request.get('/api/subscription-inbox?limit=50')).json()
+  let inboxReads = 0, sourceReads = 0, completedUpdates = 0
+  let releaseUpdates = () => {}
+  const pendingUpdates = new Promise<void>(resolve => { releaseUpdates = resolve })
+  await page.route('**/api/subscriptions/*/update?cards=true', async route => {
+    const response = await route.fetch()
+    completedUpdates++
+    await pendingUpdates
+    await route.fulfill({ response })
+  })
+  page.on('request', request => {
+    const path = new URL(request.url()).pathname
+    if (path === '/api/subscription-inbox') inboxReads++
+    if (path === '/api/subscriptions') sourceReads++
+  })
+  await page.goto('/subscriptions')
+  await expect(page.getByRole('heading', { name: '全部订阅', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: '全部更新', exact: true })).toBeEnabled()
+  await expect.poll(() => inboxReads).toBe(1)
+  await expect(page.getByTestId('content-card')).toHaveCount(before.page.entries.length)
+  await page.getByRole('button', { name: '全部更新', exact: true }).click()
+  try {
+    await expect.poll(() => completedUpdates).toBe(2)
+    const beforeFocus = sourceReads
+    await page.evaluate(() => { window.dispatchEvent(new Event('focus')); document.dispatchEvent(new Event('visibilitychange')) })
+    await page.waitForTimeout(150)
+    expect(sourceReads).toBe(beforeFocus)
+    expect(inboxReads).toBe(1)
+  } finally { releaseUpdates() }
+  await expect(page.getByRole('status').filter({ hasText: '已完成 2/2 个来源' })).toBeVisible()
+  await expect.poll(() => inboxReads).toBe(2)
+  const after = await (await request.get('/api/subscription-inbox?limit=50')).json()
+  await expect(page.getByTestId('content-card')).toHaveCount(after.page.entries.length)
+  await expect(page.getByTestId('content-card').getByRole('heading')).toHaveText(after.page.entries.map((entry: { item: ContentItem }) => entry.item.title))
 })

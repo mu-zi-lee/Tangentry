@@ -24,7 +24,7 @@ export function ArticleGalleryCard({ item, origin, discoveryReason, discoveryTyp
           {item.viewCount ? <span>{item.viewCount} 浏览</span> : null}
         </div>}
         <div className="modern-card-author">
-          <AuthorLink item={item} onCreator={onCreator} showAvatar={Boolean(item.authorAvatarUrl || item.platform === 'xiaohongshu' || (onCreator && item.authorId && creatorViewSupported(item.platform)))} discoveryType={discovery ? discoveryType : undefined} discoveryReason={discoveryReason}><AuthorPublication item={item} /></AuthorLink>
+          <AuthorLink item={item} onCreator={onCreator} resolveMissing={!discovery} showAvatar={Boolean(item.authorAvatarUrl || item.platform === 'xiaohongshu' || (onCreator && item.authorId && creatorViewSupported(item.platform)))} discoveryType={discovery ? discoveryType : undefined} discoveryReason={discoveryReason}><AuthorPublication item={item} resolveMissing={!discovery} /></AuthorLink>
           <div className="modern-card-actions"><SaveCardAction item={item} saved={saved} pending={pending} onSave={onSave} /></div>
         </div>
       </div>

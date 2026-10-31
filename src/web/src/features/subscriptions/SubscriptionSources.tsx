@@ -1,5 +1,5 @@
 import { Button, Checkbox, Input, Select } from '../../components/ui'
-import { Folder, Pencil, Plus, RefreshCw, Search, Trash2, X } from 'lucide-react'
+import { AlertCircle, Folder, LoaderCircle, Pencil, Plus, RefreshCw, Search, Trash2, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { SubscriptionGroup, SubscriptionSource } from '../../shared/api/types'
 import { sourceLabel } from './sourcePresentation'
@@ -50,7 +50,7 @@ export function SubscriptionSources({state, groups, onSelect}: {state: ReturnTyp
   const matches = (source: SubscriptionSource, groupName = '') => !keyword || `${source.name} ${sourceLabel(source)} ${groupName}`.toLocaleLowerCase().includes(keyword)
   const sourceButton = (source: SubscriptionSource) => <div key={source.id} className={`subscription-source-row ${selected.has(source.id) ? 'selected' : ''}`}>
     <Checkbox className="subscription-source-check" type="checkbox" checked={selected.has(source.id)} aria-label={`选择来源 ${source.name}`} onChange={event => { const next = toggleSelection(selected, visibleIds, source.id, (event.nativeEvent as MouseEvent).shiftKey, anchor.current); anchor.current = source.id; setSelected(next) }} />
-    <Button variant="quiet" className={`subscription-source ${source.id === state.selectedId ? 'active' : ''}`} aria-current={source.id === state.selectedId ? 'true' : undefined} title={source.name} onClick={() => { state.select(source.id); onSelect?.() }}><SubscriptionSourceIcon source={source}/><strong>{source.name}</strong><span className="subscription-source-platform">{sourceLabel(source)}</span><small>{source.lastUpdatedAt ? `${source.itemCount} 条` : '未更新'}</small></Button>
+    <Button variant="quiet" className={`subscription-source ${source.id === state.selectedId ? 'active' : ''}`} aria-current={source.id === state.selectedId ? 'true' : undefined} title={source.name} onClick={() => { state.select(source.id); onSelect?.() }}><SubscriptionSourceIcon source={source}/><strong>{source.name}</strong><span className="subscription-source-platform"><span>{sourceLabel(source)}</span>{source.active ? <span className="subscription-source-health" data-active="true"><LoaderCircle size={11} className="spin" aria-hidden="true"/>更新中</span> : !['healthy', 'never_checked', 'paused'].includes(source.refresh.status) && <span className="subscription-source-health" title={source.refresh.message}><AlertCircle size={11} aria-hidden="true"/>需处理</span>}</span><small>{source.lastUpdatedAt ? `${source.itemCount} 条` : '未更新'}</small></Button>
   </div>
   const ungrouped = state.sources.filter(source => !source.groupId)
   const unresolved = state.sources.filter(source => source.groupId && !knownGroups.has(source.groupId))

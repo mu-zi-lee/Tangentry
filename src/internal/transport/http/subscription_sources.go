@@ -5,8 +5,25 @@ import (
 	"errors"
 	"net/http"
 
+	"tangentry/internal/content"
 	"tangentry/internal/subscriptions"
 )
+
+func subscriptionCardMode(w http.ResponseWriter, r *http.Request) (bool, bool) {
+	query := r.URL.Query()
+	values, cards := query["cards"]
+	if len(query) != 0 && (!cards || len(query) != 1 || len(values) != 1 || values[0] != "true") {
+		fail(w, subscriptions.ErrInvalid)
+		return false, false
+	}
+	return cards, true
+}
+
+func projectSubscriptionCards(detail *subscriptions.Detail) {
+	for index := range detail.Items {
+		detail.Items[index] = content.Card(detail.Items[index])
+	}
+}
 
 type subscriptionBatchRequest struct {
 	Action          string   `json:"action"`
@@ -89,10 +106,25 @@ func (h *feedsHandler) subscriptionGet(w http.ResponseWriter, r *http.Request) {
 	if !h.subscriptionReady(w) {
 		return
 	}
-	detail, err := h.feeds.Subscriptions.Get(r.Context(), r.PathValue("id"))
+	cards, valid := subscriptionCardMode(w, r)
+	if !valid {
+		return
+	}
+	get := h.feeds.Subscriptions.Get
+	if cards {
+		if service, ok := h.feeds.Subscriptions.(interface {
+			GetCards(context.Context, string) (subscriptions.Detail, error)
+		}); ok {
+			get = service.GetCards
+		}
+	}
+	detail, err := get(r.Context(), r.PathValue("id"))
 	if err != nil {
 		fail(w, err)
 		return
+	}
+	if cards {
+		projectSubscriptionCards(&detail)
 	}
 	write(w, 200, detail)
 }
@@ -156,10 +188,17 @@ func (h *feedsHandler) subscriptionUpdate(w http.ResponseWriter, r *http.Request
 	if !h.subscriptionReady(w) {
 		return
 	}
+	cards, valid := subscriptionCardMode(w, r)
+	if !valid {
+		return
+	}
 	detail, err := h.feeds.Subscriptions.Update(r.Context(), r.PathValue("id"))
 	if err != nil {
 		fail(w, err)
 		return
+	}
+	if cards {
+		projectSubscriptionCards(&detail)
 	}
 	write(w, 200, detail)
 }

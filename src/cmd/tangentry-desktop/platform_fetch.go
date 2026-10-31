@@ -27,7 +27,7 @@ const (
 	douyinDOMCandidateMax    = 16
 	platformFetchTimeout     = 20 * time.Second
 	douyinVideoMediaTimeout  = 25 * time.Second
-	platformFetchIdle        = 5 * time.Minute
+	platformFetchIdle        = 45 * time.Second
 	douyinCapturePoll        = 200 * time.Millisecond
 	douyinDOMWait            = 15 * time.Second
 	douyinCaptureStable      = 700 * time.Millisecond
@@ -36,18 +36,46 @@ const (
 )
 
 type platformPageBridge struct {
-	mu       sync.Mutex
-	sessions map[string]*platformPageSession
-	closed   bool
+	mu           sync.Mutex
+	sessions     map[string]*platformPageSession
+	closed       bool
+	createWindow func(*platformPageSession) (platformSessionWindow, error)
+}
+
+type platformSessionWindow interface {
+	Page() *mygo.Page
+	LoadURL(string) error
+	EvalContext(context.Context, string) (any, error)
+	IsDestroyed() bool
+	Close()
+}
+
+type nativePlatformSessionWindow struct{ *mygo.Window }
+
+func (window *nativePlatformSessionWindow) EvalContext(ctx context.Context, script string) (any, error) {
+	return window.Page().EvalContext(ctx, script)
+}
+
+func (window *nativePlatformSessionWindow) LoadURL(url string) error {
+	return window.Page().LoadURL(url)
 }
 
 type platformPageSession struct {
-	mu                sync.Mutex
+	bridge            *platformPageBridge
 	platform          string
 	origin            string
-	window            *mygo.Window
+	window            platformSessionWindow
+	ctx               context.Context
+	cancel            context.CancelFunc
+	initialized       chan struct{}
+	initErr           error
+	operation         chan struct{}
+	users             int
 	lastUsed          time.Time
 	closeAt           *time.Timer
+	closeGeneration   uint64
+	closing           bool
+	destroyed         atomic.Bool
 	ready             chan struct{}
 	readyOnce         sync.Once
 	blockedNavigation atomic.Value
@@ -259,23 +287,71 @@ const douyinPageStateScript = `(function(){const url=location.href,title=documen
 
 const douyinMediaClearScript = `(function(){ if(window.__tangentryDouyinMedia) window.__tangentryDouyinMedia.splice(0); if(window.__tangentryDouyinFeed) window.__tangentryDouyinFeed.splice(0); return true; })();`
 
-const douyinMediaMutePreloadScript = `(function(){
-  let target='';
-  try { target=sessionStorage.getItem('__tangentryDouyinMediaResolution')||'';if(target)sessionStorage.removeItem('__tangentryDouyinMediaResolution'); } catch (_) {}
-  if (!/^[1-9][0-9]{15,19}$/.test(target) || location.pathname!=='/video/'+target && location.pathname!=='/video/'+target+'/' || !/^(?:www\.)?douyin\.com$/i.test(location.hostname) || !window.HTMLMediaElement) return;
-  const mute=media=>{if(!media||!(/^(?:AUDIO|VIDEO)$/i.test(String(media.tagName||''))))return;media.muted=true;media.defaultMuted=true;media.autoplay=false;if(media.hasAttribute&&media.hasAttribute('autoplay'))media.removeAttribute('autoplay');if(typeof media.pause==='function')media.pause();};
-  const prototype=HTMLMediaElement.prototype,play=prototype.play;
-  if(typeof play==='function'&&!prototype.__tangentryDouyinMutedPlay){Object.defineProperty(prototype,'__tangentryDouyinMutedPlay',{value:true});prototype.play=function(){mute(this);return play.apply(this,arguments);};}
-  const visit=node=>{if(!node)return;if(node.nodeType===1){mute(node);if(node.querySelectorAll)for(const media of node.querySelectorAll('audio,video'))mute(media);}};
-  if(typeof MutationObserver==='function')new MutationObserver(records=>{for(const record of records){if(record.type==='attributes')visit(record.target);for(const node of record.addedNodes||[])visit(node);}}).observe(document,{subtree:true,childList:true,attributes:true,attributeFilter:['autoplay']});
-  document.addEventListener('play',event=>mute(event.target),true);
-  for(const media of document.querySelectorAll('audio,video'))mute(media);
+const platformMediaGuardScript = `(function(){
+  if (!window.HTMLMediaElement || window.__tangentryPlatformMediaGuard) return;
+  let active=true;
+  try { active=sessionStorage.getItem('__tangentryPlatformMediaIdle')!=='1'; } catch (_) {}
+  const release = media => {
+    try {
+      let resource=Boolean(media.srcObject || media.getAttribute('src') || media.currentSrc && media.networkState!==0);
+      const stream=media.srcObject;
+      if (stream) {
+        media.srcObject=null;
+        if (typeof stream.getTracks==='function') for (const track of stream.getTracks()) { try { track.stop(); } catch (_) {} }
+      }
+      if (media.hasAttribute('src')) media.removeAttribute('src');
+      for (const source of media.querySelectorAll('source')) {
+        if (source.hasAttribute('src')) { resource=true; source.removeAttribute('src'); }
+      }
+      if (media.preload!=='none') media.preload='none';
+      if (resource) media.load();
+    } catch (_) {}
+  };
+  const mute = media => {
+    if (!media || !/^(?:AUDIO|VIDEO)$/i.test(String(media.tagName || ''))) return;
+    try {
+      media.autoplay = false;
+      media.defaultMuted = true;
+      media.muted = true;
+      if (media.hasAttribute && media.hasAttribute('autoplay')) media.removeAttribute('autoplay');
+      if (!media.paused && typeof media.pause === 'function') media.pause();
+    } catch (_) {}
+    if (!active) release(media);
+  };
+  const prototype = HTMLMediaElement.prototype;
+  if (typeof prototype.play === 'function') {
+    prototype.play = function() {
+      mute(this);
+      return Promise.reject(new Error('Tangentry hidden platform media playback is disabled'));
+    };
+  }
+  const srcObject=Object.getOwnPropertyDescriptor(prototype,'srcObject');
+  if (srcObject && srcObject.configurable && srcObject.set) Object.defineProperty(prototype,'srcObject',Object.assign({},srcObject,{set(value){srcObject.set.call(this,value);if(value)mute(this);}}));
+  const visit = node => {
+    if (!node) return;
+    if (node.nodeType === 1) {
+      mute(node);
+      if (node.closest) mute(node.closest('audio,video'));
+      if (node.querySelectorAll) for (const media of node.querySelectorAll('audio,video')) mute(media);
+    }
+  };
+  if (typeof MutationObserver === 'function') new MutationObserver(records => {
+    for (const record of records) {
+      if (record.type === 'attributes') visit(record.target);
+      for (const node of record.addedNodes || []) visit(node);
+    }
+  }).observe(document, { subtree: true, childList: true, attributes: true, attributeFilter: ['autoplay', 'src'] });
+  document.addEventListener('play', event => mute(event.target), true);
+  window.__tangentryPlatformMediaGuard={setActive(value){
+    active=Boolean(value);
+    try { sessionStorage.setItem('__tangentryPlatformMediaIdle',active?'0':'1'); } catch (_) {}
+    for (const media of document.querySelectorAll('audio,video')) mute(media);
+  }};
+  for (const media of document.querySelectorAll('audio,video')) mute(media);
 })();`
 
-func douyinMediaMuteEnableScript(id string) string {
-	encoded, _ := json.Marshal(id)
-	return `(function(){try{sessionStorage.setItem('__tangentryDouyinMediaResolution',` + string(encoded) + `);}catch(_){}for(const media of document.querySelectorAll('audio,video')){media.muted=true;media.defaultMuted=true;media.autoplay=false;media.pause();}return true;})();`
-}
+const platformMediaBeginScript = platformMediaGuardScript + `window.__tangentryPlatformMediaGuard?.setActive(true);true;`
+const platformMediaCleanupScript = platformMediaGuardScript + `window.__tangentryPlatformMediaGuard?.setActive(false);true;`
 
 func douyinMediaTargetScript(id string) string {
 	encoded, _ := json.Marshal(id)
@@ -526,22 +602,14 @@ func (b *platformPageBridge) Fetch(ctx context.Context, platform, path string, r
 		return app.PlatformPageResponse{}, errors.New("B站页面字幕请求参数无效")
 	}
 
-	session, err := b.session(platform, origin)
+	lease, err := b.acquire(ctx, platform, origin)
 	if err != nil {
 		return app.PlatformPageResponse{}, err
 	}
-	session.mu.Lock()
-	defer session.mu.Unlock()
-	if err := waitPlatformPage(ctx, session.ready); err != nil {
-		return app.PlatformPageResponse{}, err
-	}
+	defer lease.release()
+	session, ctx := lease.session, lease.ctx
 	if err := ctx.Err(); err != nil {
 		return app.PlatformPageResponse{}, err
-	}
-	session.lastUsed = time.Now()
-	if session.closeAt != nil {
-		session.closeAt.Stop()
-		session.closeAt = nil
 	}
 	code, err := platformFetchScript(path, request)
 	if err != nil {
@@ -565,19 +633,6 @@ func (b *platformPageBridge) Fetch(ctx context.Context, platform, path string, r
 	if platform == "bilibili" && !validBilibiliSubtitleResponseURL(result.URL) {
 		return app.PlatformPageResponse{}, errors.New("B站字幕响应地址无效")
 	}
-	if session.closeAt == nil {
-		session.closeAt = time.AfterFunc(platformFetchIdle, func() {
-			session.mu.Lock()
-			idle := time.Since(session.lastUsed) >= platformFetchIdle
-			if idle {
-				session.closeAt = nil
-			}
-			session.mu.Unlock()
-			if idle && session.window != nil && !session.window.IsDestroyed() {
-				session.window.Close()
-			}
-		})
-	}
 	responseURL := result.URL
 	if responseURL == "" {
 		responseURL = session.window.Page().URL()
@@ -593,17 +648,14 @@ func (b *platformPageBridge) ResolveVideoMedia(ctx context.Context, id string) (
 	mediaCtx, cancel := context.WithTimeout(ctx, douyinVideoMediaTimeout)
 	defer cancel()
 	ctx = mediaCtx
-	b.mu.Lock()
-	reused := b.sessions["douyin"] != nil && !b.sessions["douyin"].window.IsDestroyed()
-	b.mu.Unlock()
-	session, err := b.session("douyin", "https://www.douyin.com/")
+	lease, err := b.acquire(ctx, "douyin", "https://www.douyin.com/")
 	if err != nil {
 		return platformfetch.VideoMediaResponse{}, platformfetch.WrapVideoMediaError(err, platformfetch.VideoMediaDiagnostic{Stage: "webview_session", Outcome: "exception", Reason: "session_destroyed"})
 	}
-	session.mu.Lock()
-	defer session.mu.Unlock()
+	defer lease.release()
+	session, ctx := lease.session, lease.ctx
 	reason := "session_created"
-	if reused {
+	if lease.reused {
 		reason = "session_reused"
 	}
 	diagnostics = append(diagnostics, platformfetch.VideoMediaDiagnostic{Stage: "webview_session", Outcome: "ok", Reason: reason})
@@ -617,7 +669,6 @@ func (b *platformPageBridge) ResolveVideoMedia(ctx context.Context, id string) (
 		return platformfetch.VideoMediaResponse{}, platformfetch.WrapVideoMediaError(err, diagnostics...)
 	}
 	diagnostics = append(diagnostics, platformfetch.VideoMediaDiagnostic{Stage: "webview_session", Outcome: "ok", Reason: "dom_ready"})
-	session.lastUsed = time.Now()
 	if _, err := evalPageWithRetry(ctx, session.window.Page(), douyinMediaTargetScript(id)); err != nil && ctx.Err() != nil {
 		return platformfetch.VideoMediaResponse{}, platformfetch.WrapVideoMediaError(err, diagnostics...)
 	}
@@ -625,9 +676,6 @@ func (b *platformPageBridge) ResolveVideoMedia(ctx context.Context, id string) (
 		return platformfetch.VideoMediaResponse{}, platformfetch.WrapVideoMediaError(err, diagnostics...)
 	}
 	if _, err := evalPageWithRetry(ctx, session.window.Page(), douyinMediaClearScript); err != nil && ctx.Err() != nil {
-		return platformfetch.VideoMediaResponse{}, platformfetch.WrapVideoMediaError(err, diagnostics...)
-	}
-	if _, err := evalPageWithRetry(ctx, session.window.Page(), douyinMediaMuteEnableScript(id)); err != nil {
 		return platformfetch.VideoMediaResponse{}, platformfetch.WrapVideoMediaError(err, diagnostics...)
 	}
 	if err := session.window.Page().LoadURL("https://www.douyin.com/video/" + id); err != nil {
@@ -1143,29 +1191,20 @@ func (b *platformPageBridge) CaptureFeed(ctx context.Context, platform string, p
 	}
 	captureCtx, cancel := context.WithTimeout(ctx, douyinFeedCaptureTimeout)
 	defer cancel()
-	session, err := b.session(platform, "https://www.douyin.com/")
+	lease, err := b.acquire(captureCtx, platform, "https://www.douyin.com/")
 	if err != nil {
 		return platformfetch.FeedCaptureResponse{}, err
 	}
-	session.mu.Lock()
-	defer session.mu.Unlock()
-	if err := waitPlatformPage(captureCtx, session.ready); err != nil {
-		return platformfetch.FeedCaptureResponse{}, err
-	}
-	return b.captureFeedLocked(captureCtx, session, pages)
+	defer lease.release()
+	return b.captureFeedLocked(lease.ctx, lease.session, pages)
 }
 
 // captureFeedLocked reuses the exact recommendation-page capture flow for
-// both discovery and playback. Caller holds session.mu.
+// both discovery and playback. Caller owns the session's operation slot.
 func (b *platformPageBridge) captureFeedLocked(captureCtx context.Context, session *platformPageSession, pages int, mediaTarget ...string) (platformfetch.FeedCaptureResponse, error) {
 	target := ""
 	if len(mediaTarget) > 0 {
 		target = mediaTarget[0]
-	}
-	session.lastUsed = time.Now()
-	if session.closeAt != nil {
-		session.closeAt.Stop()
-		session.closeAt = nil
 	}
 	session.blockedNavigation.Store("")
 	if _, err := evalPageWithRetry(captureCtx, session.window.Page(), douyinMediaTargetScript(target)); err != nil && captureCtx.Err() != nil {
@@ -1300,19 +1339,6 @@ func (b *platformPageBridge) captureFeedLocked(captureCtx context.Context, sessi
 	for _, response := range result.Responses {
 		responses = append(responses, sanitizeDouyinCaptureResponse(response))
 	}
-	if session.closeAt == nil {
-		session.closeAt = time.AfterFunc(platformFetchIdle, func() {
-			session.mu.Lock()
-			idle := time.Since(session.lastUsed) >= platformFetchIdle
-			if idle {
-				session.closeAt = nil
-			}
-			session.mu.Unlock()
-			if idle && session.window != nil && !session.window.IsDestroyed() {
-				session.window.Close()
-			}
-		})
-	}
 	pageURL := result.PageURL
 	if blocked, ok := session.blockedNavigation.Load().(string); ok && blocked != "" {
 		pageURL = blocked
@@ -1385,15 +1411,12 @@ func (b *platformPageBridge) CaptureSearch(ctx context.Context, platform, query,
 	if err != nil {
 		return platformfetch.SearchCaptureResponse{}, err
 	}
-	session, err := b.session(platform, origin)
+	lease, err := b.acquire(ctx, platform, origin)
 	if err != nil {
 		return platformfetch.SearchCaptureResponse{}, err
 	}
-	session.mu.Lock()
-	defer session.mu.Unlock()
-	if err := waitPlatformPage(ctx, session.ready); err != nil {
-		return platformfetch.SearchCaptureResponse{}, err
-	}
+	defer lease.release()
+	session, ctx := lease.session, lease.ctx
 	if err := session.window.Page().LoadURL(path); err != nil {
 		return platformfetch.SearchCaptureResponse{}, err
 	}
@@ -2058,18 +2081,8 @@ func isPageContextGoneError(err error) bool {
 	return strings.Contains(value, "completion handler") || strings.Contains(value, "context") && (strings.Contains(value, "destroy") || strings.Contains(value, "navigation") || strings.Contains(value, "reachable"))
 }
 
-func (b *platformPageBridge) session(platform, origin string) (*platformPageSession, error) {
-	b.mu.Lock()
-	if b.closed {
-		b.mu.Unlock()
-		return nil, errors.New("平台页面桥已关闭")
-	}
-	if existing := b.sessions[platform]; existing != nil && !existing.window.IsDestroyed() {
-		b.mu.Unlock()
-		return existing, nil
-	}
-	session := &platformPageSession{platform: platform, origin: origin, lastUsed: time.Now(), ready: make(chan struct{})}
-	session.blockedNavigation.Store("")
+func createPlatformPageWindow(session *platformPageSession) (platformSessionWindow, error) {
+	platform, origin := session.platform, session.origin
 	x, y := platformPageWindowPosition(mygo.Screen.Displays(), platformPageWindowWidth, platformPageWindowHeight)
 	planned := mygo.Rectangle{X: x, Y: y, Width: platformPageWindowWidth, Height: platformPageWindowHeight}
 	window := mygo.NewWindow(mygo.WindowOptions{
@@ -2080,9 +2093,9 @@ func (b *platformPageBridge) session(platform, origin string) (*platformPageSess
 		DisableClose: true, DisableFullScreen: true, SkipTaskbar: true,
 		Page: mygo.PageOptions{TrustedOrigins: []string{origin}, PreloadScript: func() string {
 			if platform == "douyin" {
-				return douyinFeedCaptureScript + "\n" + douyinMediaMutePreloadScript
+				return douyinFeedCaptureScript + "\n" + platformMediaGuardScript
 			}
-			return ""
+			return platformMediaGuardScript
 		}()},
 	})
 	concealPlatformPageWindow(window, planned)
@@ -2096,25 +2109,11 @@ func (b *platformPageBridge) session(platform, origin string) (*platformPageSess
 	})
 	window.Page().SetWindowOpenHandler(func(mygo.WindowOpenRequest) *mygo.WindowOptions { return nil })
 	window.OnClosed(func() {
-		b.mu.Lock()
-		if b.sessions[platform] == session {
-			delete(b.sessions, platform)
-		}
-		b.mu.Unlock()
+		session.bridge.mu.Lock()
+		session.retireLocked()
+		session.bridge.mu.Unlock()
 	})
-	session.window = window
-	b.sessions[platform] = session
-	b.mu.Unlock()
-	if err := window.Page().LoadURL(origin); err != nil {
-		b.mu.Lock()
-		if b.sessions[platform] == session {
-			delete(b.sessions, platform)
-		}
-		b.mu.Unlock()
-		window.Close()
-		return nil, err
-	}
-	return session, nil
+	return &nativePlatformSessionWindow{window}, nil
 }
 
 func waitPlatformPage(ctx context.Context, ready <-chan struct{}) error {
@@ -2125,29 +2124,6 @@ func waitPlatformPage(ctx context.Context, ready <-chan struct{}) error {
 		return ctx.Err()
 	case <-time.After(platformFetchTimeout):
 		return context.DeadlineExceeded
-	}
-}
-
-func (b *platformPageBridge) Close() {
-	b.mu.Lock()
-	if b.closed {
-		b.mu.Unlock()
-		return
-	}
-	b.closed = true
-	sessions := make([]*platformPageSession, 0, len(b.sessions))
-	for _, session := range b.sessions {
-		sessions = append(sessions, session)
-	}
-	b.sessions = make(map[string]*platformPageSession)
-	b.mu.Unlock()
-	for _, session := range sessions {
-		if session.closeAt != nil {
-			session.closeAt.Stop()
-		}
-		if session.window != nil && !session.window.IsDestroyed() {
-			session.window.Close()
-		}
 	}
 }
 

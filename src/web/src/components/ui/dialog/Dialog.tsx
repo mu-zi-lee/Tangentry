@@ -44,15 +44,15 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(
         if (event.defaultPrevented || event.key !== 'Tab') return
         const focusable = [...event.currentTarget.querySelectorAll<HTMLElement>('button, a[href], input, select, textarea, [tabindex]')]
           .filter(node => node.tabIndex >= 0 && !node.matches(':disabled, [inert], [inert] *') && node.getClientRects().length > 0 && getComputedStyle(node).visibility !== 'hidden')
-        const first = focusable[0], last = focusable.at(-1)
+        const first = focusable[0]
         if (!first) { event.preventDefault(); event.currentTarget.focus(); return }
-        if (event.shiftKey && (document.activeElement === first || document.activeElement === event.currentTarget)) {
-          event.preventDefault()
-          last?.focus()
-        } else if (!event.shiftKey && document.activeElement === last) {
-          event.preventDefault()
-          first.focus()
-        }
+        // WebKit's system keyboard-navigation setting may skip buttons, so
+        // own the whole modal tab order rather than only wrapping its ends.
+        event.preventDefault()
+        const current = focusable.indexOf(document.activeElement as HTMLElement)
+        const next = current < 0 ? event.shiftKey ? focusable.length - 1 : 0
+          : (current + (event.shiftKey ? -1 : 1) + focusable.length) % focusable.length
+        focusable[next].focus()
       }}
     >
       {title ? <>

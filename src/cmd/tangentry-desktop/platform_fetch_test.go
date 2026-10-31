@@ -21,7 +21,7 @@ func validateDouyinCaptureScripts() error {
 	if err != nil {
 		return nil
 	}
-	for _, script := range []string{douyinFeedCaptureScript, douyinMediaReadScript("6961737553342991651"), douyinFeedReadScriptForMedia("6961737553342991651"), douyinDOMMediaScript("6961737553342991651"), douyinDomReadScript, searchDomReadScript, douyinMediaMuteEnableScript("6961737553342991651"), douyinMediaMutePreloadScript} {
+	for _, script := range []string{douyinFeedCaptureScript, douyinMediaReadScript("6961737553342991651"), douyinFeedReadScriptForMedia("6961737553342991651"), douyinDOMMediaScript("6961737553342991651"), douyinDomReadScript, searchDomReadScript, platformMediaBeginScript, platformMediaCleanupScript} {
 		command := exec.Command(node, "-e", "new Function(require('fs').readFileSync(0, 'utf8'))")
 		command.Stdin = strings.NewReader(script)
 		if output, err := command.CombinedOutput(); err != nil {
@@ -29,58 +29,6 @@ func validateDouyinCaptureScripts() error {
 		}
 	}
 	return nil
-}
-
-func TestDouyinMediaMuteIsScopedToResolutionDetailNavigation(t *testing.T) {
-	if !strings.Contains(douyinMediaMuteEnableScript("6961737553342991651"), "__tangentryDouyinMediaResolution") || !strings.Contains(douyinMediaMutePreloadScript, "location.pathname") || !strings.Contains(douyinMediaMutePreloadScript, "prototype.play=function") {
-		t.Fatal("media resolver mute is missing its one-shot route and autoplay guard")
-	}
-	if strings.Contains(douyinMediaMutePreloadScript, "src=\"") || strings.Contains(douyinMediaMutePreloadScript, "localStorage") {
-		t.Fatal("media resolver mute should not rewrite user content or persist beyond the WebView session")
-	}
-	node, err := exec.LookPath("node")
-	if err != nil {
-		t.Skip("node is unavailable for isolated media mute fixture")
-	}
-	encodedScript, err := json.Marshal(douyinMediaMutePreloadScript)
-	if err != nil {
-		t.Fatal(err)
-	}
-	harness := `
-function run(path,host,stored){
-  let value=stored,removed=false,paused=0;
-  global.location={pathname:path,hostname:host};
-  global.sessionStorage={getItem(){return value;},removeItem(){removed=true;value=null;}};
-  function Media(){this.tagName='VIDEO';this.muted=false;this.defaultMuted=false;this.autoplay=true;this.hasAttribute=()=>true;this.removeAttribute=()=>{};this.pause=()=>{paused++;};}
-  Media.prototype.play=function(){return this.muted?'muted':'audible';};
-  global.HTMLMediaElement=Media;global.window={HTMLMediaElement:Media};
-  const media=new Media();global.document={querySelectorAll(){return [media];},addEventListener(){}};
-  eval(` + string(encodedScript) + `);
-  return {muted:media.muted,play:media.play(),removed:removed,paused:paused};
-}
-console.log(JSON.stringify({enabled:run('/video/6961737553342991651','www.douyin.com','6961737553342991651'),reader:run('/video/6961737553342991651','www.douyin.com',null),other:run('/video/6961737553342991651','reader.local','6961737553342991651')}));`
-	output, err := exec.Command(node, "-e", harness).CombinedOutput()
-	if err != nil {
-		t.Fatalf("media mute fixture failed: %s", strings.TrimSpace(string(output)))
-	}
-	var result struct {
-		Enabled struct {
-			Muted   bool   `json:"muted"`
-			Play    string `json:"play"`
-			Removed bool   `json:"removed"`
-		} `json:"enabled"`
-		Reader struct {
-			Muted bool   `json:"muted"`
-			Play  string `json:"play"`
-		} `json:"reader"`
-		Other struct {
-			Muted bool   `json:"muted"`
-			Play  string `json:"play"`
-		} `json:"other"`
-	}
-	if err := json.Unmarshal(output, &result); err != nil || !result.Enabled.Muted || result.Enabled.Play != "muted" || !result.Enabled.Removed || result.Reader.Muted || result.Reader.Play != "audible" || result.Other.Muted {
-		t.Fatalf("media mute scope failed: %+v err=%v output=%s", result, err, output)
-	}
 }
 
 func TestSanitizeDouyinCardPreservesOnlySafeHTTPSCoverURL(t *testing.T) {

@@ -19,11 +19,15 @@ func (h *feedsHandler) inboxList(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		switch key {
-		case "q", "sourceId", "groupId", "platform", "kind", "topic", "tag", "read", "favorite", "since", "until", "cursor", "limit":
+		case "q", "sourceId", "groupId", "platform", "kind", "topic", "tag", "read", "favorite", "since", "until", "cursor", "limit", "cards":
 		default:
 			fail(w, subscriptions.ErrInboxInvalid)
 			return
 		}
+	}
+	if q.Has("cards") && q.Get("cards") != "true" {
+		fail(w, subscriptions.ErrInboxInvalid)
+		return
 	}
 	limit := subscriptions.InboxPageSize
 	if q.Has("limit") {
@@ -56,7 +60,7 @@ func (h *feedsHandler) inboxList(w http.ResponseWriter, r *http.Request) {
 		fail(w, subscriptions.ErrInboxInvalid)
 		return
 	}
-	page, err := h.feeds.SubscriptionInbox.List(r.Context(), subscriptions.InboxQuery{Query: q.Get("q"), SourceID: q.Get("sourceId"), GroupID: q.Get("groupId"), Platform: q.Get("platform"), Kind: q.Get("kind"), Topic: q.Get("topic"), Tag: q.Get("tag"), Read: q.Get("read"), Favorite: favorite, Since: since, Until: until, Cursor: q.Get("cursor"), Limit: limit})
+	page, err := h.feeds.SubscriptionInbox.List(r.Context(), subscriptions.InboxQuery{Query: q.Get("q"), SourceID: q.Get("sourceId"), GroupID: q.Get("groupId"), Platform: q.Get("platform"), Kind: q.Get("kind"), Topic: q.Get("topic"), Tag: q.Get("tag"), Read: q.Get("read"), Favorite: favorite, Since: since, Until: until, Cursor: q.Get("cursor"), Limit: limit, Cards: q.Get("cards") == "true"})
 	if err != nil {
 		fail(w, err)
 		return

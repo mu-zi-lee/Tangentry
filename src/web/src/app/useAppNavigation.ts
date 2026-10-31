@@ -28,9 +28,9 @@ function findSource(view: View, sourceID: string, focusID: string) {
     : !node.closest('[data-app-view="discovery"]')
   if (focusID) {
     const focused = document.getElementById(focusID)
-    // A page-level control such as #main has no app-view marker; it is still a
-    // valid keyboard restoration target when no content card was recorded.
-    if (focused && (!sourceID || inView(focused))) return focused
+    // WebKit clicks need not focus buttons. A stale #main snapshot must not
+    // override the explicit content source recorded when opening the reader.
+    if (focused && (!sourceID || (focused.closest<HTMLElement>('[data-content-id]')?.dataset.contentId === sourceID && inView(focused)))) return focused
   }
   if (!sourceID) return null
   return Array.from(document.querySelectorAll<HTMLElement>('[data-content-id]'))
@@ -43,6 +43,7 @@ export function RestoreViewport({ top, sourceID, focusID = '', routeKey: targetR
     let attempts = 0
     let stableFrames = 0
     let lastHeight = 0
+    let focusedSource: HTMLElement | null = null
     let stopped = false
     const observer = typeof MutationObserver === 'undefined' ? null : new MutationObserver(() => schedule())
     // Keep watching long enough for network-backed galleries/readers to mount.
@@ -58,19 +59,24 @@ export function RestoreViewport({ top, sourceID, focusID = '', routeKey: targetR
         stop()
         return
       }
-      // Re-apply after async lists render; an early scroll can otherwise be clamped by a short page.
-      window.scrollTo({ top, behavior: 'instant' })
+      // Async lists may grow, but repeated writes to an unreachable offset
+      // fight the native scroller and waste layout work on shorter pages.
+      const height = document.documentElement.scrollHeight
+      const reachableTop = Math.min(top, Math.max(0, height - window.innerHeight))
+      if (Math.abs(window.scrollY - reachableTop) > 1) window.scrollTo({ top: reachableTop, behavior: 'instant' })
       const source = findSource(view, sourceID, focusID)
       if (source) {
-        const targetReachable = document.documentElement.scrollHeight >= top + window.innerHeight
-        const targetReached = Math.abs(window.scrollY - top) <= 1
-        if (!targetReachable || !targetReached) {
+        if (Math.abs(window.scrollY - reachableTop) > 1) {
           stableFrames = 0
           schedule()
           return
         }
-        source.focus({ preventScroll: true })
-        const height = document.documentElement.scrollHeight
+        // Restore focus once. Repeating it while layout settles can steal
+        // focus back from a search field and swallow the user's next edit.
+        if (source !== focusedSource) {
+          focusedSource = source
+          source.focus({ preventScroll: true })
+        }
         stableFrames = height === lastHeight ? stableFrames + 1 : 0
         lastHeight = height
         if (stableFrames >= 8) {
@@ -101,15 +107,26 @@ export function RestoreViewport({ top, sourceID, focusID = '', routeKey: targetR
       window.removeEventListener('wheel', stop)
       window.removeEventListener('touchstart', stop)
       window.removeEventListener('pointerdown', stop)
+      window.removeEventListener('resize', stop)
+      window.removeEventListener('focusin', onFocusIn)
+      window.removeEventListener('beforeinput', stop)
       window.removeEventListener('keydown', onKeyDown)
     }
+    const onFocusIn = (event: FocusEvent) => {
+      if (focusedSource && event.target !== focusedSource && !focusedSource.contains(event.target as Node | null)) stop()
+    }
     const onKeyDown = (event: KeyboardEvent) => {
-      if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '].includes(event.key)) stop()
+      if (event.key !== 'Shift' && event.key !== 'Control' && event.key !== 'Alt' && event.key !== 'Meta') stop()
     }
     // A saved position belongs to navigation; user input takes over immediately.
     window.addEventListener('wheel', stop, { passive: true })
     window.addEventListener('touchstart', stop, { passive: true })
     window.addEventListener('pointerdown', stop, { passive: true })
+    // Saved pixel offsets no longer describe the layout after a viewport
+    // change; do not keep pulling the user back to the old position.
+    window.addEventListener('resize', stop, { passive: true })
+    window.addEventListener('focusin', onFocusIn)
+    window.addEventListener('beforeinput', stop)
     window.addEventListener('keydown', onKeyDown)
     observer?.observe(document.body, { childList: true, subtree: true })
     schedule()
@@ -144,6 +161,11 @@ export function useAppNavigation(input: RefObject<HTMLInputElement | null>) {
     const active = document.activeElement instanceof HTMLElement ? document.activeElement : null
     const source = active?.closest<HTMLElement>('[data-content-id]')
     return { sourceID: source?.dataset.contentId ?? '', focusID: active?.id ?? '' }
+  }
+
+  function replaceCurrentPath(path: string) {
+    replacePath(path)
+    currentRoute.current = routeKey(path)
   }
 
   function navigate(next: View, push = true, path = viewPaths[next], targetOverride?: ViewportTarget) {
@@ -256,6 +278,7 @@ export function useAppNavigation(input: RefObject<HTMLInputElement | null>) {
   return {
     view,
     navigate,
+    replaceCurrentPath,
     returnHome,
     readerQuery,
     readerNoteId,

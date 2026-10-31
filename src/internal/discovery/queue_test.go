@@ -29,6 +29,30 @@ func (r *queueFixture) ListQueuedRecommendations(context.Context, QueueScope, in
 	return []QueuedItem{}, nil
 }
 
+func (r *queueFixture) GetQueuedRecommendation(context.Context, QueueScope, string) (content.Item, error) {
+	r.reads++
+	if r.onRead != nil {
+		r.onRead()
+	}
+	return content.Item{ID: "youtube:abcdefghijk"}, nil
+}
+
+func TestQueueDetailRejectsMismatchedIDsAndAccountChanges(t *testing.T) {
+	scope := QueueScope{Platform: "youtube", Account: strings.Repeat("a", 64)}
+	r := &queueFixture{}
+	queue := NewRecommendationQueue(r, func(string) QueueScope { return scope })
+	if _, err := queue.Item(context.Background(), "youtube", "bilibili:BV17x411w7KC"); !errors.Is(err, ErrInvalidQuery) || r.reads != 0 {
+		t.Fatal("mismatched detail reached repository", err)
+	}
+	if item, err := queue.Item(context.Background(), "youtube", "youtube:abcdefghijk"); err != nil || item.ID == "" {
+		t.Fatal("local detail unavailable", item, err)
+	}
+	r.onRead = func() { scope.Account = strings.Repeat("b", 64) }
+	if item, err := queue.Item(context.Background(), "youtube", "youtube:abcdefghijk"); !errors.Is(err, ErrUnavailable) || item.ID != "" {
+		t.Fatal("old account detail leaked", item, err)
+	}
+}
+
 func TestQueueDiscardsResponsesWhenAccountChangesDuringStorage(t *testing.T) {
 	for _, operation := range []string{"read", "write"} {
 		t.Run(operation, func(t *testing.T) {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { createAppearancePreference } from '../../shared/preferences/appearancePreference'
 
 export type CardDensity = 'compact' | 'comfortable' | 'spacious'
 export type CardTitleSize = 'small' | 'medium' | 'large'
@@ -9,7 +9,6 @@ export const cardWidthRange = { min: 180, max: 420, step: 10 } as const
 export const cardCoverHeightRange = { min: 100, max: 240, step: 10 } as const
 export const defaultCardAppearance: CardAppearance = { width: 248, coverHeight: 160, density: 'comfortable', titleSize: 'medium', corners: 'soft', excerpt: true }
 const key = 'tangentry.card-appearance.v1'
-const changed = 'tangentry-card-appearance-changed'
 const densities: Record<CardDensity, { gap: string; pad: string }> = { compact: { gap: '10px', pad: '9px 11px' }, comfortable: { gap: '18px', pad: '12px 14px' }, spacious: { gap: '26px', pad: '16px 18px' } }
 const titles: Record<CardTitleSize, string> = { small: '13px', medium: '14px', large: '15.5px' }
 const corners: Record<CardCorners, string> = { square: '3px', soft: '12px', round: '20px' }
@@ -26,9 +25,6 @@ function valid(value: unknown): CardAppearance {
     excerpt: typeof raw.excerpt === 'boolean' ? raw.excerpt : defaultCardAppearance.excerpt,
   }
 }
-function read(): CardAppearance {
-  try { return valid(JSON.parse(localStorage.getItem(key) ?? 'null')) } catch { return defaultCardAppearance }
-}
 export function applyCardAppearance(value: CardAppearance, root: HTMLElement = document.documentElement) {
   root.style.setProperty('--card-min', `${value.width}px`)
   root.style.setProperty('--card-cover-height', `${value.coverHeight}px`)
@@ -39,25 +35,11 @@ export function applyCardAppearance(value: CardAppearance, root: HTMLElement = d
   root.dataset.cardExcerpt = value.excerpt ? 'on' : 'off'
 }
 
-// Card appearance is a per-device reading preference, applied as CSS variables.
+const preference = createAppearancePreference({ key: 'card_appearance', storageKey: key, validate: valid, apply: applyCardAppearance })
+export const readCardAppearance = preference.read
+
 export function useCardAppearance() {
-  const [appearance, setAppearance] = useState(read)
-  const appearanceRef = useRef(appearance)
-  useEffect(() => { appearanceRef.current = appearance; applyCardAppearance(appearance) }, [appearance])
-  useEffect(() => {
-    const storage = (event: StorageEvent) => { if (event.key === key || event.key === null) setAppearance(read()) }
-    const local = (event: Event) => setAppearance(valid((event as CustomEvent<CardAppearance>).detail))
-    window.addEventListener('storage', storage)
-    window.addEventListener(changed, local)
-    return () => { window.removeEventListener('storage', storage); window.removeEventListener(changed, local) }
-  }, [])
-  const change = useCallback((patch: Partial<CardAppearance>) => {
-    const next = valid({ ...appearanceRef.current, ...patch })
-    appearanceRef.current = next
-    try { localStorage.setItem(key, JSON.stringify(next)) } catch { /* Applies for this session. */ }
-    setAppearance(next)
-    window.dispatchEvent(new CustomEvent(changed, { detail: next }))
-  }, [])
-  const reset = useCallback(() => change(defaultCardAppearance), [change])
+  const { value: appearance, change } = preference.usePreference()
+  const reset = () => change(defaultCardAppearance)
   return { appearance, change, reset }
 }

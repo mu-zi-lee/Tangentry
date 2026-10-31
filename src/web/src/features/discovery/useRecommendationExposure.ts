@@ -1,12 +1,15 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type RefObject } from 'react'
 import { request } from '../../shared/api/client'
 
-export function useRecommendationExposure(active: boolean, identities: string, rootSelector = '.mixed-gallery') {
+export function useRecommendationExposure(active: boolean, sentinel: RefObject<HTMLElement | null>) {
   const marked = useRef(new Set<string>())
   useEffect(() => {
     if (!active) return
+    const root = sentinel.current?.parentElement
+    if (!root) return
     const timers = new Map<Element, number>()
     const visible = new Set<Element>()
+    const observed = new Set<Element>()
     const cancel = (node: Element) => {
       const timer = timers.get(node)
       if (timer !== undefined) window.clearTimeout(timer)
@@ -35,15 +38,34 @@ export function useRecommendationExposure(active: boolean, identities: string, r
         }
       }
     }, { threshold: [.5] })
-    const observeCards = () => document.querySelectorAll(`${rootSelector} [data-testid="content-card"]`).forEach(node => observer.observe(node))
-    let cancelObserve: () => void
-    if ('requestIdleCallback' in window) {
-      const idle = window.requestIdleCallback(observeCards)
-      cancelObserve = () => window.cancelIdleCallback(idle)
-    } else {
-      const timeout = setTimeout(observeCards, 0)
-      cancelObserve = () => clearTimeout(timeout)
+    const observeCard = (node: Element) => {
+      if (!(node instanceof HTMLElement) || observed.has(node)) return
+      observed.add(node)
+      observer.observe(node)
     }
+    const observeCards = (parent: ParentNode) => parent.querySelectorAll('[data-testid="content-card"]').forEach(observeCard)
+    const removeCard = (node: Element) => {
+      if (!observed.delete(node)) return
+      observer.unobserve(node)
+      visible.delete(node)
+      cancel(node)
+    }
+    observeCards(root)
+    const mutations = new MutationObserver(records => {
+      for (const record of records) {
+        for (const node of record.removedNodes) {
+          if (!(node instanceof Element)) continue
+          removeCard(node)
+          node.querySelectorAll('[data-testid="content-card"]').forEach(removeCard)
+        }
+        for (const node of record.addedNodes) {
+          if (!(node instanceof Element)) continue
+          if (node.matches('[data-testid="content-card"]')) observeCard(node)
+          observeCards(node)
+        }
+      }
+    })
+    mutations.observe(root, { childList: true, subtree: true })
     const visibility = () => {
       for (const node of visible) {
         cancel(node)
@@ -53,9 +75,9 @@ export function useRecommendationExposure(active: boolean, identities: string, r
     document.addEventListener('visibilitychange', visibility)
     return () => {
       observer.disconnect()
-      cancelObserve()
+      mutations.disconnect()
       for (const node of timers.keys()) cancel(node)
       document.removeEventListener('visibilitychange', visibility)
     }
-  }, [active, identities, rootSelector])
+  }, [active, sentinel])
 }

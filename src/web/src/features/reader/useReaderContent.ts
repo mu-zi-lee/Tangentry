@@ -3,6 +3,7 @@ import type { ContentItem, DownloadJob } from '../../shared/api/types'
 import { APIError, request } from '../../shared/api/client'
 import { cachedNote, cacheNote, sameNoteLocator } from '../../shared/data/noteDetails'
 import { rememberPublicationItem } from '../../shared/data/publicationDetails'
+import { readFullContent } from '../../shared/data/fullContent'
 
 class LocalNoteReadError extends Error {
   constructor() { super('本机笔记读取失败，已有内容未删除，请重新读取。') }
@@ -105,6 +106,7 @@ export function useReaderContent({ id, initialItem, jobs, jobsLoading, onItem }:
     }
 
     async function resolve(): Promise<ContentItem | undefined> {
+      if (initialItem?.id === id && initialItem.partial) return readFullContent(initialItem, controller.signal)
       if (initialItem?.id === id && !initialItem.partial && (initialItem.platform !== 'linuxdo' || initialItem.discussion)) return initialItem
       try {
         return await request<ContentItem>('/library/' + encodeURIComponent(id), { signal: controller.signal })

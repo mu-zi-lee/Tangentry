@@ -1,8 +1,9 @@
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react'
 
 import type { PlaybackHandle } from './types'
 import { loadYouTubeAPI, type YouTubePlayer } from './youtubeIframeAPI'
 import { captureDisplayedElement } from './captureFrame'
+import { createPlaybackTicker } from './playbackTicker'
 
 // Load the official API only after the user starts playback. Its real clock is
 // shared with notes and subtitles; failed/blocked API reads remain null.
@@ -16,6 +17,9 @@ export const YouTubeEmbedPlayer = forwardRef<PlaybackHandle, {
   const fallback = useRef(false)
   const engaged = useRef(false)
   const seekRequest = useRef<{ target: number; expires: number } | null>(null)
+  const wakeClock = useRef<(() => void) | null>(null)
+  const callbacks = useRef({ onPosition, onReady, onProgress, onPlaying, onEnded })
+  useLayoutEffect(() => { callbacks.current = { onPosition, onReady, onProgress, onPlaying, onEnded } }, [onPosition, onReady, onProgress, onPlaying, onEnded])
   const getPosition = () => {
     if (!ready.current || !player.current) return null
     try {
@@ -43,43 +47,51 @@ export const YouTubeEmbedPlayer = forwardRef<PlaybackHandle, {
       engaged.current = true
       seekRequest.current = { target: seconds, expires: performance.now() + 10000 }
       onPosition?.(getPosition())
+      wakeClock.current?.()
       return true
     } catch { return false }
   } }), [onPosition])
   useEffect(() => {
     const node = container.current
     if (!node || !/^[A-Za-z0-9_-]{11}$/.test(id)) return
-    let active = true, ticker: number | undefined, readyTimeout: number | undefined
+    let active = true, readyTimeout: number | undefined
     let lastSample: { position: number; duration: number } | null = null
-    const flush = () => { if (lastSample) onProgress?.(lastSample.position, lastSample.duration, true) }
+    const flush = () => { if (lastSample) callbacks.current.onProgress?.(lastSample.position, lastSample.duration, true) }
     const report = (immediate = false) => {
       const position = getPosition()
-      onPosition?.(position)
+      callbacks.current.onPosition?.(position)
       if (!player.current) return
+      let state: number | undefined
+      try { state = player.current.getPlayerState?.() }
+      catch { ticker.setRunning(false); return }
+      if (seekRequest.current && performance.now() >= seekRequest.current.expires) { seekRequest.current = null; immediate = true }
+      ticker.setRunning(state === 1 || Boolean(seekRequest.current))
+      callbacks.current.onPlaying?.(state === 1)
+      if (state === 1) engaged.current = true
+      if (position === null) return
       try {
-        const state = player.current.getPlayerState?.()
-        onPlaying?.(state === 1)
-        if (state === 1) engaged.current = true
-        if (position === null) return
         const requested = seekRequest.current
         // Display the observed clock while seeking, but do not overwrite saved
         // progress until the target is acknowledged or the bounded wait expires.
         if (requested && Math.abs(position - requested.target) > 1 && performance.now() < requested.expires) return
-        if (requested) { seekRequest.current = null; immediate = true }
+        if (requested) { seekRequest.current = null; ticker.setRunning(state === 1); immediate = true }
         if (!engaged.current) return
         const duration = player.current.getDuration()
         if (!Number.isFinite(duration) || duration <= 0 || duration > 604800 || position > duration) return
         lastSample = { position, duration }
-        onProgress?.(position, duration, immediate)
-      } catch { /* An unavailable duration/state must not invent a resumable position. */ }
+        callbacks.current.onProgress?.(position, duration, immediate)
+      } catch { /* An unavailable duration must not invent a resumable position. */ }
     }
+    const ticker = createPlaybackTicker(() => report())
+    wakeClock.current = () => ticker.setRunning(true)
     const degrade = () => {
       if (!active) return
       flush()
       clearTimeout(readyTimeout)
-      ready.current = false; fallback.current = true; clearInterval(ticker)
-      onPlaying?.(false)
-      setUnavailable(true); onReady?.(true); onPosition?.(null)
+      ready.current = false; fallback.current = true; ticker.setRunning(false)
+      seekRequest.current = null
+      callbacks.current.onPlaying?.(false)
+      setUnavailable(true); callbacks.current.onReady?.(true); callbacks.current.onPosition?.(null)
     }
     const frame = document.createElement('iframe')
     frame.className = 'platform-video'
@@ -92,15 +104,15 @@ export const YouTubeEmbedPlayer = forwardRef<PlaybackHandle, {
     fallback.current = false
     engaged.current = false
     seekRequest.current = null
-    setUnavailable(false); onReady?.(false); onPosition?.(null)
+    setUnavailable(false); callbacks.current.onReady?.(false); callbacks.current.onPosition?.(null)
     void loadYouTubeAPI().then(api => {
       if (!active) return
       readyTimeout = window.setTimeout(degrade, 12000)
       player.current = new api.Player(frame, { events: {
         onReady: () => {
           if (!active) return
-          clearTimeout(readyTimeout); clearInterval(ticker)
-          ready.current = true; fallback.current = false; setUnavailable(false); onReady?.(true)
+          clearTimeout(readyTimeout)
+          ready.current = true; fallback.current = false; setUnavailable(false); callbacks.current.onReady?.(true)
           if (target.revision === 0 && start > 0 && player.current) {
             try {
               const duration = player.current.getDuration()
@@ -111,28 +123,27 @@ export const YouTubeEmbedPlayer = forwardRef<PlaybackHandle, {
               }
             } catch { /* Initial URL seeking remains available if the control API rejects the request. */ }
           }
-          report(); ticker = window.setInterval(() => {
-            if (!document.hidden && (player.current?.getPlayerState?.() === 1 || seekRequest.current)) report()
-          }, 100)
+          report()
         },
         onError: degrade,
         onStateChange: event => {
           if (!active || !ready.current || fallback.current) return
           if (event.data === 1) engaged.current = true
-          if (event.data === 0) onEnded?.()
+          if (event.data === 0) callbacks.current.onEnded?.()
           report(event.data === 0 || event.data === 2)
         },
       } })
     }).catch(degrade)
     return () => {
-      active = false; ready.current = false; clearInterval(ticker); clearTimeout(readyTimeout)
+      active = false; ready.current = false; ticker.stop(); clearTimeout(readyTimeout)
+      wakeClock.current = null
       flush()
       seekRequest.current = null
       try { player.current?.destroy() } catch { /* Remove failed players as well. */ }
       finally { player.current = null; frame.src = 'about:blank'; node.replaceChildren() }
-      onPlaying?.(false)
-      onReady?.(false); onPosition?.(null)
+      callbacks.current.onPlaying?.(false)
+      callbacks.current.onReady?.(false); callbacks.current.onPosition?.(null)
     }
-  }, [id, title, autoplay, target, onReady, onPosition, onProgress, onPlaying, onEnded])
+  }, [id, title, autoplay, target])
   return <div className="youtube-embed"><div ref={container}/>{unavailable && <p className="field-hint" role="status">YouTube 播放时间暂不可用，笔记不自动关联时间；仍可点击字幕跳转。<a href={`https://www.youtube.com/watch?v=${id}&t=${target.seconds}s`} target="_blank" rel="noreferrer">打开原视频</a></p>}</div>
 })

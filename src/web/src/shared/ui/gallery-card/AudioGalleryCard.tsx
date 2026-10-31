@@ -17,7 +17,7 @@ export function AudioGalleryCard({ item, origin, discoveryReason, discoveryType,
 
   return (
     <GalleryCardFrame item={item} origin={origin} discoveryReason={discoveryReason} className="card-audio" onRead={onRead} onFeedback={discovery ? onFeedback : undefined}>
-      <PodcastArtwork key={item.id + item.thumbnailUrl} item={item} />
+      <PodcastArtwork key={item.id + item.thumbnailUrl} item={item} resolveMissing={!discovery} />
       <div className="card-audio-info">
         <GalleryCardTitle item={item} onRead={onRead} />
         {excerpt}

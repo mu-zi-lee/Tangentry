@@ -15,7 +15,7 @@ const selectionKey = 'tangentry-subscription-selection'
 export const allSubscriptionsID = '__all__'
 const message = (cause: unknown) => cause instanceof Error ? cause.message : '操作没有完成，请重试。'
 
-export function useSubscriptions(active = false) {
+export function useSubscriptions(active = false, contentActive = active) {
   const [sources, setSources] = useState<SubscriptionSource[]>([])
   const [selectedId, setSelectedId] = useState(() => { try { return sessionStorage.getItem(selectionKey) ?? allSubscriptionsID } catch { return allSubscriptionsID } })
   const [detail, setDetail] = useState<SubscriptionDetail | null>(null)
@@ -42,6 +42,8 @@ export function useSubscriptions(active = false) {
   isActive.current = active
   const currentDetail = useRef(detail)
   currentDetail.current = detail
+  const sourcesRef = useRef(sources)
+  sourcesRef.current = sources
 
   const select = useCallback((id: string) => {
     activeId.current = id
@@ -53,7 +55,7 @@ export function useSubscriptions(active = false) {
 
   const reload = useCallback(async (background = false, initial = false) => {
     // Automatic checks wait for the current read; explicit reloads replace it.
-    if (mutation.current || background && listRequest.current) return
+    if (mutation.current || background && (listRequest.current || batchRequest.current)) return
     listRequest.current?.abort()
     const controller = new AbortController()
     listRequest.current = controller
@@ -61,11 +63,12 @@ export function useSubscriptions(active = false) {
     try {
       const result = await request<{ sources: SubscriptionSource[] }>('/subscriptions', { signal: controller.signal })
       if (controller.signal.aborted || (background && !isActive.current)) return
-      setSources(result.sources)
+      const unchanged = JSON.stringify(sourcesRef.current) === JSON.stringify(result.sources)
+      if (!unchanged) setSources(result.sources)
       if (activeId.current !== allSubscriptionsID && !result.sources.some(source => source.id === activeId.current)) select(result.sources[0]?.id ?? '')
       if (!background) {
         // Restoring the selected source may already have started its first read.
-        if (!initial || !detailRequest.current) setDetailVersion(current => current + 1)
+        if (!initial) setDetailVersion(current => current + 1)
       }
       else {
         const selected = result.sources.find(source => source.id === activeId.current)
@@ -74,8 +77,9 @@ export function useSubscriptions(active = false) {
           if (previous.source.lastUpdatedAt !== selected.lastUpdatedAt || previous.source.itemCount !== selected.itemCount || previous.source.refresh.contentRevision !== selected.refresh.contentRevision) {
             if (!detailRequest.current) setDetailVersion(current => current + 1)
           }
-          else setDetail(current => current?.source.id === selected.id ? { ...current, source: selected } : current)
+          else if (!unchanged) setDetail(current => current?.source.id === selected.id ? { ...current, source: selected } : current)
         }
+        else if (!unchanged && activeId.current === allSubscriptionsID && !allRequest.current) setDetailVersion(current => current + 1)
       }
     } catch (cause) {
       if (!controller.signal.aborted && !background) setListError(message(cause))
@@ -93,7 +97,7 @@ export function useSubscriptions(active = false) {
     setDetail(current => current?.source.id === id ? current : null)
     if (!id) { setDetail(null); detailRequest.current = null; return }
     try {
-      const result = await request<SubscriptionDetail>(`/subscriptions/${encodeURIComponent(id)}`, { signal: controller.signal })
+      const result = await request<SubscriptionDetail>(`/subscriptions/${encodeURIComponent(id)}?cards=true`, { signal: controller.signal })
       if (!controller.signal.aborted && activeId.current === id) setDetail(result)
     } catch (cause) {
       if (!controller.signal.aborted && activeId.current === id) setDetailError(message(cause))
@@ -109,7 +113,7 @@ export function useSubscriptions(active = false) {
     allRequest.current = controller
     setAllLoading(true); setAllError('')
     try {
-      const result = await request<{ page: SubscriptionInboxPage }>('/subscription-inbox?limit=50', { signal: controller.signal })
+      const result = await request<{ page: SubscriptionInboxPage }>('/subscription-inbox?limit=50&cards=true', { signal: controller.signal })
       if (!controller.signal.aborted && activeId.current === allSubscriptionsID) setAllItems(result.page.entries.map(entry => entry.item))
     } catch (cause) {
       if (!controller.signal.aborted && activeId.current === allSubscriptionsID) setAllError(message(cause))
@@ -119,8 +123,37 @@ export function useSubscriptions(active = false) {
     }
   }, [])
 
-  useEffect(() => { void reload(false, true); return () => { listRequest.current?.abort(); detailRequest.current?.abort(); allRequest.current?.abort(); mutation.current?.abort(); batchRequest.current?.abort() } }, [reload])
   useEffect(() => {
+    // The hook lives at App scope so reader navigation can retain the selected
+    // source. Do not start network work or timers outside this view.
+    if (!active) {
+      listRequest.current?.abort()
+      detailRequest.current?.abort()
+      allRequest.current?.abort()
+      mutation.current?.abort()
+      batchRequest.current?.abort()
+      setLoading(false)
+      setReading(false)
+      setAllLoading(false)
+      return
+    }
+    void reload(false, true)
+    return () => {
+      listRequest.current?.abort()
+      detailRequest.current?.abort()
+      allRequest.current?.abort()
+      mutation.current?.abort()
+      batchRequest.current?.abort()
+    }
+  }, [active, reload])
+  useEffect(() => {
+    if (!active || !contentActive) {
+      detailRequest.current?.abort()
+      allRequest.current?.abort()
+      setReading(false)
+      setAllLoading(false)
+      return
+    }
     if (selectedId === allSubscriptionsID) {
       detailRequest.current?.abort()
       setDetail(null)
@@ -130,10 +163,10 @@ export function useSubscriptions(active = false) {
     allRequest.current?.abort()
     setAllLoading(false)
     void loadDetail(selectedId)
-  }, [selectedId, detailVersion, loadDetail, loadAll])
+  }, [active, contentActive, selectedId, detailVersion, loadDetail, loadAll])
 
   useEffect(() => {
-    const imported = () => { if (!mutation.current) void reload() }
+    const imported = () => { if (isActive.current && !mutation.current) void reload() }
     window.addEventListener('tangentry:subscriptions-changed', imported)
     if (!active) return () => window.removeEventListener('tangentry:subscriptions-changed', imported)
     const refresh = () => { if (document.visibilityState === 'visible' && !mutation.current) void reload(true) }
@@ -178,7 +211,7 @@ export function useSubscriptions(active = false) {
         if (kind === 'update') {
           setUpdateErrors(current => ({ ...current, [id]: message(cause) }))
           try {
-            const local = await request<SubscriptionDetail>(`/subscriptions/${encodeURIComponent(id)}`, { signal: controller.signal })
+            const local = await request<SubscriptionDetail>(`/subscriptions/${encodeURIComponent(id)}?cards=true`, { signal: controller.signal })
             if (!controller.signal.aborted) replaceSource(local.source)
           } catch { /* Keep the platform error and cached content if local metadata cannot be read. */ }
         }
@@ -186,7 +219,7 @@ export function useSubscriptions(active = false) {
           setActionError(message(cause))
           if (kind === 'address' && cause instanceof APIError && cause.code === 'subscription_address_conflict') {
             try {
-              const local = await request<SubscriptionDetail>(`/subscriptions/${encodeURIComponent(id)}`, { signal: controller.signal })
+              const local = await request<SubscriptionDetail>(`/subscriptions/${encodeURIComponent(id)}?cards=true`, { signal: controller.signal })
               if (!controller.signal.aborted) replaceSource(local.source)
             } catch { /* Keep the user's draft and conflict message when local rereading fails. */ }
           }
@@ -194,8 +227,7 @@ export function useSubscriptions(active = false) {
       }
       return false
     } finally {
-      if (!controller.signal.aborted) setPending(null)
-      mutation.current = null
+      if (mutation.current === controller) { setPending(null); mutation.current = null }
     }
   }
 
@@ -212,7 +244,7 @@ export function useSubscriptions(active = false) {
   })
   const update = (id: string) => {
     if (activeId.current === id) { detailRequest.current?.abort(); setReading(false) }
-    return mutate('update', id, signal => request<SubscriptionDetail>(`/subscriptions/${encodeURIComponent(id)}/update`, { method: 'POST', signal }), result => {
+    return mutate('update', id, signal => request<SubscriptionDetail>(`/subscriptions/${encodeURIComponent(id)}/update?cards=true`, { method: 'POST', signal }), result => {
       replaceSource(result.source)
       if (activeId.current === id) { setDetail(result); setDetailError(''); setNotice(result.notModified ? '已检查，内容没有变化。' : `已更新最近一页，共 ${result.items.length} 条。`) }
     })
@@ -254,17 +286,22 @@ export function useSubscriptions(active = false) {
     // Keep batch refreshes within the backend's two-source update gate so a
     // third concurrent request is not rejected as busy.
     await Promise.all(Array.from({ length: Math.min(2, unique.length) }, worker))
-    if (!controller.signal.aborted) setBatch(current => current ? { ...current, running: false } : current)
+    setBatch(current => current ? { ...current, running: false } : current)
     if (batchRequest.current === controller) batchRequest.current = null
     return succeeded
   }
 
   const batchUpdate = async (ids: string[]) => {
-    const succeeded = await runBatch('update', ids, (id, signal) => request<SubscriptionDetail>(`/subscriptions/${encodeURIComponent(id)}/update`, { method: 'POST', signal }), (id, result) => {
+    const succeeded = await runBatch('update', ids, (id, signal) => request<SubscriptionDetail>(`/subscriptions/${encodeURIComponent(id)}/update?cards=true`, { method: 'POST', signal }), (id, result) => {
       replaceSource(result.source)
       if (activeId.current === id) { setDetail(result); setDetailError('') }
     })
-    if (succeeded.size) setNotice(`已更新 ${succeeded.size} 个来源${succeeded.size < new Set(ids).size ? '，失败项已保留旧内容。' : '。'}`)
+    if (succeeded.size) {
+      // Refresh the combined stream once, not after each source or poll while
+      // the batch is still writing. Inactive views defer the read until return.
+      if (activeId.current === allSubscriptionsID) setDetailVersion(current => current + 1)
+      setNotice(`已更新 ${succeeded.size} 个来源${succeeded.size < new Set(ids).size ? '，失败项已保留旧内容。' : '。'}`)
+    }
     return succeeded.size > 0
   }
   const batchRemove = async (ids: string[]) => {

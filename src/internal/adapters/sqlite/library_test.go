@@ -2,14 +2,104 @@ package sqlite
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
 	"tangentry/internal/ai"
+	"tangentry/internal/articles"
 	"tangentry/internal/content"
 	"tangentry/internal/history"
 )
+
+func TestLibraryDatabaseCardProjectionPreservesFullReadsAndSearch(t *testing.T) {
+	ctx := context.Background()
+	store := inboxTestStore(t)
+	items := make([]content.Item, 10)
+	for index := range items {
+		item := inboxTestItem(index+300, "article")
+		item.SavedAt = int64(index + 1)
+		switch index {
+		case 0:
+			item.Description = strings.Repeat("文🙂a", content.CardDescriptionRunes)
+			item.ArticleBlocks = []content.ArticleBlock{{Kind: "paragraph", Text: "needleinbody remains searchable"}}
+		case 1:
+			item.Description = strings.Repeat("🙂", content.CardDescriptionRunes)
+		case 2:
+			item.Description = "前缀\x00" + strings.Repeat("🙂", content.CardDescriptionRunes)
+		case 3:
+			item.Description = "\x00短描述"
+		case 4:
+			item.Transcripts = []content.Transcript{{URL: "https://example.com/subtitles.vtt", Type: "text/vtt"}}
+		case 5:
+			item.Discussion = &content.Discussion{TopicID: "topic"}
+		case 6:
+			item.Partial = true
+		case 7:
+			item.Images = []content.Image{{URL: "https://example.com/cover.png", Width: 640, Height: 360}}
+			item.Paper = &content.PaperMetadata{ArxivID: "2401.00001", Abstract: "论文摘要"}
+		case 8:
+			item.Description = "Comments"
+		case 9:
+			item.Kind = "audio"
+		}
+		if _, err := store.Save(ctx, item); err != nil {
+			t.Fatal(err)
+		}
+		items[index] = item
+	}
+	doc := articles.Document{ContentID: items[8].ID, SourceURL: items[8].URL, Title: items[8].Title, Revision: 1, Blocks: []articles.Block{{Kind: "paragraph", Text: strings.Repeat("缓存的原站正文。", 10)}}}
+	if _, err := store.SaveArticle(ctx, doc, 0); err != nil {
+		t.Fatal(err)
+	}
+	full := make(map[string]content.Item, len(items))
+	for _, item := range items {
+		stored, err := store.Get(ctx, item.ID)
+		if err != nil {
+			t.Fatal(err)
+		}
+		full[item.ID] = stored
+	}
+	for offset := 0; offset < len(items); offset += 3 {
+		page, err := store.Page(ctx, content.Query{Limit: 3, Offset: offset})
+		if err != nil || page.Total != len(items) || len(page.Items) != min(3, len(items)-offset) || page.Counts["article"] != 9 || page.Counts["audio"] != 1 {
+			t.Fatal("projection changed page metadata", page, err)
+		}
+		wantNext := 0
+		if offset+len(page.Items) < len(items) {
+			wantNext = offset + len(page.Items)
+		}
+		if page.Next != wantNext {
+			t.Fatal("projection changed continuation", page.Next, wantNext)
+		}
+		for index, item := range page.Items {
+			if item.ID != items[len(items)-1-offset-index].ID {
+				t.Fatal("projection changed saved order", item.ID)
+			}
+			want, _ := json.Marshal(content.Card(full[item.ID]))
+			got, _ := json.Marshal(item)
+			if string(want) != string(got) {
+				t.Fatalf("card mismatch for %s\nwant %s\ngot %s", item.ID, want, got)
+			}
+			stored, err := store.Get(ctx, item.ID)
+			if err != nil || !reflect.DeepEqual(stored, full[item.ID]) {
+				t.Fatal("card read mutated stored full item", item.ID, err)
+			}
+		}
+	}
+	page, err := store.Page(ctx, content.Query{Q: "needleinbody"})
+	if err != nil || page.Total != 1 || len(page.Items) != 1 || page.Items[0].ID != items[0].ID || len(page.Items[0].ArticleBlocks) != 0 {
+		t.Fatal("projected body is no longer searchable", page, err)
+	}
+	cancelled, cancel := context.WithCancel(ctx)
+	cancel()
+	if _, err := store.Page(cancelled, content.Query{}); !errors.Is(err, context.Canceled) {
+		t.Fatal("cancelled library read proceeded", err)
+	}
+}
 
 func TestLibraryPageFiltersSearchesAndOmitsBodies(t *testing.T) {
 	ctx := context.Background()

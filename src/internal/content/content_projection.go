@@ -5,15 +5,28 @@ import "strings"
 // CardDescriptionRunes bounds descriptions in card listings.
 const CardDescriptionRunes = 1200
 
+// TruncateRunes copies only a bounded prefix, without retaining the full source
+// string or allocating a rune slice proportional to an article's length.
+func TruncateRunes(text string, limit int) (string, bool) {
+	count := 0
+	for index := range text {
+		if count >= limit {
+			return strings.Clone(text[:index]), true
+		}
+		count++
+	}
+	return text, false
+}
+
 // Card returns the fields a content card shows, without article bodies.
 func Card(item Item) Item {
-	description := []rune(item.Description)
-	if len(item.ArticleBlocks) == 0 && len(item.Transcripts) == 0 && len(description) <= CardDescriptionRunes {
+	description, truncated := TruncateRunes(item.Description, CardDescriptionRunes)
+	if len(item.ArticleBlocks) == 0 && len(item.Transcripts) == 0 && item.Discussion == nil && !truncated {
 		return item
 	}
 	item.ArticleBlocks, item.Transcripts, item.Discussion, item.Partial = nil, nil, nil, true
-	if len(description) > CardDescriptionRunes {
-		item.Description = string(description[:CardDescriptionRunes])
+	if truncated {
+		item.Description = description
 	}
 	return item
 }

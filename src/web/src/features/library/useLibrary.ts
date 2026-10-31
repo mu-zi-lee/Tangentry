@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { request } from '../../shared/api/client'
 import type { ContentItem } from '../../shared/api/types'
+import { readFullContent } from '../../shared/data/fullContent'
 
 export function useLibrary() {
   const [items, setItems] = useState<ContentItem[]>([])
@@ -71,8 +72,7 @@ export function useLibrary() {
         setItems(current => current.filter(existing => existing.id !== item.id))
         setNotice('已取消收藏')
       } else {
-        const full = item.partial ? removed.current.get(item.id) : item
-        if (!full) throw new Error('这条收藏的正文已不在本机，请从原来源重新打开后收藏。')
+        const full = removed.current.get(item.id) ?? await readFullContent(item)
         const result = await request<ContentItem>('/library', { method: 'POST', body: JSON.stringify(full) })
         setItems(current => [result, ...current.filter(existing => existing.id !== item.id)])
         setNotice('已收藏到资料库')

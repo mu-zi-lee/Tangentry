@@ -9,8 +9,8 @@ import (
 	"tangentry/internal/content"
 )
 
-// Page filters the library in SQL and returns card projections, so a list
-// never carries article bodies or the whole collection.
+// Page filters and projects cards in SQL without decoding reader-only bodies.
+// A zero limit retains the existing unpaginated-list contract.
 func (s *Store) Page(ctx context.Context, q content.Query) (content.Page, error) {
 	where, args := libraryFilter(q)
 	page := content.Page{Items: []content.Item{}, Counts: map[string]int{}}
@@ -43,7 +43,7 @@ func (s *Store) Page(ctx context.Context, q content.Query) (content.Page, error)
 	if limit == 0 {
 		limit = -1
 	}
-	rows, err = s.db.QueryContext(ctx, `SELECT payload, saved_at FROM saved_content WHERE `+where+` ORDER BY saved_at DESC, id LIMIT ? OFFSET ?`, append(args, limit, q.Offset)...)
+	rows, err = s.db.QueryContext(ctx, `SELECT `+cardPayloadSQL("payload")+`, saved_at FROM saved_content WHERE `+where+` ORDER BY saved_at DESC, id LIMIT ? OFFSET ?`, append(args, limit, q.Offset)...)
 	if err != nil {
 		return content.Page{}, err
 	}

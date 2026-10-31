@@ -88,6 +88,12 @@ export function DownloadsPage({ downloads, onRead, intent }: { downloads: Downlo
   const subtitleTracks = (info?.subtitles ?? []).filter(track => !track.automatic || options.automaticSubtitles)
   const languages = [...new Map(subtitleTracks.map(track => [track.language, track])).values()]
   function update(value: Partial<DownloadOptions>) { setOptions(current => ({ ...current, ...value })) }
+  function openDeleteDialog(trigger: HTMLButtonElement, selection: { ids: string[]; clear: boolean }) {
+    // Safari does not focus a button on mouse click. Establish the modal's
+    // return target explicitly before it captures the previous focus.
+    trigger.focus({ preventScroll: true })
+    setDeleteDialog(selection)
+  }
   useEffect(() => {
     if (intent?.url) {
       setURL(intent.url)
@@ -200,8 +206,8 @@ export function DownloadsPage({ downloads, onRead, intent }: { downloads: Downlo
       <div className="section-heading download-history-toolbar"><h2 id="download-history-title" className="section-title">下载任务</h2>
         <div className="download-task-filters" role="group" aria-label="筛选下载任务">{taskFilters.map(({ value, label, count }) => <Button variant="quiet" key={value} aria-pressed={filter === value} onClick={() => setFilter(value)}><span>{label}</span><span className="count" aria-hidden="true">{count}</span></Button>)}</div>
         {deletable.length > 0 && <label className="download-select-all"><Checkbox type="checkbox" checked={allSelected} onChange={event => setSelected(event.target.checked ? new Set(deletable.map(job => job.id)) : new Set())} />全选</label>}
-        {selected.size > 0 && <Button variant="secondary" className="button button-secondary" onClick={() => setDeleteDialog({ ids: [...selected], clear: false })}><Trash2 size={15}/>删除所选</Button>}
-        {downloads.jobs.some(job => job.state !== 'queued' && job.state !== 'running') && <Button variant="secondary" className="button button-secondary" onClick={() => setDeleteDialog({ ids: [], clear: true })}><Trash2 size={15}/>清空历史</Button>}
+        {selected.size > 0 && <Button variant="secondary" className="button button-secondary" onClick={event => openDeleteDialog(event.currentTarget, { ids: [...selected], clear: false })}><Trash2 size={15}/>删除所选</Button>}
+        {downloads.jobs.some(job => job.state !== 'queued' && job.state !== 'running') && <Button variant="secondary" className="button button-secondary" onClick={event => openDeleteDialog(event.currentTarget, { ids: [], clear: true })}><Trash2 size={15}/>清空历史</Button>}
         <Button variant="quiet" iconOnly className="icon-button" title="刷新下载任务" aria-label="刷新下载任务" disabled={downloads.loading} onClick={() => void downloads.reload()}><RefreshCw size={16} className={downloads.loading ? 'spin' : undefined}/></Button>
       </div>
       {downloads.loading ? <p className="loading-state" role="status">正在读取任务…</p> : jobs.length === 0 ? <section className="empty-state compact-empty"><ArrowDownToLine size={24} strokeWidth={1.4} aria-hidden="true" /><h2>{downloads.jobs.length ? '没有符合条件的任务' : '还没有下载任务'}</h2><p>粘贴一个视频或音频链接，开始建立你的离线资料库。</p></section> : <div className="download-library" aria-label="下载任务">
@@ -214,7 +220,7 @@ export function DownloadsPage({ downloads, onRead, intent }: { downloads: Downlo
             {canRead(job) ? <Button variant="quiet" iconOnly className="icon-button download-play" title="播放与阅读" data-content-id={`download:${job.id}`} aria-label={`在阅读页播放 ${job.title}`} onClick={() => onRead(job)}><Play size={16}/></Button> : <a className="icon-button download-play" title="播放文件" aria-label={`播放文件 ${job.title}`} href={`/api/downloads/${encodeURIComponent(job.id)}/media`} target="_blank" rel="noopener noreferrer"><Play size={16}/></a>}
             <a className="icon-button" title={job.fileName ?? '保存文件'} aria-label={`保存文件 ${job.fileName ?? job.title}`} href={`/api/downloads/${encodeURIComponent(job.id)}/file`} download><ArrowDownToLine size={17}/></a>
             <DownloadAttachments job={job}/>
-            <Button variant="quiet" iconOnly className="icon-button" title="删除记录" aria-label={`删除下载记录 ${job.title}`} onClick={() => setDeleteDialog({ ids: [job.id], clear: false })}><Trash2 size={16}/></Button>
+            <Button variant="quiet" iconOnly className="icon-button" title="删除记录" aria-label={`删除下载记录 ${job.title}`} onClick={event => openDeleteDialog(event.currentTarget, { ids: [job.id], clear: false })}><Trash2 size={16}/></Button>
             <a className="icon-button" title="打开原链接" href={job.url} rel="noopener noreferrer" target="_blank" aria-label={`打开下载原视频 ${job.title}`}><ExternalLink size={16}/></a>
           </div>
         </article>)}</div></section>}
@@ -222,7 +228,7 @@ export function DownloadsPage({ downloads, onRead, intent }: { downloads: Downlo
           <Checkbox type="checkbox" checked={selected.has(job.id)} onChange={event => setSelected(current => { const next = new Set(current); if (event.target.checked) next.add(job.id); else next.delete(job.id); return next })} aria-label={`选择下载 ${job.title}`}/>
           <div className="download-retry-status" aria-hidden="true">{job.state === 'cancelled' ? <X size={16}/> : <CircleHelp size={16}/>}</div>
           <div className="download-retry-copy"><h3>{job.title}</h3><p><span>{labels[job.state]}</span> · {sourceName(job.url)} · {formatDate(job.createdAt)}</p>{job.message && <small>{job.message}</small>}</div>
-          <div className="download-retry-actions"><Button variant="secondary" className="button button-secondary" disabled={downloads.submitting} onClick={() => void downloads.start(job.url, job.title, job.maxHeight, jobOptions(job), { subdirectory: job.subdirectory, outputDirectory: job.outputDirectory, thumbnailUrl: job.thumbnailUrl })}><RefreshCw size={15}/>重新下载</Button><Button variant="quiet" iconOnly className="icon-button" title="删除记录" aria-label={`删除下载记录 ${job.title}`} onClick={() => setDeleteDialog({ ids: [job.id], clear: false })}><Trash2 size={16}/></Button></div>
+          <div className="download-retry-actions"><Button variant="secondary" className="button button-secondary" disabled={downloads.submitting} onClick={() => void downloads.start(job.url, job.title, job.maxHeight, jobOptions(job), { subdirectory: job.subdirectory, outputDirectory: job.outputDirectory, thumbnailUrl: job.thumbnailUrl })}><RefreshCw size={15}/>重新下载</Button><Button variant="quiet" iconOnly className="icon-button" title="删除记录" aria-label={`删除下载记录 ${job.title}`} onClick={event => openDeleteDialog(event.currentTarget, { ids: [job.id], clear: false })}><Trash2 size={16}/></Button></div>
         </article>)}</div></section>}
       </div>}
     </div>

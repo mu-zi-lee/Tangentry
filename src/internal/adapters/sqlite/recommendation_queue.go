@@ -2,11 +2,33 @@ package sqlite
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
+	"errors"
+	"strings"
 
 	"tangentry/internal/content"
 	"tangentry/internal/discovery"
 )
+
+func (s *Store) GetQueuedRecommendation(ctx context.Context, scope discovery.QueueScope, id string) (content.Item, error) {
+	if !discovery.ValidQueueScope(scope) || !content.ValidID(id) || !strings.HasPrefix(id, scope.Platform+":") {
+		return content.Item{}, discovery.ErrInvalidQuery
+	}
+	var payload []byte
+	err := s.db.QueryRowContext(ctx, `SELECT payload FROM recommendation_queue WHERE platform=? AND account=? AND content_id=?`, scope.Platform, scope.Account, id).Scan(&payload)
+	if errors.Is(err, sql.ErrNoRows) {
+		return content.Item{}, content.ErrNotFound
+	}
+	if err != nil {
+		return content.Item{}, err
+	}
+	var item content.Item
+	if json.Unmarshal(payload, &item) != nil || item.ID != id || content.Validate(item) != nil {
+		return content.Item{}, content.ErrNotFound
+	}
+	return item, nil
+}
 
 func (s *Store) EnqueueRecommendations(ctx context.Context, scope discovery.QueueScope, items []content.Item, at int64) error {
 	if !discovery.ValidQueueBatch(scope, items, at) {

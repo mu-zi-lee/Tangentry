@@ -138,10 +138,31 @@ func (s *Service) List(ctx context.Context) ([]Source, error) {
 	return items, err
 }
 func (s *Service) Get(ctx context.Context, id string) (Detail, error) {
+	return s.get(ctx, id, false)
+}
+
+func (s *Service) GetCards(ctx context.Context, id string) (Detail, error) {
+	return s.get(ctx, id, true)
+}
+
+func (s *Service) get(ctx context.Context, id string, cards bool) (Detail, error) {
 	if !validID(id) {
 		return Detail{}, ErrInvalid
 	}
-	detail, err := s.repository.GetSubscription(ctx, id)
+	get := s.repository.GetSubscription
+	if cards {
+		if repository, ok := s.repository.(interface {
+			GetSubscriptionCards(context.Context, string) (Detail, error)
+		}); ok {
+			get = repository.GetSubscriptionCards
+		}
+	}
+	detail, err := get(ctx, id)
+	if err == nil && cards {
+		for index := range detail.Items {
+			detail.Items[index] = content.Card(detail.Items[index])
+		}
+	}
 	s.mu.Lock()
 	detail.Source.Active = s.active[id]
 	s.mu.Unlock()

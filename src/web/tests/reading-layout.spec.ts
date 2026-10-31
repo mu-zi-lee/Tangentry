@@ -85,6 +85,16 @@ test('reader read state stays changed and saving does not add extra toolbar butt
 })
 
 test('subtitle tools sit above the text, open one task at a time and keep saved progress above the player', async ({ page, request }) => {
+  // Layout does not depend on an external subtitle lookup or CLI fallback.
+  await page.route('**/api/subtitles/bilibili?**', route => route.fulfill({ json: {
+    videoId: video.platformId, part: 1, status: 'available', parts: [{
+      cid: 123, page: 1, title: '布局测试分 P', status: 'cc', tracks: [],
+      languages: [{ language: 'zh-Hans', label: '布局测试字幕', source: 'cc', automatic: false, hasUrl: true }],
+    }], tracks: [{
+      language: 'zh-Hans', label: '布局测试字幕', source: 'cc', automatic: false,
+      cues: [{ start: 0, end: 4, text: '明确标识的字幕布局测试内容。' }],
+    }],
+  } }))
   expect((await request.post('/api/library', { data: video })).ok()).toBe(true)
   const previous = (await (await request.get('/api/reading-progress?contentId=' + encodeURIComponent(video.id))).json()).progress
   expect((await request.put('/api/reading-progress/' + encodeURIComponent(video.id), { data: { positionSeconds: 17, durationSeconds: 123, revision: previous?.revision ?? 0 } })).ok()).toBe(true)
@@ -193,6 +203,9 @@ test('source warnings stay inline, native options follow the theme and dismissed
     await page.goto('/')
     const switcher = page.getByRole('button', { name: theme === 'dark' ? '切换深色模式' : '切换浅色模式', exact: true })
     await switcher.click()
+    // View transitions apply asynchronously; do not navigate away before the
+    // user's selection has actually reached the DOM and persistence effect.
+    await expect(page.locator('html')).toHaveAttribute('data-theme', theme)
     await page.goto(`/reader?video=${item.platformId}`)
     await expect(reader.getByLabel('字幕语言', { exact: true })).toBeVisible()
     await expect(page.locator('html')).toHaveAttribute('data-theme', theme)

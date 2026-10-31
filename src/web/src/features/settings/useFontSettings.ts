@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { createAppearancePreference } from '../../shared/preferences/appearancePreference'
 
 export type UIFont = 'system' | 'inter' | 'noto'
 export type ReadingFont = 'system' | 'wenkai' | 'noto' | 'serif'
@@ -87,28 +87,11 @@ export function applyFontSettings(value: FontSettings, root: HTMLElement = docum
   root.dataset.fontReadingLineHeight = settings.lineHeight
 }
 
+const preference = createAppearancePreference({ key: 'font_settings', storageKey: fontSettingsKey, validate: validateFontSettings, apply: applyFontSettings })
+export const readInitialFontSettings = preference.read
+
 export function useFontSettings() {
-  const [settings, setSettings] = useState(readFontSettings)
-  const settingsRef = useRef(settings)
-
-  useEffect(() => { settingsRef.current = settings; applyFontSettings(settings) }, [settings])
-  useEffect(() => {
-    const storage = (event: StorageEvent) => { if (event.key === fontSettingsKey || event.key === null) setSettings(readFontSettings()) }
-    const local = (event: Event) => setSettings(validateFontSettings((event as CustomEvent<FontSettings>).detail))
-    window.addEventListener('storage', storage)
-    window.addEventListener(fontSettingsChangedEvent, local)
-    return () => {
-      window.removeEventListener('storage', storage)
-      window.removeEventListener(fontSettingsChangedEvent, local)
-    }
-  }, [])
-
-  const change = useCallback((patch: Partial<FontSettings>) => {
-    const next = writeFontSettings({ ...settingsRef.current, ...patch })
-    settingsRef.current = next
-    setSettings(next)
-    window.dispatchEvent(new CustomEvent(fontSettingsChangedEvent, { detail: next }))
-  }, [])
-  const reset = useCallback(() => change(defaultFontSettings), [change])
+  const { value: settings, change } = preference.usePreference()
+  const reset = () => change(defaultFontSettings)
   return { settings, change, reset }
 }

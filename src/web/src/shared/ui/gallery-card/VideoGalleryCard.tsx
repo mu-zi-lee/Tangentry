@@ -1,19 +1,15 @@
 import { Play } from 'lucide-react'
-import { useState } from 'react'
 import type { GalleryCardContentProps } from './types'
 import { GalleryCardFrame } from './GalleryCardFrame'
 import { GalleryCardTitle } from './GalleryCardText'
 import { VideoCardActions } from './GalleryCardActions'
 import { useCardCover } from './useCardCover'
 import { formatDuration } from '../ContentCard'
-import { HoverVideoPreview } from '../../media/HoverVideoPreview'
 import { retryThroughProxy, sourceImageURL } from '../../media/sourceImage'
 import { AuthorLink, AuthorPublication } from '../CardAuthor'
 
 export function VideoGalleryCard({ item, origin, discoveryReason, discoveryType, saved, pending, onRead, onSave, onCreator, onDownload, progress, status, discovery = false, excerpt, onFeedback }: GalleryCardContentProps) {
   const { failed: coverFailed, setFailed: setCoverFailed } = useCardCover(item.thumbnailUrl)
-  const [hoverPreview, setHoverPreview] = useState(false)
-  const [previewVisit, setPreviewVisit] = useState(0)
   const progressPercent = progress && progress.durationSeconds > 0
     ? Math.max(0, Math.min(100, (progress.positionSeconds / progress.durationSeconds) * 100))
     : 0
@@ -23,18 +19,9 @@ export function VideoGalleryCard({ item, origin, discoveryReason, discoveryType,
     <GalleryCardFrame item={item} origin={origin} discoveryReason={discoveryReason} className="card-video" onRead={onRead} status={status} dataPlatform onFeedback={discovery ? onFeedback : undefined}>
       <div
         className="modern-card-thumbnail"
-        onPointerEnter={event => {
-          if (event.pointerType === 'mouse' && window.matchMedia('(hover: hover)').matches) {
-            setPreviewVisit(value => value + 1)
-            setHoverPreview(true)
-          }
-        }}
-        onPointerLeave={() => setHoverPreview(false)}
         onClick={event => {
           const target = event.target as Element
-          if (target.closest('button, iframe')) return
-          const preview = target.closest('video')
-          if (preview && event.clientY >= preview.getBoundingClientRect().bottom - 40) return
+          if (target.closest('button')) return
           onRead(item)
         }}
         role="group"
@@ -45,9 +32,8 @@ export function VideoGalleryCard({ item, origin, discoveryReason, discoveryType,
           event.stopPropagation()
           onRead(item)
         }}
-        aria-label={`预览视频 ${item.title}`}
+        aria-label={`打开视频 ${item.title}`}
       >
-        <HoverVideoPreview key={previewVisit} item={item} active={hoverPreview} />
         {item.thumbnailUrl && !coverFailed ? (
           <img src={sourceImageURL(item, item.thumbnailUrl)} alt="" loading="lazy" referrerPolicy="no-referrer" onError={event => retryThroughProxy(event, item, item.thumbnailUrl) || setCoverFailed(true)} />
         ) : (
@@ -72,7 +58,7 @@ export function VideoGalleryCard({ item, origin, discoveryReason, discoveryType,
         {excerpt}
         {item.likeCount ? <div className="discovery-card-stats">{item.likeCount} 赞</div> : null}
         <div className="modern-card-author">
-          <AuthorLink item={item} onCreator={onCreator} discoveryType={discovery ? discoveryType : undefined} discoveryReason={discoveryReason}><AuthorPublication item={item} /></AuthorLink>
+          <AuthorLink item={item} onCreator={onCreator} resolveMissing={!discovery} discoveryType={discovery ? discoveryType : undefined} discoveryReason={discoveryReason}><AuthorPublication item={item} resolveMissing={!discovery} /></AuthorLink>
           {actions}
         </div>
       </div>

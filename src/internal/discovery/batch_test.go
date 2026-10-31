@@ -2,6 +2,7 @@ package discovery
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"strconv"
 	"testing"
@@ -21,6 +22,12 @@ type slowBatchProvider struct {
 }
 
 type blockingContinuationProvider struct{}
+
+type batchProviderFunc func(context.Context, string, int) (Feed, error)
+
+func (f batchProviderFunc) Fetch(ctx context.Context, source string, page int) (Feed, error) {
+	return f(ctx, source, page)
+}
 
 func (blockingContinuationProvider) Fetch(ctx context.Context, source string, _ int) (Feed, error) {
 	if source == "douyin" {
@@ -165,6 +172,138 @@ func TestBatchContinuesAfterEmptyPageWithContinuation(t *testing.T) {
 	second, err := service.Create(context.Background(), BatchRequest{Size: 10, Seed: 12, Cursor: first.NextCursor})
 	if err != nil || len(second.Items) != 1 || second.Items[0].Item.ID != "bilibili:third" || second.HasNextBatch {
 		t.Fatalf("empty continuation page did not advance to next source page: %#v, err=%v", second, err)
+	}
+}
+
+func TestBatchContinuationBoundsDuplicatePagesAndRetainsNextPage(t *testing.T) {
+	item := batchItem("bilibili", "existing", "已有内容", "作者", 1)
+	var pages []int
+	service := NewBatchService(batchProviderFunc(func(_ context.Context, _ string, page int) (Feed, error) {
+		pages = append(pages, page)
+		if page <= maxContinuationPagesPerSource+1 {
+			return Feed{Items: []content.Item{item}, HasMore: true}, nil
+		}
+		return Feed{Items: []content.Item{batchItem("bilibili", "new", "新内容", "作者", 1)}}, nil
+	}), nil, []string{"bilibili"})
+	snapshot := batchSnapshot{
+		Candidates: []batchCandidate{{Item: item, Source: "bilibili"}},
+		Status:     map[string]BatchSourceStatus{}, NextPages: map[string]int{"bilibili": 2}, Exhausted: map[string]bool{"bilibili": false},
+	}
+	if err := service.extendSnapshot(context.Background(), BatchRequest{Size: 10}, &snapshot, 1); err != nil {
+		t.Fatal(err)
+	}
+	if len(pages) != maxContinuationPagesPerSource || snapshot.NextPages["bilibili"] != 2+maxContinuationPagesPerSource || snapshot.Exhausted["bilibili"] {
+		t.Fatalf("unbounded or lost duplicate-page continuation: pages=%v snapshot=%+v", pages, snapshot)
+	}
+	if err := service.extendSnapshot(context.Background(), BatchRequest{Size: 10}, &snapshot, 1); err != nil {
+		t.Fatal(err)
+	}
+	if len(pages) != maxContinuationPagesPerSource+1 || len(snapshot.Candidates) != 2 || snapshot.Candidates[1].Item.ID != "bilibili:new" {
+		t.Fatalf("bounded request failed to resume at next source page: pages=%v candidates=%+v", pages, snapshot.Candidates)
+	}
+}
+
+func TestBatchContinuationHasRequestWideFetchBudget(t *testing.T) {
+	var calls []string
+	item := batchItem("bilibili", "existing", "已有内容", "作者", 1)
+	service := NewBatchService(batchProviderFunc(func(_ context.Context, source string, page int) (Feed, error) {
+		calls = append(calls, source+":"+strconv.Itoa(page))
+		return Feed{Items: []content.Item{item}, HasMore: true}, nil
+	}), nil, []string{"bilibili", "youtube", "xiaohongshu", "linuxdo"})
+	snapshot := batchSnapshot{
+		Candidates: []batchCandidate{{Item: item, Source: "bilibili"}},
+		Status:     map[string]BatchSourceStatus{},
+		NextPages:  map[string]int{"bilibili": 2, "youtube": 2, "xiaohongshu": 2, "linuxdo": 2},
+		Exhausted:  map[string]bool{"bilibili": false, "youtube": false, "xiaohongshu": false, "linuxdo": false},
+	}
+	if err := service.extendSnapshot(context.Background(), BatchRequest{Size: 10}, &snapshot, 1); err != nil {
+		t.Fatal(err)
+	}
+	if len(calls) != maxContinuationFetchesPerBatch {
+		t.Fatalf("continuation exceeded request budget: calls=%d want=%d (%v)", len(calls), maxContinuationFetchesPerBatch, calls)
+	}
+	if len(calls) > 4 {
+		t.Fatalf("one scroll fetched more than four platform pages: %v", calls)
+	}
+	if snapshot.Exhausted["linuxdo"] || snapshot.NextPages["linuxdo"] == 0 {
+		t.Fatalf("budgeted source lost its continuation: %+v", snapshot)
+	}
+}
+
+func TestBatchContinuationRotatesBudgetAcrossSources(t *testing.T) {
+	var calls []string
+	sources := []string{"bilibili", "youtube", "xiaohongshu", "linuxdo", "xiaoyuzhou", "douyin", "huggingface"}
+	service := NewBatchService(batchProviderFunc(func(_ context.Context, source string, _ int) (Feed, error) {
+		calls = append(calls, source)
+		return Feed{HasMore: true}, nil
+	}), nil, sources)
+	snapshot := batchSnapshot{Status: map[string]BatchSourceStatus{}, NextPages: map[string]int{}, Exhausted: map[string]bool{}}
+	for request := 0; request < len(sources); request++ {
+		before := len(calls)
+		if err := service.extendSnapshot(context.Background(), BatchRequest{Size: 10}, &snapshot, 0); err != nil {
+			t.Fatal(err)
+		}
+		if count := len(calls) - before; count > 4 || count == 0 {
+			t.Fatalf("invalid continuation work: calls=%v", calls[before:])
+		}
+		// Source rotation must survive the same persistence boundary as a cursor.
+		payload, err := json.Marshal(snapshot)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := unmarshalBatchSnapshot(payload, &snapshot); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, source := range sources {
+		found := false
+		for _, called := range calls {
+			found = found || called == source
+		}
+		if !found {
+			t.Fatalf("source %q starved behind duplicate pages: %v", source, calls)
+		}
+	}
+}
+
+func TestBatchContinuationOnlyFetchesSourcesWithoutBufferedCandidates(t *testing.T) {
+	var calls []string
+	service := NewBatchService(batchProviderFunc(func(_ context.Context, source string, _ int) (Feed, error) {
+		calls = append(calls, source)
+		return Feed{Items: []content.Item{batchItem(source, "next", "新内容", "作者", 1)}}, nil
+	}), nil, []string{"bilibili", "youtube"})
+	snapshot := batchSnapshot{
+		Candidates: []batchCandidate{
+			{Item: batchItem("youtube", "read", "已浏览", "作者", 1), Source: "youtube"},
+			{Item: batchItem("bilibili", "buffered", "待浏览", "作者", 1), Source: "bilibili"},
+		},
+		Status: map[string]BatchSourceStatus{}, NextPages: map[string]int{"bilibili": 2, "youtube": 2}, Exhausted: map[string]bool{"bilibili": false, "youtube": false},
+	}
+	if err := service.extendSnapshot(context.Background(), BatchRequest{Size: 10}, &snapshot, 1); err != nil {
+		t.Fatal(err)
+	}
+	if len(calls) != 1 || calls[0] != "youtube" || snapshot.NextPages["bilibili"] != 2 {
+		t.Fatalf("refetched a buffered source: calls=%v pages=%v", calls, snapshot.NextPages)
+	}
+}
+
+func TestBatchContinuationStopsOnRequestCancellation(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	calls := 0
+	service := NewBatchService(batchProviderFunc(func(context.Context, string, int) (Feed, error) {
+		calls++
+		cancel()
+		return Feed{HasMore: true}, nil
+	}), nil, []string{"bilibili", "youtube"})
+	snapshot := batchSnapshot{Status: map[string]BatchSourceStatus{}, NextPages: map[string]int{}, Exhausted: map[string]bool{"bilibili": false, "youtube": false}}
+	if err := service.extendSnapshot(ctx, BatchRequest{Size: 10}, &snapshot, 0); !errors.Is(err, context.Canceled) {
+		t.Fatalf("cancellation was swallowed: %v", err)
+	}
+	if calls != 1 || len(snapshot.NextPages) != 0 {
+		t.Fatalf("canceled request continued fetching or advanced cursor: calls=%d pages=%v", calls, snapshot.NextPages)
+	}
+	if err := service.extendSnapshot(ctx, BatchRequest{Size: 10}, &snapshot, 0); !errors.Is(err, context.Canceled) || calls != 1 {
+		t.Fatalf("already canceled request fetched another page: calls=%d err=%v", calls, err)
 	}
 }
 

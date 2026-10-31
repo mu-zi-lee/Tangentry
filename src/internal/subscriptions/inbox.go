@@ -49,6 +49,8 @@ type InboxQuery struct {
 	Until    int64
 	Cursor   string
 	Limit    int
+	// Cards changes representation only; it does not change cursor identity.
+	Cards bool
 }
 type InboxPosition struct {
 	Before  int64  `json:"before"`
@@ -102,6 +104,11 @@ func (s *InboxService) List(ctx context.Context, query InboxQuery) (InboxPage, e
 	page, next, err := s.repository.ListSubscriptionInbox(ctx, query, position)
 	if err != nil {
 		return InboxPage{}, err
+	}
+	if query.Cards {
+		for index := range page.Entries {
+			page.Entries[index].Item = content.Card(page.Entries[index].Item)
+		}
 	}
 	if next.Before > 0 {
 		data, _ := json.Marshal(next)

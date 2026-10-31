@@ -9,6 +9,7 @@ test('Bilibili QR login polls until confirmed without exposing credentials', asy
     return route.fulfill({ json: { id: 'synthetic-session', status: 'success', expiresAt: Date.now()/1000+180 } })
   })
   await page.goto('/tools#accounts')
+  await page.getByRole('button', { name: '连接哔哩哔哩', exact: true }).click()
   await page.getByRole('button', { name: '扫码登录 B站' }).click()
   await expect(page.getByAltText('B站登录二维码')).toBeVisible()
   await expect(page.getByText('登录成功，已保存 Cookie。', { exact: true })).toBeVisible({ timeout: 10000 })

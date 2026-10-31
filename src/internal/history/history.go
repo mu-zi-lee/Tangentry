@@ -65,9 +65,7 @@ func (s *Service) Viewing(ctx context.Context) ([]Entry, error) { return s.repos
 // cover image, as browser history always stored it.
 func snapshot(item content.Item) content.Item {
 	item.ArticleBlocks, item.Transcripts, item.PreviewText, item.SavedAt, item.Partial = nil, nil, "", 0, false
-	if description := []rune(item.Description); len(description) > content.CardDescriptionRunes {
-		item.Description = string(description[:content.CardDescriptionRunes])
-	}
+	item.Description, _ = content.TruncateRunes(item.Description, content.CardDescriptionRunes)
 	if len(item.Images) > 1 {
 		item.Images = item.Images[:1]
 	}

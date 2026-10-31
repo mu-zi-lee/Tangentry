@@ -64,11 +64,11 @@ export function App() {
   const downloads = useDownloads()
   const input = useRef<HTMLInputElement>(null)
   const navigation = useAppNavigation(input)
-  const { view, navigate, returnHome, readerQuery, readerNoteId, readingItem, setReadingItem, readerSourceID, scrollPositions, viewportTarget, viewportVersion, setReaderReturn, returnFromReader, returnToPath } = navigation
+  const { view, navigate, replaceCurrentPath, returnHome, readerQuery, readerNoteId, readingItem, setReadingItem, readerSourceID, scrollPositions, viewportTarget, viewportVersion, setReaderReturn, returnFromReader, returnToPath } = navigation
   const bilibili = useBilibiliBrowse(view === 'bilibili', path => navigate('bilibili', false, path))
-  const subscriptions = useSubscriptions(view === 'subscriptions')
   const [subscriptionView, setSubscriptionView] = useState(() => selectedSavedViewFromURL())
   const [subscriptionMode,setSubscriptionMode] = useState<'latest'|'history'|'health'>(() => selectedSavedViewFromURL() || new URLSearchParams(location.search).get('mode') === 'history' ? 'history' : window.location.hash === '#health' ? 'health' : 'latest')
+  const subscriptions = useSubscriptions(view === 'subscriptions', subscriptionMode === 'latest')
   const inbox = useSubscriptionInbox(view === 'subscriptions' && subscriptionMode === 'history', subscriptionView)
   const savedViews = useSavedViews(view==='subscriptions')
   const skipDefaultSubscriptionView = useRef(false)
@@ -115,20 +115,24 @@ export function App() {
     const params = new URLSearchParams(location.search)
     if (value.trim()) params.set('q', value.trim())
     else params.delete('q')
-    navigate('subscriptions', false, `/subscriptions${params.toString() ? `?${params}` : ''}${location.hash}`)
+    // Search changes stay in the current view. Replacing the URL directly
+    // preserves the active input and avoids re-running viewport restoration.
+    replaceCurrentPath(`/subscriptions${params.toString() ? `?${params}` : ''}${location.hash}`)
   }
   const updateSubscriptionReadFilter = (value: 'all' | 'unread' | 'read') => {
     setSubscriptionReadFilter(value)
     const params = new URLSearchParams(location.search)
     if (value === 'all') params.delete('read')
     else params.set('read', value)
-    navigate('subscriptions', false, `/subscriptions${params.toString() ? `?${params}` : ''}${location.hash}`)
+    replaceCurrentPath(`/subscriptions${params.toString() ? `?${params}` : ''}${location.hash}`)
   }
   const [galleryQuery, setGalleryQuery] = useState('')
   const creatorReturnPath = useRef('/search')
   const bilibiliReturnPath = useRef('/')
   const discoveryActive = view === 'discovery'
-  const gallery = useGallery(discoveryActive, gallerySources)
+  // The mixed batch owns discovery requests. Keep legacy settings callbacks,
+  // but do not also preload a second, unused feed for every platform.
+  const gallery = useGallery(false, gallerySources)
   const globalNotes = useGlobalNotes(view === 'notes')
   const [downloadIntent, setDownloadIntent] = useState<{ url: string; mode: 'video' | 'audio'; token: number } | null>(null)
   const favorites = useFavoriteSync(view === 'library')
@@ -254,7 +258,7 @@ export function App() {
     viewingHistory.record(cachedReadingItem)
   }, [view, readingID, cachedReadingItem, viewingHistory.record])
   const readStates = useReadState([
-    ...(view === 'subscriptions' ? subscriptionMode==='history' ? inbox.page.entries.map(entry=>entry.item.id) : subscriptions.detail?.items.map(item => item.id) ?? [] : []),
+    ...(view === 'subscriptions' ? subscriptionMode==='history' ? inbox.page.entries.map(entry=>entry.item.id) : subscriptions.selectedId === '__all__' ? subscriptions.allItems.map(item => item.id) : subscriptions.detail?.items.map(item => item.id) ?? [] : []),
     ...(view === 'reader' && supportsReadState(readingID) ? [readingID] : []),
   ])
   const openedForReading = useRef('')

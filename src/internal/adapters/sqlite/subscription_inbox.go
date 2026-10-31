@@ -5,10 +5,32 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"strconv"
 	"strings"
 	"tangentry/internal/content"
 	"tangentry/internal/subscriptions"
 )
+
+// Strip reader-only data before crossing the SQLite/Go boundary. SQLite still
+// parses the stored JSON, but Go does not allocate or decode the complete body.
+func inboxCardPayload() string {
+	return cardPayloadSQL("i.payload")
+}
+
+func cardPayloadSQL(payload string) string {
+	description := `COALESCE(json_extract(` + payload + `,'$.description'),'')`
+	limit := strconv.Itoa(content.CardDescriptionRunes)
+	// SQLite text functions stop at NUL; let content.Card handle that uncommon
+	// case so its Unicode-prefix semantics stay identical to full-list mode.
+	bounded := `CASE WHEN instr(` + description + `,char(0))>0 THEN ` + description + ` ELSE substr(` + description + `,1,` + limit + `) END`
+	partial := `CASE WHEN json_extract(` + payload + `,'$.partial')=1
+		OR COALESCE(json_array_length(` + payload + `,'$.articleBlocks'),0)>0
+		OR COALESCE(json_array_length(` + payload + `,'$.transcripts'),0)>0
+		OR COALESCE(json_type(` + payload + `,'$.discussion'),'null')<>'null'
+		OR length(` + description + `)>` + limit + ` THEN 'true' ELSE 'false' END`
+	return `json_set(json_remove(` + payload + `,'$.articleBlocks','$.transcripts','$.discussion'),
+		'$.description',` + bounded + `,'$.partial',json(` + partial + `))`
+}
 
 func (s *Store) GetSubscriptionInboxItem(ctx context.Context, id string) (content.Item, error) {
 	var item content.Item
@@ -57,7 +79,11 @@ func (s *Store) ListSubscriptionInbox(ctx context.Context, q subscriptions.Inbox
 	filtered, filterArgs := subscriptionInboxConditions(q)
 	conditions = append(conditions, filtered[1:]...)
 	args = append(args, filterArgs...)
-	rows, err := tx.QueryContext(ctx, `SELECT i.sequence,i.payload,i.first_seen_at,i.last_seen_at FROM subscription_inbox i LEFT JOIN read_state r ON r.content_id=i.content_id WHERE `+strings.Join(conditions, " AND ")+` ORDER BY i.sequence DESC LIMIT ?`, append(args, limit+1)...)
+	payload := "i.payload"
+	if q.Cards {
+		payload = inboxCardPayload()
+	}
+	rows, err := tx.QueryContext(ctx, `SELECT i.sequence,`+payload+`,i.first_seen_at,i.last_seen_at FROM subscription_inbox i LEFT JOIN read_state r ON r.content_id=i.content_id WHERE `+strings.Join(conditions, " AND ")+` ORDER BY i.sequence DESC LIMIT ?`, append(args, limit+1)...)
 	if err != nil {
 		return page, p, err
 	}
@@ -88,26 +114,36 @@ func (s *Store) ListSubscriptionInbox(ctx context.Context, q subscriptions.Inbox
 		next = p
 		next.Before = sequences[limit-1]
 	}
-	for i := range page.Entries {
-		entry := &page.Entries[i]
+	ids := make([]string, len(page.Entries))
+	entries := make(map[string]*subscriptions.InboxEntry, len(page.Entries))
+	for index := range page.Entries {
+		entry := &page.Entries[index]
 		entry.Sources = []subscriptions.InboxSource{}
-		rows, err = tx.QueryContext(ctx, `SELECT a.source_id,COALESCE(s.name,a.source_name),s.id IS NULL FROM subscription_inbox_sources a LEFT JOIN subscriptions s ON s.id=a.source_id WHERE a.content_id=? ORDER BY a.source_id`, entry.Item.ID)
-		if err != nil {
+		ids[index], entries[entry.Item.ID] = entry.Item.ID, entry
+	}
+	encoded, err := json.Marshal(ids)
+	if err != nil {
+		return page, p, err
+	}
+	rows, err = tx.QueryContext(ctx, `SELECT a.content_id,a.source_id,COALESCE(s.name,a.source_name),s.id IS NULL FROM subscription_inbox_sources a LEFT JOIN subscriptions s ON s.id=a.source_id WHERE a.content_id IN (SELECT value FROM json_each(?)) ORDER BY a.content_id,a.source_id`, string(encoded))
+	if err != nil {
+		return page, p, err
+	}
+	for rows.Next() {
+		var id string
+		var source subscriptions.InboxSource
+		if err = rows.Scan(&id, &source.ID, &source.Name, &source.Removed); err != nil {
+			rows.Close()
 			return page, p, err
 		}
-		for rows.Next() {
-			var source subscriptions.InboxSource
-			if err = rows.Scan(&source.ID, &source.Name, &source.Removed); err != nil {
-				rows.Close()
-				return page, p, err
-			}
+		if entry := entries[id]; entry != nil {
 			entry.Sources = append(entry.Sources, source)
 		}
-		err = rows.Err()
-		rows.Close()
-		if err != nil {
-			return page, p, err
-		}
+	}
+	err = rows.Err()
+	rows.Close()
+	if err != nil {
+		return page, p, err
 	}
 	rows, err = tx.QueryContext(ctx, `SELECT DISTINCT a.source_id,COALESCE(s.name,a.source_name),s.id IS NULL FROM subscription_inbox_sources a LEFT JOIN subscriptions s ON s.id=a.source_id ORDER BY a.source_id`)
 	if err != nil {
@@ -135,6 +171,9 @@ func (s *Store) ListSubscriptionInbox(ctx context.Context, q subscriptions.Inbox
 	}
 	s.applyArticlePreviews(ctx, items)
 	for i := range page.Entries {
+		if q.Cards {
+			items[i] = content.Card(items[i])
+		}
 		page.Entries[i].Item = items[i]
 	}
 	return page, next, nil

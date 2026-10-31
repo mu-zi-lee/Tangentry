@@ -1,12 +1,14 @@
 package httptransport
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"mime"
 	"net/http"
 	"strconv"
 
+	"tangentry/internal/content"
 	"tangentry/internal/subscriptions"
 )
 
@@ -111,10 +113,14 @@ func (h *feedsHandler) savedViewInbox(w http.ResponseWriter, r *http.Request) {
 	}
 	q := r.URL.Query()
 	for key, values := range q {
-		if key != "cursor" && key != "limit" || len(values) != 1 {
+		if key != "cursor" && key != "limit" && key != "cards" || len(values) != 1 {
 			fail(w, subscriptions.ErrInboxInvalid)
 			return
 		}
+	}
+	if q.Has("cards") && q.Get("cards") != "true" {
+		fail(w, subscriptions.ErrInboxInvalid)
+		return
 	}
 	limit := subscriptions.InboxPageSize
 	if q.Has("limit") {
@@ -125,10 +131,23 @@ func (h *feedsHandler) savedViewInbox(w http.ResponseWriter, r *http.Request) {
 		}
 		limit = parsed
 	}
-	page, count, err := h.feeds.SavedViews.Query(r.Context(), r.PathValue("id"), q.Get("cursor"), limit)
+	query := h.feeds.SavedViews.Query
+	if q.Get("cards") == "true" {
+		if cards, ok := h.feeds.SavedViews.(interface {
+			QueryCards(context.Context, string, string, int) (subscriptions.InboxPage, int, error)
+		}); ok {
+			query = cards.QueryCards
+		}
+	}
+	page, count, err := query(r.Context(), r.PathValue("id"), q.Get("cursor"), limit)
 	if err != nil {
 		fail(w, err)
 		return
+	}
+	if q.Get("cards") == "true" {
+		for index := range page.Entries {
+			page.Entries[index].Item = content.Card(page.Entries[index].Item)
+		}
 	}
 	write(w, http.StatusOK, map[string]any{"page": page, "count": count})
 }

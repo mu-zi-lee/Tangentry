@@ -81,6 +81,14 @@ const douyinInitialSourceTimeout = 20 * time.Second
 const douyinBackgroundSourceTimeout = 75 * time.Second
 const douyinContinuationTimeout = 20 * time.Second
 
+// Empty or duplicate platform pages must not turn one scroll into a long crawl.
+const maxContinuationPagesPerSource = 3
+
+// A cursor request should top up the visible page, not fan out into an
+// unbounded sweep across every source. This keeps a burst of empty/duplicate
+// pages from multiplying WebView work when the user clicks "加载更多".
+const maxContinuationFetchesPerBatch = 4
+
 type initialSourceResult struct {
 	source   string
 	feed     Feed
@@ -112,8 +120,9 @@ type batchSnapshot struct {
 	Status     map[string]BatchSourceStatus `json:"status"`
 	// NextPages keeps source pagination independent from the user-facing cursor.
 	// A zero value means that the source has not been fetched beyond page one.
-	NextPages map[string]int  `json:"nextPages,omitempty"`
-	Exhausted map[string]bool `json:"exhausted,omitempty"`
+	NextPages  map[string]int  `json:"nextPages,omitempty"`
+	Exhausted  map[string]bool `json:"exhausted,omitempty"`
+	NextSource int             `json:"nextSource,omitempty"`
 }
 
 func NewBatchService(provider BatchCandidateProvider, subscriptions func(context.Context) (Feed, error), sources []string, repositories ...BatchSnapshotRepository) *BatchService {
@@ -168,6 +177,7 @@ func (s *BatchService) Create(ctx context.Context, request BatchRequest) (BatchR
 		if unmarshalBatchSnapshot(payload, &snapshot) != nil {
 			return BatchResponse{}, ErrInvalidBatch
 		}
+		projectBatchCandidates(snapshot.Candidates)
 		// Feedback can change after a snapshot was created. Re-check strict
 		// hide/block rules on every cursor request so a stale snapshot cannot
 		// surface content the user has explicitly removed.
@@ -320,6 +330,7 @@ func (s *BatchService) Create(ctx context.Context, request BatchRequest) (BatchR
 		}
 	}
 	all = selectBatchOrder(all, request, carried)
+	projectBatchCandidates(all)
 	snapshot = batchSnapshot{Candidates: all, Status: status, NextPages: nextPages, Exhausted: exhausted}
 	// If every source starts empty but advertises a continuation, fetch one
 	// continuation before exposing an empty stream.
@@ -350,6 +361,7 @@ func unmarshalBatchSnapshot(payload []byte, snapshot *batchSnapshot) error {
 		Status     map[string]string `json:"status"`
 		NextPages  map[string]int    `json:"nextPages,omitempty"`
 		Exhausted  map[string]bool   `json:"exhausted,omitempty"`
+		NextSource int               `json:"nextSource,omitempty"`
 	}
 	if err := json.Unmarshal(payload, &legacy); err != nil {
 		return err
@@ -358,7 +370,7 @@ func unmarshalBatchSnapshot(payload []byte, snapshot *batchSnapshot) error {
 	for source, value := range legacy.Status {
 		status[source] = BatchSourceStatus{Status: value}
 	}
-	*snapshot = batchSnapshot{Candidates: legacy.Candidates, Status: status, NextPages: legacy.NextPages, Exhausted: legacy.Exhausted}
+	*snapshot = batchSnapshot{Candidates: legacy.Candidates, Status: status, NextPages: legacy.NextPages, Exhausted: legacy.Exhausted, NextSource: legacy.NextSource}
 	return nil
 }
 
@@ -386,6 +398,10 @@ func (s *BatchService) extendSnapshot(ctx context.Context, request BatchRequest,
 	for _, candidate := range snapshot.Candidates {
 		seen[candidate.Item.ID] = struct{}{}
 	}
+	buffered := make(map[string]bool, len(s.sources))
+	for _, candidate := range snapshot.Candidates[min(offset, len(snapshot.Candidates)):] {
+		buffered[candidate.Source] = true
+	}
 	add := func(source, reason string, feed Feed) []batchCandidate {
 		added := make([]batchCandidate, 0, len(feed.Items))
 		for _, item := range feed.Items {
@@ -404,15 +420,37 @@ func (s *BatchService) extendSnapshot(ctx context.Context, request BatchRequest,
 		return added
 	}
 	newCandidates := make([]batchCandidate, 0, len(s.sources)*20)
-	for _, source := range s.sources {
-		if source == "subscriptions" || request.Source != "" && source != request.Source || snapshot.Exhausted[source] {
+	fetches := 0
+	start := snapshot.NextSource
+	if start < 0 || start >= len(s.sources) {
+		start = 0
+	}
+sources:
+	for scanned := 0; scanned < len(s.sources); scanned++ {
+		sourceIndex := (start + scanned) % len(s.sources)
+		source := s.sources[sourceIndex]
+		if source == "subscriptions" || request.Source != "" && source != request.Source || snapshot.Exhausted[source] || buffered[source] {
 			continue
+		}
+		if fetches >= maxContinuationFetchesPerBatch {
+			snapshot.NextSource = sourceIndex
+			break
 		}
 		page := snapshot.NextPages[source]
 		if page < 1 {
 			page = 1
 		}
-		for attempts := 0; attempts < 100 && !snapshot.Exhausted[source]; attempts++ {
+		for attempts := 0; attempts < maxContinuationPagesPerSource && !snapshot.Exhausted[source]; attempts++ {
+			if err := ctx.Err(); err != nil {
+				return err
+			}
+			if fetches >= maxContinuationFetchesPerBatch {
+				snapshot.Status[source] = BatchSourceStatus{Status: "loading", Message: "正在加载，继续下滑后会补充此来源。"}
+				snapshot.NextPages[source] = page
+				snapshot.NextSource = (sourceIndex + 1) % len(s.sources)
+				break sources
+			}
+			fetches++
 			fetchCtx := ctx
 			cancel := func() {}
 			if timeout := s.continuationTimeout(source); timeout > 0 {
@@ -420,6 +458,9 @@ func (s *BatchService) extendSnapshot(ctx context.Context, request BatchRequest,
 			}
 			feed, err := s.provider.Fetch(fetchCtx, source, page)
 			cancel()
+			if ctx.Err() != nil {
+				return ctx.Err()
+			}
 			if err != nil {
 				if errors.Is(err, context.DeadlineExceeded) {
 					snapshot.Status[source] = BatchSourceStatus{Status: "loading", Message: "正在加载，继续下滑后会补充此来源。"}
@@ -446,8 +487,10 @@ func (s *BatchService) extendSnapshot(ctx context.Context, request BatchRequest,
 			}
 			page++
 		}
+		snapshot.NextSource = (sourceIndex + 1) % len(s.sources)
 	}
 	newCandidates = s.applyFeedback(ctx, newCandidates)
+	projectBatchCandidates(newCandidates)
 	offset = min(offset, len(snapshot.Candidates))
 	prefix := append([]batchCandidate(nil), snapshot.Candidates[:offset]...)
 	tail := append(append([]batchCandidate(nil), snapshot.Candidates[offset:]...), newCandidates...)
@@ -782,6 +825,9 @@ func interleaveBatchCandidates(candidates []batchCandidate) []batchCandidate {
 		for _, source := range sources {
 			queue := queues[source]
 			position := positions[source]
+			if position == len(queue) {
+				continue
+			}
 			candidateIndex := -1
 			for index := position; index < len(queue); index++ {
 				candidate := queue[index]

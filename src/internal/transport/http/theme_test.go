@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -27,7 +28,7 @@ func newThemeTestHandler(t *testing.T, store *filesystem.ThemePreferences) http.
 	}
 	t.Cleanup(func() { _ = db.Close() })
 	return New(content.NewService(db), discovery.NewService(testProvider{}), fstest.MapFS{
-		"index.html": {Data: []byte(`<script>const theme = "__TANGENTRY_THEME__"; const saved = __TANGENTRY_THEME_SAVED__</script>`)},
+		"index.html": {Data: []byte(`<script>const theme = "__TANGENTRY_THEME__"; const saved = "__TANGENTRY_THEME_SAVED__"; const appearance = "__TANGENTRY_APPEARANCE__"</script>`)},
 	}, Options{Preferences: store})
 }
 
@@ -173,5 +174,100 @@ func TestIndexHTMLInjectsPersistedThemeBeforeAppScripts(t *testing.T) {
 	}
 	if strings.Contains(html, "__TANGENTRY_THEME") {
 		t.Fatalf("placeholder leaked into HTML: %s", html)
+	}
+}
+
+func TestSourceIndexHTMLInjectsStartupPreferences(t *testing.T) {
+	data, err := os.ReadFile(filepath.Join("..", "..", "..", "web", "index.html"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, saved := range []bool{false, true} {
+		t.Run(map[bool]string{false: "defaults", true: "persisted"}[saved], func(t *testing.T) {
+			store := filesystem.NewPreferences(filepath.Join(t.TempDir(), "preferences.json"))
+			theme, appearance := "system", "{}"
+			if saved {
+				theme = "dark"
+				if err := store.Save(context.Background(), preferences.ThemeDark); err != nil {
+					t.Fatal(err)
+				}
+				value := `{"width":360,"excerpt":false}`
+				if err := store.Set(context.Background(), preferences.CardAppearanceKey, value, 1); err != nil {
+					t.Fatal(err)
+				}
+				encoded, _ := json.Marshal(map[string]string{preferences.CardAppearanceKey: value})
+				appearance = string(encoded)
+			}
+			handler := &Handler{preferences: store}
+			html := string(handler.injectTheme(httptest.NewRequest(http.MethodGet, "/", nil), data))
+			encodedSaved, _ := json.Marshal(saved)
+			for _, expected := range []string{
+				`const injectedTheme = "` + theme + `"`,
+				`const themeSaved = ` + string(encodedSaved) + ` === true`,
+				`window.__TANGENTRY_APPEARANCE__ = ` + appearance,
+			} {
+				if !strings.Contains(html, expected) {
+					t.Errorf("startup HTML missing %q: %s", expected, html)
+				}
+			}
+			for _, placeholder := range []string{`"__TANGENTRY_THEME__"`, `"__TANGENTRY_THEME_SAVED__"`, `"__TANGENTRY_APPEARANCE__"`} {
+				if strings.Contains(html, placeholder) {
+					t.Errorf("startup placeholder not replaced: %s", placeholder)
+				}
+			}
+		})
+	}
+}
+
+func TestAppearancePreferencesSurviveNewHandlerAndOrigin(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "preferences.json")
+	handler := newThemeTestHandler(t, filesystem.NewPreferences(path))
+	values := map[string]string{
+		preferences.CardAppearanceKey: `{"width":360,"corners":"round","excerpt":false}`,
+		preferences.FontSettingsKey:   `{"reading":"noto","fontSize":19,"lineHeight":"relaxed"}`,
+	}
+	for key, value := range values {
+		payload, _ := json.Marshal(preferenceInput{Value: value, Revision: 20})
+		response := themeRequest(handler, http.MethodPut, "/api/preferences/"+key, bytes.NewReader(payload))
+		if response.Code != http.StatusOK {
+			t.Fatalf("PUT %s status=%d body=%s", key, response.Code, response.Body.String())
+		}
+	}
+	restarted := newThemeTestHandler(t, filesystem.NewPreferences(path))
+	for key, value := range values {
+		response := themeRequest(restarted, http.MethodGet, "/api/preferences/"+key, nil)
+		var stored struct {
+			Value string `json:"value"`
+			Saved bool   `json:"saved"`
+		}
+		if err := json.NewDecoder(response.Body).Decode(&stored); err != nil {
+			t.Fatal(err)
+		}
+		if response.Code != http.StatusOK || !stored.Saved || stored.Value != value {
+			t.Fatalf("restarted %s = %+v status=%d", key, stored, response.Code)
+		}
+	}
+	request := httptest.NewRequest(http.MethodGet, "http://127.0.0.1:54321/", nil)
+	response := httptest.NewRecorder()
+	restarted.ServeHTTP(response, request)
+	encoded, _ := json.Marshal(values)
+	if response.Code != http.StatusOK || !strings.Contains(response.Body.String(), "const appearance = "+string(encoded)) {
+		t.Fatalf("appearance not injected on new origin: %s", response.Body.String())
+	}
+	if strings.Contains(response.Body.String(), "__TANGENTRY_APPEARANCE__") {
+		t.Fatal("appearance placeholder leaked into HTML")
+	}
+}
+
+func TestAppearancePreferencesRejectNonObjectJSON(t *testing.T) {
+	handler := newThemeTestHandler(t, filesystem.NewPreferences(filepath.Join(t.TempDir(), "preferences.json")))
+	for _, key := range []string{preferences.CardAppearanceKey, preferences.FontSettingsKey} {
+		for _, value := range []string{"null", "[]", "true", "broken"} {
+			payload, _ := json.Marshal(preferenceInput{Value: value})
+			response := themeRequest(handler, http.MethodPut, "/api/preferences/"+key, bytes.NewReader(payload))
+			if response.Code != http.StatusBadRequest {
+				t.Errorf("%s accepted %q status=%d", key, value, response.Code)
+			}
+		}
 	}
 }

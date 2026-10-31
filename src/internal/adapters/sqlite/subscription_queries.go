@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"strings"
 
 	"tangentry/internal/content"
 	"tangentry/internal/subscriptions"
@@ -91,9 +92,30 @@ func (s *Store) ListSubscriptions(ctx context.Context) ([]subscriptions.Source, 
 }
 
 func (s *Store) GetSubscription(ctx context.Context, id string) (subscriptions.Detail, error) {
-	detail, err := scanSubscription(s.db.QueryRowContext(ctx, `SELECT `+subscriptionJoinedColumns+` FROM subscriptions s`+subscriptionJoins+`WHERE s.id=?`, id), true)
+	return s.getSubscription(ctx, id, false)
+}
+
+func (s *Store) GetSubscriptionCards(ctx context.Context, id string) (subscriptions.Detail, error) {
+	return s.getSubscription(ctx, id, true)
+}
+
+func (s *Store) getSubscription(ctx context.Context, id string, cards bool) (subscriptions.Detail, error) {
+	columns := subscriptionJoinedColumns
+	if cards {
+		// Array iteration retains snapshot order; remove the original items before
+		// assembling the small snapshot transferred to the Go JSON decoder.
+		snapshot := `CASE WHEN s.snapshot='' THEN '' ELSE json_set(json_remove(s.snapshot,'$.items'),'$.items',
+			(SELECT json_group_array(` + cardPayloadSQL("item.value") + `) FROM json_each(s.snapshot,'$.items') item)) END`
+		columns = strings.Replace(columns, "s.snapshot", snapshot, 1)
+	}
+	detail, err := scanSubscription(s.db.QueryRowContext(ctx, `SELECT `+columns+` FROM subscriptions s`+subscriptionJoins+`WHERE s.id=?`, id), true)
 	if err == nil {
 		s.applyArticlePreviews(ctx, detail.Items)
+		if cards {
+			for index := range detail.Items {
+				detail.Items[index] = content.Card(detail.Items[index])
+			}
+		}
 	}
 	return detail, err
 }

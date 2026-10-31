@@ -66,5 +66,15 @@ func (h *Handler) injectTheme(r *http.Request, data []byte) []byte {
 	encodedTheme, _ := json.Marshal(string(theme))
 	encodedSaved, _ := json.Marshal(saved)
 	data = bytes.Replace(data, []byte(`"__TANGENTRY_THEME__"`), encodedTheme, 1)
-	return bytes.Replace(data, []byte(`__TANGENTRY_THEME_SAVED__`), encodedSaved, 1)
+	data = bytes.Replace(data, []byte(`"__TANGENTRY_THEME_SAVED__"`), encodedSaved, 1)
+	appearance := make(map[string]string)
+	if h.preferences != nil {
+		for _, key := range []string{preferences.CardAppearanceKey, preferences.FontSettingsKey} {
+			if value, persisted, err := h.preferences.Get(r.Context(), key); err == nil && persisted {
+				appearance[key] = value
+			}
+		}
+	}
+	encodedAppearance, _ := json.Marshal(appearance)
+	return bytes.Replace(data, []byte(`"__TANGENTRY_APPEARANCE__"`), encodedAppearance, 1)
 }

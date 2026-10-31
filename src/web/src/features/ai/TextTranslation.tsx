@@ -7,6 +7,7 @@ import { isChineseText } from '../../shared/text/chineseText'
 import type { CardTextRendererProps } from '../../shared/ui/CardText'
 import './ai.css'
 import { useTranslationLanguage } from './useTranslationLanguage'
+import { normalizeSubtitleLanguage } from '../subtitles/subtitleLanguageMatch'
 
 let cardTranslationQueue: Promise<void> = Promise.resolve()
 
@@ -92,5 +93,7 @@ export function BilingualTitle({ contentId, text, compact = false, source = 'tit
 
 // Compact card translation: translates when the card scrolls into view.
 export function CardTranslation(props: CardTextRendererProps) {
+  const { language } = useTranslationLanguage()
+  if (!/\p{L}/u.test(props.text) || normalizeSubtitleLanguage(language) === 'zh-hans' && isChineseText(props.text)) return props.children(props.text)
   return <BilingualTitle compact {...props}/>
 }

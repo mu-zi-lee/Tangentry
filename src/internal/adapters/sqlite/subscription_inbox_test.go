@@ -8,10 +8,121 @@ import (
 	"path/filepath"
 	"reflect"
 	"strings"
+	"tangentry/internal/articles"
 	"tangentry/internal/content"
 	"tangentry/internal/subscriptions"
 	"testing"
 )
+
+func TestInboxDatabaseCardProjectionMatchesFullItemsAndPagination(t *testing.T) {
+	s := inboxTestStore(t)
+	ctx := context.Background()
+	source := inboxTestSource(t, s, "卡片投影", "https://example.com/card-projection")
+	other := inboxTestSource(t, s, "第二来源", "https://example.com/card-projection-other")
+	items := make([]content.Item, 14)
+	for index := range items {
+		item := inboxTestItem(index+100, "article")
+		switch index {
+		case 0:
+			item.Description = strings.Repeat("文🙂a", content.CardDescriptionRunes)
+		case 1:
+			item.Description = strings.Repeat("🙂", content.CardDescriptionRunes)
+		case 2:
+			item.ArticleBlocks = []content.ArticleBlock{{Kind: "paragraph", Text: "正文必须留在全文端点。"}}
+		case 3:
+			item.Transcripts = []content.Transcript{{URL: "https://example.com/subtitles.vtt", Type: "text/vtt"}}
+		case 4:
+			item.Discussion = &content.Discussion{TopicID: "topic"}
+		case 5:
+			item.Partial = true
+		case 6:
+			item.Images = []content.Image{{URL: "https://example.com/cover.png", Width: 640, Height: 360}}
+		case 7:
+			item.Paper = &content.PaperMetadata{ArxivID: "2401.00001", Abstract: "论文摘要"}
+		case 8:
+			item.Description = "Comments"
+		case 9:
+			item.Description = "前缀\x00" + strings.Repeat("🙂", content.CardDescriptionRunes)
+		case 10:
+			item.Description = "\x00短描述"
+		case 11:
+			item.Description = ""
+		}
+		items[index] = item
+	}
+	if _, err := s.UpdateSubscription(ctx, source.ID, subscriptions.Snapshot{Items: items, Total: len(items)}, 10); err != nil {
+		t.Fatal(err)
+	}
+	var projected, stored string
+	if err := s.db.QueryRowContext(ctx, `SELECT `+inboxCardPayload()+`,i.payload FROM subscription_inbox i WHERE i.content_id=?`, items[0].ID).Scan(&projected, &stored); err != nil {
+		t.Fatal(err)
+	}
+	if len(projected) >= len(stored)/2 {
+		t.Fatal("database transferred the full description before projection", len(projected), len(stored))
+	}
+	if _, err := s.UpdateSubscription(ctx, other.ID, subscriptions.Snapshot{Items: items[:2], Total: 2}, 11); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.DeleteSubscription(ctx, other.ID); err != nil {
+		t.Fatal(err)
+	}
+	doc := articles.Document{ContentID: items[8].ID, SourceURL: items[8].URL, Title: items[8].Title, Revision: 1, Blocks: []articles.Block{{Kind: "paragraph", Text: strings.Repeat("缓存的原站正文。", 10)}}}
+	if _, err := s.SaveArticle(ctx, doc, 0); err != nil {
+		t.Fatal(err)
+	}
+	fullSource, err := s.GetSubscription(ctx, source.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cardSource, err := s.GetSubscriptionCards(ctx, source.ID)
+	if err != nil || !reflect.DeepEqual(fullSource.Source, cardSource.Source) || len(fullSource.Items) != len(cardSource.Items) {
+		t.Fatal("source card projection changed metadata", err)
+	}
+	for index, item := range fullSource.Items {
+		want, _ := json.Marshal(content.Card(item))
+		got, _ := json.Marshal(cardSource.Items[index])
+		if string(want) != string(got) {
+			t.Fatalf("source item order or projection changed at %d\nwant %s\ngot %s", index, want, got)
+		}
+	}
+	empty := inboxTestSource(t, s, "未更新来源", "https://example.com/no-snapshot")
+	emptyCards, err := s.GetSubscriptionCards(ctx, empty.ID)
+	if err != nil || emptyCards.Items == nil || len(emptyCards.Items) != 0 {
+		t.Fatal("empty source card contract", err)
+	}
+	service := subscriptions.NewInboxService(s)
+	cursor := ""
+	for pageIndex, count := range []int{10, 4} {
+		full, err := service.List(ctx, subscriptions.InboxQuery{Limit: 10, Cursor: cursor})
+		if err != nil {
+			t.Fatal(err)
+		}
+		cards, err := service.List(ctx, subscriptions.InboxQuery{Limit: 10, Cursor: cursor, Cards: true})
+		if err != nil || len(cards.Entries) != count || cards.NextCursor != full.NextCursor || !reflect.DeepEqual(cards.Sources, full.Sources) {
+			t.Fatal("card mode changed page boundaries or sources", pageIndex, err)
+		}
+		for index, entry := range full.Entries {
+			want, _ := json.Marshal(content.Card(entry.Item))
+			got, _ := json.Marshal(cards.Entries[index].Item)
+			if string(got) != string(want) || !reflect.DeepEqual(cards.Entries[index].Sources, entry.Sources) || cards.Entries[index].FirstSeenAt != entry.FirstSeenAt || cards.Entries[index].LastSeenAt != entry.LastSeenAt {
+				t.Fatalf("projection mismatch for %s\nwant %s\ngot  %s", entry.Item.ID, want, got)
+			}
+			original, err := service.Item(ctx, entry.Item.ID)
+			if err != nil || !reflect.DeepEqual(original, entry.Item) {
+				t.Fatal("card read mutated stored content", entry.Item.ID, err)
+			}
+		}
+		cursor = cards.NextCursor
+	}
+	if cursor != "" {
+		t.Fatal("unexpected third page")
+	}
+	cancelled, cancel := context.WithCancel(ctx)
+	cancel()
+	if _, err := service.List(cancelled, subscriptions.InboxQuery{Cards: true}); !errors.Is(err, context.Canceled) {
+		t.Fatal("cancelled card read proceeded", err)
+	}
+}
 
 func inboxTestItem(n int, kind string) content.Item {
 	id := fmt.Sprintf("%064x", n)

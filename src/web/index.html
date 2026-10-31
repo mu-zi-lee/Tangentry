@@ -2,12 +2,13 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
+    <script>window.__TANGENTRY_APPEARANCE__ = "__TANGENTRY_APPEARANCE__"</script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#ffffff" />
     <meta name="description" content="Tangentry · 让每一次点击，都具有继续发现的可能。" />
     <title>Tangentry — 继续发现</title>
     <link rel="icon" href="/favicon.svg" />
-    <script>const injectedTheme = "__TANGENTRY_THEME__"; const themeSaved = typeof __TANGENTRY_THEME_SAVED__ !== 'undefined' && typeof __TANGENTRY_THEME_SAVED__ === 'boolean' ? __TANGENTRY_THEME_SAVED__ : false; let legacyTheme = null; try { legacyTheme = localStorage.getItem('tangentry-theme') } catch {} const validTheme = value => value === 'light' || value === 'dark' || value === 'system'; const theme = themeSaved && validTheme(injectedTheme) ? injectedTheme : validTheme(legacyTheme) ? legacyTheme : validTheme(injectedTheme) ? injectedTheme : 'system'; window.__TANGENTRY_THEME__ = theme; window.__TANGENTRY_THEME_SAVED__ = themeSaved; let systemDark = false; try { systemDark = matchMedia('(prefers-color-scheme: dark)').matches } catch {} document.documentElement.dataset.theme = theme === 'dark' || (theme === 'system' && systemDark) ? 'dark' : 'light'</script>
+    <script>const injectedTheme = "__TANGENTRY_THEME__"; const themeSaved = "__TANGENTRY_THEME_SAVED__" === true; let legacyTheme = null; try { legacyTheme = localStorage.getItem('tangentry-theme') } catch {} const validTheme = value => value === 'light' || value === 'dark' || value === 'system'; const theme = themeSaved && validTheme(injectedTheme) ? injectedTheme : validTheme(legacyTheme) ? legacyTheme : validTheme(injectedTheme) ? injectedTheme : 'system'; window.__TANGENTRY_THEME__ = theme; window.__TANGENTRY_THEME_SAVED__ = themeSaved; let systemDark = false; try { systemDark = matchMedia('(prefers-color-scheme: dark)').matches } catch {} document.documentElement.dataset.theme = theme === 'dark' || (theme === 'system' && systemDark) ? 'dark' : 'light'</script>
   </head>
   <body>
     <div id="root"></div>

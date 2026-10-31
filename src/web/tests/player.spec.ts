@@ -36,7 +36,9 @@ test('local video decodes, seeks from subtitles and notes, has native captions, 
   await page.getByRole('button', { name: `在阅读页播放 ${job.title}`, exact: true }).click()
   await expect(page).toHaveURL('/reader?video=BVplayer0000')
   const video = page.getByLabel('本地视频播放器', { exact: true })
-  await expect.poll(() => video.evaluate((node: HTMLVideoElement) => node.readyState)).toBeGreaterThanOrEqual(2)
+  // Metadata-only preload may stop at HAVE_METADATA in WebKit. Decoding is
+  // verified by the real playback clock below, not by preloading frames.
+  await expect.poll(() => video.evaluate((node: HTMLVideoElement) => node.readyState)).toBeGreaterThanOrEqual(1)
   expect(await video.evaluate((node: HTMLVideoElement) => ({ width: node.videoWidth, height: node.videoHeight, duration: node.duration, paused: node.paused }))).toEqual({ width: 640, height: 360, duration: 12, paused: true })
   await expect(page.getByRole('button', { name: '跳转播放时间 00:05', exact: true })).toBeVisible()
   expect(await video.evaluate((node: HTMLVideoElement) => node.textTracks[0]?.mode)).toBe('disabled')
@@ -86,7 +88,7 @@ test('local video decodes, seeks from subtitles and notes, has native captions, 
   // the actual API; the reader no longer asks users to type timestamps.
   expect((await request.patch('/api/notes/' + notes[0].id, { data: { body: notes[0].body, positionSeconds: 125 } })).status()).toBe(200)
   await page.reload()
-  await expect.poll(() => video.evaluate((node: HTMLVideoElement) => node.readyState)).toBeGreaterThanOrEqual(2)
+  await expect.poll(() => video.evaluate((node: HTMLVideoElement) => node.readyState)).toBeGreaterThanOrEqual(1)
   await page.getByRole('group', { name: '阅读区域', exact: true }).getByRole('button', { name: '笔记', exact: true }).click()
   await page.getByRole('button', { name: '跳转笔记关联时间 02:05', exact: true }).click()
   await expect(page.getByRole('alert')).toContainText('这个时间超出本地视频时长')
@@ -95,7 +97,7 @@ test('local video decodes, seeks from subtitles and notes, has native captions, 
   // Re-enter from downloads after the deliberate full-page reload above.
   await page.getByRole('navigation', { name: '快捷导航', exact: true }).getByRole('button', { name: '下载', exact: true }).click()
   await page.getByRole('button', { name: `在阅读页播放 ${job.title}`, exact: true }).click()
-  await expect.poll(() => video.evaluate((node: HTMLVideoElement) => node.readyState)).toBeGreaterThanOrEqual(2)
+  await expect.poll(() => video.evaluate((node: HTMLVideoElement) => node.readyState)).toBeGreaterThanOrEqual(1)
   const handle = await video.elementHandle()
   await video.evaluate(async (node: HTMLVideoElement) => { await node.play() })
   await page.getByRole('button', { name: '返回列表', exact: true }).click()
@@ -133,7 +135,7 @@ test('article playback keeps the transcript mounted and saves without restarting
   await completed(request, 'BVplayer0000', '文章模式稳定测试')
   await page.goto('/reader?video=BVplayer0000')
   const video = page.getByLabel('本地视频播放器', { exact: true })
-  await expect.poll(() => video.evaluate((node: HTMLVideoElement) => node.readyState)).toBeGreaterThanOrEqual(2)
+  await expect.poll(() => video.evaluate((node: HTMLVideoElement) => node.readyState)).toBeGreaterThanOrEqual(1)
   await page.locator('.subtitle-modes').getByRole('button', { name: '文章', exact: true }).click()
   await video.evaluate(async (node: HTMLVideoElement) => { node.currentTime = 5; node.muted = true; await node.play() })
   const body = page.getByRole('list', { name: '字幕段落' })
@@ -201,9 +203,22 @@ test('following playback expands long transcripts and scrolls only inside the su
   await expect(page.getByRole('button', { name: '继续跟随播放', exact: true })).toBeVisible()
   // Let real wheel scrolling settle before a new native seek updates the clock.
   await expect.poll(() => pane.evaluate(node => node.scrollTop)).toBeLessThan(await pane.evaluate(node => node.scrollHeight - node.clientHeight - 100))
+  await pane.evaluate(node => new Promise<void>((resolve, reject) => {
+    let previous = node.scrollTop, stable = 0, frames = 0
+    const settled = () => {
+      stable = Math.abs(node.scrollTop - previous) < .5 ? stable + 1 : 0
+      previous = node.scrollTop
+      if (stable >= 8) resolve()
+      else if (++frames >= 180) reject(new Error('Transcript wheel scroll did not settle'))
+      else requestAnimationFrame(settled)
+    }
+    requestAnimationFrame(settled)
+  }))
   const browsingPosition = await pane.evaluate(node => node.scrollTop)
+  const nextActiveHeight = await cues.nth(200).evaluate(node => node.getBoundingClientRect().height)
   await video.evaluate((node: HTMLVideoElement) => { node.currentTime = 8.03 })
   await expect(pane.locator('[aria-current="true"]')).toContainText('第200段跟随测试')
+  expect(await cues.nth(200).evaluate(node => node.getBoundingClientRect().height)).toBeCloseTo(nextActiveHeight, 1)
   await expect.poll(() => pane.evaluate((node, savedPosition) => Math.abs(node.scrollTop - savedPosition), browsingPosition)).toBeLessThan(2)
   const resume = page.getByRole('button', { name: '继续跟随播放', exact: true })
   await resume.scrollIntoViewIfNeeded()
@@ -239,11 +254,14 @@ test('changing completed files pauses the previous video and resets synchronizat
   await select.selectOption(high.id)
   expect(await previous!.evaluate((node: HTMLVideoElement) => node.paused)).toBe(true)
   await expect(video).toHaveAttribute('src', `/api/downloads/${high.id}/media`)
-  await expect.poll(() => video.evaluate((node: HTMLVideoElement) => node.readyState)).toBeGreaterThanOrEqual(2)
+  await expect.poll(() => video.evaluate((node: HTMLVideoElement) => node.readyState)).toBeGreaterThanOrEqual(1)
   expect(await video.evaluate((node: HTMLVideoElement) => ({ time: node.currentTime, paused: node.paused }))).toEqual({ time: 0, paused: true })
   await expect(page.getByLabel('笔记正文')).toHaveValue('切换文件时保留笔记草稿。')
   expect(await video.evaluate((node: HTMLVideoElement) => node.textTracks[0]?.mode)).toBe('disabled')
   await video.evaluate((node: HTMLVideoElement) => { node.textTracks[0].mode = 'hidden' })
   await expect.poll(() => video.evaluate((node: HTMLVideoElement) => node.textTracks[0]?.cues?.length ?? 0)).toBe(3)
   await expect(page.getByRole('list', { name: '字幕段落' }).locator('[aria-current="true"]')).toHaveCount(0)
+  await video.evaluate(async (node: HTMLVideoElement) => { node.muted = true; await node.play() })
+  await expect.poll(() => video.evaluate((node: HTMLVideoElement) => node.currentTime)).toBeGreaterThan(.2)
+  await video.evaluate((node: HTMLVideoElement) => node.pause())
 })

@@ -20,6 +20,28 @@ async function mockImages(page: Page, wait: Promise<void> = Promise.resolve()) {
   })
 }
 
+test('video covers never mount hover media and still open by mouse and keyboard', async ({ page }) => {
+  const item: ContentItem = { ...imageItem(0), id: 'bilibili:BV17x411w7KC', platform: 'bilibili', platformId: 'BV17x411w7KC', kind: 'video', thumbnailUrl: '' }
+  await page.route('**/api/library', route => route.fulfill({ json: { items: [item] } }))
+  const playbackRequests: string[] = []
+  page.on('request', request => { if (/\/api\/playback\//.test(request.url())) playbackRequests.push(request.url()) })
+  await page.goto('/library')
+  const cover = page.getByRole('group', { name: `打开视频 ${item.title}`, exact: true })
+  await cover.hover()
+  await page.waitForTimeout(900)
+  await expect(page.locator('.card-video video, .card-video audio, .card-video iframe')).toHaveCount(0)
+  expect(playbackRequests).toEqual([])
+  await cover.click()
+  await expect(page.getByRole('button', { name: '返回列表', exact: true })).toBeVisible()
+  await page.getByRole('button', { name: '返回列表', exact: true }).click()
+  for (const key of ['Enter', 'Space']) {
+    await cover.focus()
+    await cover.press(key)
+    await expect(page.getByRole('button', { name: '返回列表', exact: true })).toBeVisible()
+    await page.getByRole('button', { name: '返回列表', exact: true }).click()
+  }
+})
+
 test('image covers reserve their actual ratio before loading and keep it across viewport widths', async ({ page }) => {
   const items = Array.from({ length: 18 }, (_, index) => imageItem(index))
   let release = () => {}

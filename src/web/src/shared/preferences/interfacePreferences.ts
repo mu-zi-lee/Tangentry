@@ -1,6 +1,6 @@
 import { request } from '../api/client'
 
-export type InterfacePreferenceKey = 'theme' | 'automatic_subtitles'
+export type InterfacePreferenceKey = 'theme' | 'automatic_subtitles' | 'card_appearance' | 'font_settings'
 
 let revision = Date.now()
 let latest: Partial<Record<InterfacePreferenceKey, { value: string; revision: number }>> = {}

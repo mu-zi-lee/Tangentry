@@ -56,6 +56,13 @@ func (h *Handler) preferencePut(w http.ResponseWriter, r *http.Request) {
 		write(w, http.StatusBadRequest, apiError{"invalid_preference", "自动字幕偏好值无效。"})
 		return
 	}
+	if key == preferences.CardAppearanceKey || key == preferences.FontSettingsKey {
+		var settings map[string]json.RawMessage
+		if json.Unmarshal([]byte(input.Value), &settings) != nil || settings == nil {
+			write(w, http.StatusBadRequest, apiError{"invalid_preference", "外观偏好格式无效。"})
+			return
+		}
+	}
 	if input.Revision < 1 {
 		input.Revision = 1
 	}

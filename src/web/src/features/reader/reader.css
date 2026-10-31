@@ -345,7 +345,7 @@
 .subtitle-cues, .subtitle-cues.synchronized { scrollbar-width: none; scrollbar-gutter: auto; }
 .subtitle-cues::-webkit-scrollbar { display: none; }
 .subtitle-cues li { grid-template-columns: 48px minmax(0, 1fr); padding: 8px 4px; border-radius: 4px; }
-.immersive-reader .subtitle-cues li[aria-current=true] { padding: 8px 4px; border-inline-start: 0; box-shadow: none; background: var(--surface); }
+.immersive-reader .subtitle-cues li[aria-current=true] { border-inline-start: 0; box-shadow: none; background: var(--surface); }
 .subtitle-cues p { font-size: 14px; line-height: 1.9; }
 .immersive-reader .subtitle-article-mode { padding: 8px 16px 20px; max-width: 68ch; margin-inline: auto; width: 100%; }
 .immersive-reader .subtitle-article-mode li { display: block; padding: 0; margin-bottom: 1.2em; border: 0; background: transparent; }
