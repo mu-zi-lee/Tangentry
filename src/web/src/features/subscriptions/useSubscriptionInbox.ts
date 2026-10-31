@@ -85,6 +85,13 @@ export function useSubscriptionInbox(active: boolean, savedViewID = '') {
     setFilters(next)
     confirmedFilters.current = next
     if (savedViewID) skipViewReset.current = true
+    // Opened from elsewhere (e.g. a source's "view all history"): becoming
+    // active would abort a request started now, so let activation load it.
+    if (!active) {
+      controller.current?.abort(); ++generation.current
+      setConfirmed(false); setLoading(false); setError('')
+      return Promise.resolve(false)
+    }
     return load(next, '', 0, '')
   }
   return {

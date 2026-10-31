@@ -323,7 +323,9 @@ export function useSubscriptions(active = false, contentActive = active) {
     return succeeded.size > 0
   }
   const batchConfigureRefresh = async (ids: string[], enabled: boolean, intervalSeconds: number) => {
-    const succeeded = await runBatch('refresh-policy', ids, (id, signal) => request<SubscriptionSource>(`/subscriptions/${encodeURIComponent(id)}/refresh-policy`, { method: 'PUT', body: JSON.stringify({ enabled, intervalSeconds }), signal }), (_id, result) => replaceSource(result))
+    // Switching to manual keeps each source's own interval for when it is re-enabled.
+    const interval = (id: string) => enabled ? intervalSeconds : sources.find(source => source.id === id)?.refresh.intervalSeconds ?? intervalSeconds
+    const succeeded = await runBatch('refresh-policy', ids, (id, signal) => request<SubscriptionSource>(`/subscriptions/${encodeURIComponent(id)}/refresh-policy`, { method: 'PUT', body: JSON.stringify({ enabled, intervalSeconds: interval(id) }), signal }), (_id, result) => replaceSource(result))
     if (succeeded.size) setNotice(`已修改 ${succeeded.size} 个来源的自动更新设置。`)
     return succeeded.size > 0
   }
@@ -333,5 +335,5 @@ export function useSubscriptions(active = false, contentActive = active) {
     return batch.kind === 'update' ? batchUpdate(ids) : Promise.resolve(false)
   }
 
-  return { sources, selectedId, allItems, allLoading, allError, detail: detail?.source.id === selectedId ? detail : null, loading, reading, pending, batch, listError, detailError, actionError, updateError: updateErrors[selectedId] ?? '', notice, select, reload, reloadDetail: () => selectedId === allSubscriptionsID ? loadAll() : loadDetail(selectedId), create, rename, editAddress, update, remove, configureRefresh, batchUpdate, batchRemove, batchMove, batchConfigureRefresh, retryBatchFailed, setMembership, dissolveGroup }
+  return { sources, selectedId, allItems, allLoading, allError, detail: detail?.source.id === selectedId ? detail : null, loading, reading, pending, batch, listError, detailError, actionError, updateError: updateErrors[selectedId] ?? '', updateErrors, notice, select, reload, reloadDetail: () => selectedId === allSubscriptionsID ? loadAll() : loadDetail(selectedId), create, rename, editAddress, update, remove, configureRefresh, batchUpdate, batchRemove, batchMove, batchConfigureRefresh, retryBatchFailed, setMembership, dissolveGroup }
 }

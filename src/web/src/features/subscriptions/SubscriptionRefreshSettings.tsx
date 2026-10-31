@@ -27,10 +27,10 @@ export function SubscriptionRefreshSettings({ source, busy, onSave }: {
   }, [policy.enabled, policy.intervalSeconds, dirty])
 
   return <div className="subscription-refresh" title={`最近成功检查：${date(policy.lastCheckedAt)}${policy.enabled ? `；下次检查：${date(policy.nextCheckAt)}` : ''}`}>
-    <form onSubmit={event => { event.preventDefault(); void onSave(enabled, interval).then(ok => { if (ok) setBaseline({ enabled, interval }) }) }}>
+    <form className="subscription-setting-row subscription-refresh-form" onSubmit={event => { event.preventDefault(); void onSave(enabled, interval).then(ok => { if (ok) setBaseline({ enabled, interval }) }) }}>
       <label className="subscription-refresh-toggle"><Checkbox aria-label={youtube ? '自动刷新这个 YouTube 频道' : bilibili ? '自动刷新这个 B 站来源' : '自动刷新这个 RSS 来源'} type="checkbox" checked={enabled} disabled={busy} onChange={event => setEnabled(event.target.checked)} />自动更新</label>
-      <label className="subscription-field"><span>检查间隔</span><Select aria-label={youtube ? "YouTube 频道检查间隔" : bilibili ? "B 站来源检查间隔" : "RSS 检查间隔"} value={interval} disabled={busy} onChange={event => setInterval(Number(event.target.value))}>{!intervals.includes(interval) && <option value={interval}>{Math.round(interval / 60)} 分钟</option>}{intervals.map((value, index) => <option key={value} value={value}>{labels[index]}</option>)}</Select></label>
-      <Button variant="quiet" iconOnly className="icon-button" aria-label="保存更新设置" title="保存更新设置" disabled={busy || !dirty}><Check size={16}/></Button>
+      <label className="subscription-field"><span>检查间隔</span><Select disabled={busy || !enabled} data-enabled={enabled} aria-label={youtube ? "YouTube 频道检查间隔" : bilibili ? "B 站来源检查间隔" : "RSS 检查间隔"} value={interval} onChange={event => setInterval(Number(event.target.value))}>{!intervals.includes(interval) && <option value={interval}>{Math.round(interval / 60)} 分钟</option>}{intervals.map((value, index) => <option key={value} value={value}>{labels[index]}</option>)}</Select></label>
+      <Button className="button button-secondary" variant="secondary" aria-label="保存更新设置" title="保存更新设置" disabled={busy || !dirty}><Check size={14} aria-hidden="true"/>保存</Button>
     </form>
     <span className="visually-hidden">最近成功检查 {date(policy.lastCheckedAt)}{policy.enabled && ` 下次计划检查 ${date(policy.nextCheckAt)}`}</span>
     {policy.message && <p className="subscription-refresh-error" role="status">{policy.message}{policy.enabled && ' 将按延后的计划重试。'}</p>}

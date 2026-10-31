@@ -1,7 +1,7 @@
 import { expect, test } from './e2e'
 import AxeBuilder from '@axe-core/playwright'
 import type { SubscriptionDetail, SubscriptionSource, ContentItem } from '../src/shared/api/types'
-import { closeSubscriptionSettings, openSubscriptionAdd } from './fixtures/subscription-options'
+import { closeSubscriptionAdd, closeSubscriptionSettings, openSubscriptionAdd, openSubscriptionSettings, subscriptionSheet } from './fixtures/subscription-options'
 
 // All subscription endpoints use the actual app / HTTP / SQLite. Only external
 // platform I/O is replaced by the test server's explicitly labelled provider.
@@ -29,6 +29,8 @@ test('subscriptions persist and update independently, keep successful content on
   const beforeJobs = (await (await request.get('/api/downloads')).json()).jobs
   await page.goto('/subscriptions')
   await expect(page.getByRole('heading', { name: '全部订阅', exact: true })).toBeVisible()
+  // With no sources the reading stream is the add form itself.
+  await expect(page.getByRole('region', { name: '全部订阅' }).getByLabel('订阅地址')).toBeVisible()
   await page.getByLabel('订阅地址').fill('https://space.bilibili.com/12345')
   await page.getByLabel('订阅来源名称', { exact: true }).fill('知识视频')
   await page.getByRole('button', { name: '保存来源', exact: true }).click()
@@ -37,18 +39,24 @@ test('subscriptions persist and update independently, keep successful content on
   const local = await (await request.get(path)).json() as SubscriptionDetail
   expect(local.source.lastUpdatedAt).toBe(0)
   expect(local.items).toEqual([])
+  await openSubscriptionAdd(page)
+  await expect(page.getByRole('dialog', { name: '添加订阅' })).toBeVisible()
   await page.getByLabel('订阅地址').fill('12345')
   await page.getByLabel('订阅来源名称', { exact: true }).fill('重复不应改名')
   await page.getByRole('button', { name: '保存来源', exact: true }).click()
   await expect(page.getByRole('status').filter({ hasText: '这个来源已存在' })).toBeVisible()
   expect((await (await request.get('/api/subscriptions')).json()).sources).toHaveLength(1)
   await expect(page.getByRole('heading', { name: '知识视频', exact: true })).toBeVisible()
-  await page.getByRole('button', { name: '重命名来源' }).click()
-  await expect(page.getByLabel('来源新名称')).toBeFocused()
+  await expect(page.getByRole('dialog', { name: '添加订阅' })).toBeHidden()
+  await openSubscriptionSettings(page)
+  await expect(page.getByLabel('来源新名称')).toHaveValue('知识视频')
   await page.getByLabel('来源新名称').fill('知识视频 · 持续学习')
-  await page.getByRole('button', { name: '保存名称' }).click()
-  await expect(page.getByRole('heading', { name: '知识视频 · 持续学习', exact: true })).toBeVisible()
+  await subscriptionSheet(page).getByRole('button', { name: '保存名称' }).click()
+  await expect(subscriptionSheet(page).getByRole('heading', { name: '知识视频 · 持续学习', exact: true })).toBeVisible()
   await closeSubscriptionSettings(page)
+  // Closing the sheet returns focus to the control that opened it.
+  await expect(page.getByRole('button', { name: '来源设置', exact: true })).toBeFocused()
+  await expect(page.getByRole('heading', { name: '知识视频 · 持续学习', exact: true })).toBeVisible()
   await page.getByRole('button', { name: '更新投稿', exact: true }).click()
   await expect(page.getByTestId('content-card')).toHaveCount(1)
   await page.getByRole('button', { name: '更新投稿', exact: true }).click()
@@ -119,11 +127,15 @@ test('subscriptions persist and update independently, keep successful content on
   const noteResponse = await request.post('/api/notes', { data: { contentId: 'bilibili:BV17x411w7KC', body: '订阅移除后的保留笔记测试。', positionSeconds: null } })
   expect(noteResponse.status()).toBe(201)
   const note = await noteResponse.json()
-  await page.getByRole('button', { name: '移除来源', exact: true }).click()
-  await page.getByRole('button', { name: '保留来源', exact: true }).click()
-  await expect(page.getByRole('heading', { name: '知识视频 · 持续学习', exact: true })).toBeVisible()
-  await page.getByRole('button', { name: '移除来源', exact: true }).click()
-  await page.getByRole('button', { name: '确认移除', exact: true }).click()
+  await openSubscriptionSettings(page)
+  await subscriptionSheet(page).getByRole('button', { name: '移除来源', exact: true }).click()
+  await expect(subscriptionSheet(page).getByRole('button', { name: '保留来源', exact: true })).toBeFocused()
+  await subscriptionSheet(page).getByRole('button', { name: '保留来源', exact: true }).click()
+  await expect(subscriptionSheet(page).getByRole('heading', { name: '知识视频 · 持续学习', exact: true })).toBeVisible()
+  expect((await request.get(path)).status()).toBe(200)
+  await subscriptionSheet(page).getByRole('button', { name: '移除来源', exact: true }).click()
+  await subscriptionSheet(page).getByRole('button', { name: '确认移除', exact: true }).click()
+  await expect(subscriptionSheet(page)).toBeHidden()
   await expect(page.getByRole('heading', { name: '另一个来源', exact: true })).toBeVisible()
   expect((await request.get(path)).status()).toBe(404)
   expect((await (await request.get('/api/library')).json()).items).toHaveLength(1)
@@ -157,25 +169,30 @@ test('subscription validation retains input, failed first update stays unsynced,
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
 })
 
-test('source refresh preserves an expanded add form and its unsaved draft', async ({ page, request }) => {
+test('source refresh and space switches preserve the add dialog draft', async ({ page, request }) => {
   const created = await request.post('/api/subscriptions', { data: { type: 'bilibili', query: '12345', name: '现有来源' } })
   expect(created.status()).toBe(201)
   await page.goto('/subscriptions')
   await page.getByRole('navigation', { name: '选择订阅来源' }).getByRole('button', { name: /现有来源/ }).click()
   await expect(page.getByRole('heading', { name: '现有来源', exact: true })).toBeVisible()
   await openSubscriptionAdd(page)
+  await expect(page.getByLabel('订阅地址')).toBeFocused()
   await page.getByLabel('订阅地址').fill('67890')
   await page.getByLabel('订阅来源名称', { exact: true }).fill('未保存的第二个来源')
+  await closeSubscriptionAdd(page)
+  await expect(page.locator('#subscription-add-toggle')).toBeFocused()
   const refreshed = page.waitForResponse(response => response.url().endsWith('/api/subscriptions') && response.request().method() === 'GET')
   await page.getByRole('button', { name: '重新加载来源', exact: true }).click()
   await refreshed
-  await expect(page.getByLabel('订阅地址')).toBeVisible()
+  await openSubscriptionAdd(page)
   await expect(page.getByLabel('订阅地址')).toHaveValue('67890')
   await expect(page.getByLabel('订阅来源名称', { exact: true })).toHaveValue('未保存的第二个来源')
-  await page.getByRole('button', { name: '历史收件箱', exact: true }).click()
-  await expect(page.getByLabel('订阅地址')).toBeVisible()
-  await page.getByRole('button', { name: '来源管理', exact: true }).click()
+  await closeSubscriptionAdd(page)
+  await page.getByRole('navigation', { name: '订阅空间' }).getByRole('button', { name: /管理来源/ }).click()
+  await expect(page).toHaveURL('/subscriptions?mode=manage')
+  await openSubscriptionAdd(page)
   await expect(page.getByLabel('订阅来源名称', { exact: true })).toHaveValue('未保存的第二个来源')
+  await closeSubscriptionAdd(page)
   expect((await (await request.get('/api/subscriptions')).json()).sources).toHaveLength(1)
 })
 
@@ -237,4 +254,136 @@ test('updating all sources refreshes the combined stream once after the batch co
   const after = await (await request.get('/api/subscription-inbox?limit=50')).json()
   await expect(page.getByTestId('content-card')).toHaveCount(after.page.entries.length)
   await expect(page.getByTestId('content-card').getByRole('heading')).toHaveText(after.page.entries.map((entry: { item: ContentItem }) => entry.item.title))
+})
+
+test('managing sources: groups, batch move, refresh policy, health focus and confirmed removal', async ({ page, request }) => {
+  for (const [query, name] of [['11111', '整理来源 甲'], ['22222', '整理来源 乙'], ['99999', '需要处理的来源']]) {
+    expect((await request.post('/api/subscriptions', { data: { type: 'bilibili', query, name } })).status()).toBe(201)
+  }
+  // A failing source shows up as needing attention without losing anything.
+  expect((await request.post('/api/subscriptions/bilibili%3Acreator%3A99999/update')).ok()).toBe(false)
+  const historyBefore = await (await request.get('/api/subscription-inbox?limit=50')).json()
+  await page.goto('/subscriptions#health')
+  const manager = page.getByRole('region', { name: '管理来源' })
+  await expect(page.getByRole('navigation', { name: '订阅空间' }).getByRole('button', { name: /管理来源/ })).toHaveAttribute('aria-current', 'page')
+  await expect(manager.getByRole('group', { name: '按状态筛选来源' }).getByRole('button', { name: /需处理/ })).toHaveAttribute('aria-pressed', 'true')
+  await expect(manager.getByRole('button', { name: /需要处理的来源/ }).first()).toBeVisible()
+  await expect(manager.getByRole('button', { name: /整理来源 甲/ })).toHaveCount(0)
+  await expect(manager.locator('.subscription-manage-issue')).toHaveCount(1)
+  await manager.getByRole('group', { name: '按状态筛选来源' }).getByRole('button', { name: /全部/ }).click()
+
+  // Groups are created, renamed and dissolved where sources are managed.
+  await manager.getByRole('button', { name: '新建分组' }).click()
+  await expect(manager.getByLabel('新分组名称')).toBeFocused()
+  await manager.getByLabel('新分组名称').fill('稍后整理')
+  await manager.getByRole('button', { name: '创建分组' }).click()
+  await expect(manager.getByRole('heading', { name: '稍后整理', exact: true })).toBeVisible()
+  expect((await (await request.get('/api/subscription-groups')).json()).groups.map((group: { name: string }) => group.name)).toEqual(['稍后整理'])
+
+  // Selection reveals the batch bar; shift-click selects a range; Escape clears.
+  await manager.getByRole('checkbox', { name: '选择来源 整理来源 甲' }).check()
+  await expect(page.getByRole('toolbar', { name: '批量管理来源' })).toContainText('已选 1 个来源')
+  await manager.getByRole('button', { name: /整理来源 甲/ }).first().focus()
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('toolbar', { name: '批量管理来源' })).toHaveCount(0)
+  await manager.getByRole('checkbox', { name: '选择来源 整理来源 甲' }).check()
+  await manager.getByRole('checkbox', { name: '选择来源 整理来源 乙' }).check()
+  const groups = (await (await request.get('/api/subscription-groups')).json()).groups as { id: string }[]
+  await page.getByRole('toolbar', { name: '批量管理来源' }).getByLabel('批量移动分组').selectOption(groups[0].id)
+  await expect(page.getByRole('status').filter({ hasText: '已移动 2 个来源' })).toBeVisible()
+  const moved = (await (await request.get('/api/subscriptions')).json()).sources as { name: string; groupId: string; refresh: { enabled: boolean; intervalSeconds: number } }[]
+  expect(moved.filter(source => source.groupId === groups[0].id).map(source => source.name).sort()).toEqual(['整理来源 乙', '整理来源 甲'])
+  await expect(page.getByRole('region', { name: '分组 稍后整理' }).getByRole('checkbox')).toHaveCount(2)
+
+  // Batch refresh policy: switching to manual keeps each source's interval.
+  await manager.getByRole('checkbox', { name: '选择来源 整理来源 甲' }).check()
+  await page.getByRole('toolbar', { name: '批量管理来源' }).getByLabel('批量修改刷新间隔').selectOption('manual')
+  await expect(page.getByRole('status').filter({ hasText: '已修改 1 个来源的自动更新设置' })).toBeVisible()
+  const manual = ((await (await request.get('/api/subscriptions')).json()).sources as typeof moved).find(source => source.name === '整理来源 甲')!
+  expect(manual.refresh.enabled).toBe(false)
+  expect(manual.refresh.intervalSeconds).toBe(moved.find(source => source.name === '整理来源 甲')!.refresh.intervalSeconds)
+
+  // Rename and dissolve the group; members fall back to ungrouped.
+  await manager.getByRole('button', { name: '重命名分组 稍后整理' }).click()
+  await manager.getByLabel('分组新名称 稍后整理').fill('已整理')
+  await manager.getByRole('button', { name: '保存分组名称' }).click()
+  await expect(manager.getByRole('heading', { name: '已整理', exact: true })).toBeVisible()
+  await manager.getByRole('button', { name: '解散分组 已整理' }).click()
+  await manager.getByRole('button', { name: '确认解散' }).click()
+  await expect(manager.getByRole('heading', { name: '已整理', exact: true })).toHaveCount(0)
+  expect(((await (await request.get('/api/subscriptions')).json()).sources as typeof moved).every(source => source.groupId === '')).toBe(true)
+
+  // Batch removal asks first in a modal dialog and keeps history.
+  await manager.getByRole('checkbox', { name: '全选当前来源' }).check()
+  await page.getByRole('toolbar', { name: '批量管理来源' }).getByRole('button', { name: '移除…' }).click()
+  const confirm = page.getByRole('dialog', { name: '移除 3 个来源' })
+  await expect(confirm).toBeVisible()
+  await confirm.getByRole('button', { name: '取消' }).click()
+  expect((await (await request.get('/api/subscriptions')).json()).sources).toHaveLength(3)
+  await page.getByRole('toolbar', { name: '批量管理来源' }).getByRole('button', { name: '移除…' }).click()
+  await confirm.getByRole('button', { name: '移除 3 个来源' }).click()
+  await expect(manager.getByRole('heading', { name: '还没有订阅来源' })).toBeVisible()
+  expect((await (await request.get('/api/subscriptions')).json()).sources).toEqual([])
+  expect((await (await request.get('/api/subscription-inbox?limit=50')).json()).page.entries).toHaveLength(historyBefore.page.entries.length)
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+})
+
+test('the source sheet edits refresh policy from the manager and opens the source for reading', async ({ page, request }) => {
+  // A UID without call-count behaviour in the fixture platform, so earlier tests in this file do not change its items.
+  expect((await request.post('/api/subscriptions', { data: { type: 'bilibili', query: '13579', name: '设置来源' } })).status()).toBe(201)
+  await page.goto('/subscriptions?mode=manage')
+  const manager = page.getByRole('region', { name: '管理来源' })
+  await manager.getByRole('button', { name: '设置 设置来源' }).click()
+  const sheet = subscriptionSheet(page)
+  await expect(sheet.getByRole('heading', { name: '设置来源', exact: true })).toBeVisible()
+  await expect(sheet.getByText('尚未检查', { exact: true })).toBeVisible()
+  await sheet.getByLabel('自动刷新这个 B 站来源').check()
+  await sheet.getByLabel('B 站来源检查间隔').selectOption('21600')
+  await sheet.getByRole('button', { name: '保存更新设置' }).click()
+  await expect(sheet.getByRole('status')).toContainText('自动刷新已开启')
+  expect((await (await request.get('/api/subscriptions/bilibili%3Acreator%3A13579')).json()).source.refresh.intervalSeconds).toBe(21600)
+  await page.keyboard.press('Escape')
+  await expect(sheet).toBeHidden()
+  await expect(manager.getByText('每 6 小时')).toBeVisible()
+  await manager.getByRole('button', { name: '在阅读中打开 设置来源' }).click()
+  await expect(page).toHaveURL('/subscriptions')
+  await expect(page.getByRole('region', { name: '来源投稿' }).getByRole('heading', { name: '设置来源', exact: true })).toBeVisible()
+  await page.getByRole('button', { name: '更新投稿', exact: true }).click()
+  await expect(page.getByTestId('content-card')).toHaveCount(1)
+  await page.getByRole('button', { name: /在历史收件箱查看这个来源的全部内容/ }).click()
+  await expect(page).toHaveURL('/subscriptions?mode=history')
+  const inbox = page.getByRole('region', { name: '历史收件箱' })
+  await expect(inbox.getByRole('combobox', { name: '来源' })).toHaveValue('bilibili:creator:13579')
+  await expect(inbox.getByTestId('content-card')).toHaveCount(1)
+})
+
+test('the reading navigator is keyboard navigable and media type survives a reader round trip', async ({ page, request }) => {
+  for (const [query, name] of [['12345', '键盘来源 一'], ['67890', '键盘来源 二']]) {
+    expect((await request.post('/api/subscriptions', { data: { type: 'bilibili', query, name } })).status()).toBe(201)
+    await request.post(`/api/subscriptions/bilibili%3Acreator%3A${query}/update`)
+  }
+  await page.route('**/api/subtitles/bilibili?**', route => route.fulfill({ json: { videoId: 'BV17x411w7KC', part: 1, status: 'available', tracks: [] } }))
+  await page.goto('/subscriptions')
+  const all = page.getByRole('navigation', { name: '订阅内容' }).getByRole('button', { name: /全部订阅/ })
+  await all.focus()
+  await page.keyboard.press('ArrowDown')
+  await expect(page.getByRole('navigation', { name: '订阅内容' }).getByRole('button', { name: /历史收件箱/ })).toBeFocused()
+  await page.keyboard.press('End')
+  await page.keyboard.press('Enter')
+  await expect(page.getByRole('navigation', { name: '选择订阅来源' }).getByRole('button', { name: /键盘来源/ }).last()).toHaveAttribute('aria-current', 'true')
+  await all.click()
+  await page.getByRole('group', { name: '媒体类型' }).getByRole('button', { name: '视频' }).click()
+  await page.getByRole('group', { name: '按已读状态筛选' }).getByRole('button', { name: /未读/ }).click()
+  const readingParams = () => { const params = new URL(page.url()).searchParams; return { path: new URL(page.url()).pathname, read: params.get('read'), kind: params.get('kind') } }
+  const expected = { path: '/subscriptions', read: 'unread', kind: 'video' }
+  await expect.poll(readingParams).toEqual(expected)
+  const card = page.getByTestId('content-card').first()
+  await card.getByRole('button', { name: /^阅读 / }).click()
+  await page.getByRole('button', { name: '返回列表' }).click()
+  await expect.poll(readingParams).toEqual(expected)
+  await expect(page.getByRole('group', { name: '媒体类型' }).getByRole('button', { name: '视频' })).toHaveAttribute('aria-pressed', 'true')
+  // Leaving for the manager and coming back keeps the reading filters.
+  await page.getByRole('navigation', { name: '订阅空间' }).getByRole('button', { name: /管理来源/ }).click()
+  await page.getByRole('navigation', { name: '订阅空间' }).getByRole('button', { name: /阅读/ }).click()
+  await expect.poll(readingParams).toEqual(expected)
 })

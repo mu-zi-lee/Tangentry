@@ -90,7 +90,7 @@ export function TopBar({
         </span>
         <span className="experience-location-title">
           {section && <span className="experience-location-section">{section}</span>}
-          {view === 'library' || view === 'history' ? <h1>{viewNames[view]}</h1> : <strong>{viewNames[view]}</strong>}
+          {view === 'library' || view === 'history' || view === 'subscriptions' ? <h1>{viewNames[view]}</h1> : <strong>{viewNames[view]}</strong>}
         </span>
       </div>
 
