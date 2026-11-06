@@ -15,6 +15,8 @@
 ![Platforms](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux%20%7C%20Docker-lightgrey)
 ![Version](https://img.shields.io/badge/version-0.0.3.6-orange)
 
+![Listed on Awesome MyGo](https://awesomemygo.dev/badge.svg)
+
 [功能](#-功能) · [快速开始](#-快速开始) · [使用指南](#-使用指南) · [配置](#%EF%B8%8F-配置) · [开发](#-开发) · [架构](docs/ARCHITECTURE.md) · [贡献](CONTRIBUTING.md)
 
 </div>
