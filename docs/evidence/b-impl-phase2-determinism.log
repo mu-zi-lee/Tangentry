@@ -1,0 +1,4 @@
+# Phase 2 gate extra: two-run determinism (normalized outcomes)
+EXIT_CODE:0 (0 = identical)
+PASS count: 11 per run
+Hash determinism asserted in TestSnapshotHashDeterminism; revision/hash state stable across re-open in TestBT38_ContentRevisionMigration.

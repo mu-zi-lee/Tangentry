@@ -1,0 +1,6 @@
+--- FAIL: TestBT08_Oversize (0.00s)
+    split_test.go:189: multi-sentence block must split, not drop
+FAIL
+FAIL	tangentry/internal/retrieval	7.139s
+FAIL
+EXIT_CODE:1

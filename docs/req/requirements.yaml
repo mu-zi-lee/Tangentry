@@ -12,6 +12,12 @@ note: >-
   A-only requirements: the group confirmed implementation under the existing
   A plan on 2026-11-13. This does not approve final implementation acceptance
   or the other owners' requirements.
+  B requirements (FR-02, NFR-02, INV-04, INV-05): approved via PR #2
+  (owner/b-retrieval) review 5897467590 by orangesummertime (non-author),
+  APPROVED at 2026-11-13T20:19:58Z on commit da21804, merged into main as
+  merge commit 83c7726 on 2026-11-14. This approves the design for
+  implementation; final implementation acceptance still requires a non-author
+  human review of the implementation PR.
 requirements:
   - id: FR-01
     type: functional
@@ -151,7 +157,7 @@ requirements:
   - id: FR-02
     type: functional
     owner: "WANG Jiaqi (B)"
-    approval: pending
+    approval: approved
     priority: Must
     source:
       - "../../README.md#L36"
@@ -381,7 +387,7 @@ requirements:
   - id: NFR-02
     type: nonfunctional
     owner: "WANG Jiaqi (B)"
-    approval: pending
+    approval: approved
     priority: Must
     source:
       - "../../README.md#L36"
@@ -470,7 +476,7 @@ requirements:
   - id: INV-04
     type: invariant
     owner: "WANG Jiaqi (B)"
-    approval: pending
+    approval: approved
     priority: Must
     source:
       - "../../README.md#L36"
@@ -552,7 +558,7 @@ requirements:
   - id: INV-05
     type: invariant
     owner: "WANG Jiaqi (B)"
-    approval: pending
+    approval: approved
     priority: Must
     source:
       - "../../README.md#L64-L69"

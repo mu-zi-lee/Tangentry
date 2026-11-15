@@ -1,0 +1,30 @@
+# Phase 2 first run (RED: tests written before implementation)
+$ go test ./internal/retrieval/ ./internal/adapters/sqlite/ -count=1
+# tangentry/internal/retrieval [tangentry/internal/retrieval.test]
+internal/retrieval/snapshot_hash_test.go:21:8: undefined: SnapshotHash
+internal/retrieval/snapshot_hash_test.go:25:5: undefined: SnapshotHash
+internal/retrieval/snapshot_hash_test.go:32:5: undefined: SnapshotHash
+internal/retrieval/snapshot_hash_test.go:41:5: undefined: SnapshotHash
+internal/retrieval/snapshot_hash_test.go:48:5: undefined: SnapshotHash
+internal/retrieval/snapshot_hash_test.go:56:5: undefined: SnapshotHash
+internal/retrieval/snapshot_hash_test.go:71:24: undefined: SnapshotRange
+internal/retrieval/snapshot_hash_test.go:75:18: undefined: SnapshotRange
+internal/retrieval/snapshot_hash_test.go:78:18: undefined: SnapshotRange
+internal/retrieval/snapshot_hash_test.go:81:18: undefined: SnapshotRange
+internal/retrieval/snapshot_hash_test.go:81:18: too many errors
+FAIL	tangentry/internal/retrieval [build failed]
+# tangentry/internal/adapters/sqlite [tangentry/internal/adapters/sqlite.test]
+internal/adapters/sqlite/content_version_test.go:83:10: got.ContentRevision undefined (type content.Item has no field or method ContentRevision)
+internal/adapters/sqlite/content_version_test.go:84:55: got.ContentRevision undefined (type content.Item has no field or method ContentRevision)
+internal/adapters/sqlite/content_version_test.go:86:25: undefined: retrieval.SnapshotHash
+internal/adapters/sqlite/content_version_test.go:86:38: undefined: itemSnapshot
+internal/adapters/sqlite/content_version_test.go:87:10: got.ContentHash undefined (type content.Item has no field or method ContentHash)
+internal/adapters/sqlite/content_version_test.go:88:61: got.ContentHash undefined (type content.Item has no field or method ContentHash)
+internal/adapters/sqlite/content_version_test.go:97:11: item.ContentRevision undefined (type content.Item has no field or method ContentRevision)
+internal/adapters/sqlite/content_version_test.go:97:40: item.ContentHash undefined (type content.Item has no field or method ContentHash)
+internal/adapters/sqlite/content_version_test.go:114:11: saved.ContentRevision undefined (type content.Item has no field or method ContentRevision)
+internal/adapters/sqlite/content_version_test.go:115:56: saved.ContentRevision undefined (type content.Item has no field or method ContentRevision)
+internal/adapters/sqlite/content_version_test.go:115:56: too many errors
+FAIL	tangentry/internal/adapters/sqlite [build failed]
+FAIL
+EXIT_CODE:1

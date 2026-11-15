@@ -58,7 +58,7 @@ function TemplateEditor({ task, template, defaults, savedTemplate, disabled, onC
   </div>
 }
 
-export function AISettings({ active = true, section = 'provider' }: { active?: boolean; section?: 'provider' | 'text' | 'asr' }) {
+export function AISettings({ active = true, section = 'provider' }: { active?: boolean; section?: 'provider' | 'text' | 'asr' | 'retrieval' }) {
   const translationLanguage = useTranslationLanguage()
   const [saved, setSaved] = useState<Settings | null>(null)
   const [baseUrl, setBaseUrl] = useState(''), [model, setModel] = useState(''), [key, setKey] = useState(''), [noKey, setNoKey] = useState(false)
@@ -126,7 +126,7 @@ export function AISettings({ active = true, section = 'provider' }: { active?: b
   }
   const modelOptions = (task: 'translation' | 'summary' | 'chat') => modelsForTask(mergeModelLists(availableModels, enabledModels), enabledModels, task).map(value => <option key={value} value={value}>{value}</option>)
   const checkButtons = <>{(['translation', 'summary'] as const).map(task => <Button key={task} aria-label={`检测${task === 'translation' ? '翻译' : '摘要'}连接`} type="button" variant="secondary" title={dirty ? '先保存修改后的设置' : undefined} disabled={pending || Boolean(dirty) || Boolean(checkLimitError) || saved?.translating || !(task === 'translation' ? saved?.ready : saved?.summaryReady)} onClick={() => void check(task)} icon={checking === task ? <LoaderCircle size={14} className="spin"/> : <PlugZap size={14}/>}>测试{task === 'translation' ? '翻译' : '摘要'}</Button>)}{checking && <Button type="button" variant="quiet" onClick={() => { operation.current?.abort(); setPending(false); setChecking(null) }}><X size={14}/>取消检测</Button>}</>
-  return <div className="ai-settings-workspace" hidden={section === 'asr'}>
+  return <div className="ai-settings-workspace" hidden={section === 'asr' || section === 'retrieval'}>
     {confirmReload && <div className="cookie-confirm" role="group" aria-label="放弃未保存的设置"><p>刷新会丢弃未保存的修改。</p><div><Button type="button" variant="secondary" onClick={() => setConfirmReload(false)}>继续编辑</Button><Button type="button" variant="quiet" onClick={() => void load()}>放弃修改</Button></div></div>}
     {saved && <form className="ai-config ai-settings-form" onSubmit={event => void save(event)}>
       <div role="tabpanel" id="ai-tab-panel-provider" aria-labelledby="ai-tab-provider" hidden={section !== 'provider'}>

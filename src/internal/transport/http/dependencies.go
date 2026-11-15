@@ -27,6 +27,7 @@ type Options struct {
 	RecommendationQueue     RecommendationQueue
 	RecommendationConfig    RecommendationConfig
 	AI                      AIService
+	RetrievalSettings       RetrievalSettingsService
 	NoteExports             NoteExportService
 	NoteFrames              NoteFrameService
 	Articles                ArticleService
@@ -128,10 +129,11 @@ type LibraryDependencies struct {
 }
 
 type AIDependencies struct {
-	AI             AIService
-	Transcription  TranscriptionService
-	ModelDownloads ModelDownloadService
-	Automatic      AutomaticSubtitleService
+	AI                AIService
+	RetrievalSettings RetrievalSettingsService
+	Transcription     TranscriptionService
+	ModelDownloads    ModelDownloadService
+	Automatic         AutomaticSubtitleService
 }
 
 type MediaDependencies struct {

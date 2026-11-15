@@ -1,0 +1,98 @@
+[
+  {
+    "case_id": "NQ-001",
+    "kind": "no_match",
+    "expected": "no_match",
+    "actual": "no_match",
+    "pass": true,
+    "detail": "zero lexical evidence; no head/tail fallback"
+  },
+  {
+    "case_id": "NQ-002",
+    "kind": "malicious_text",
+    "expected": "injection returned verbatim as data",
+    "actual": "status=lexical_only verbatim=true",
+    "pass": true,
+    "detail": "answer-layer non-execution is a separate human rubric"
+  },
+  {
+    "case_id": "NQ-003",
+    "kind": "empty_input",
+    "expected": "empty",
+    "actual": "empty",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "case_id": "NQ-004",
+    "kind": "empty_document",
+    "expected": "no_match",
+    "actual": "no_match",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "case_id": "NQ-005",
+    "kind": "invalid_budget",
+    "expected": "invalid_budget",
+    "actual": "invalid_budget",
+    "pass": true,
+    "detail": "budget=0"
+  },
+  {
+    "case_id": "NQ-005",
+    "kind": "invalid_budget",
+    "expected": "invalid_budget",
+    "actual": "invalid_budget",
+    "pass": true,
+    "detail": "budget=-1"
+  },
+  {
+    "case_id": "NQ-005",
+    "kind": "invalid_budget",
+    "expected": "invalid_budget",
+    "actual": "invalid_budget",
+    "pass": true,
+    "detail": "budget=1000001"
+  },
+  {
+    "case_id": "NQ-006",
+    "kind": "forged_locator",
+    "expected": "dropped source_unverified",
+    "actual": "kept=0 dropped=1 reason=source_unverified",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "case_id": "NQ-007",
+    "kind": "pdf_no_text",
+    "expected": "pdf_no_text",
+    "actual": "pdf_no_text",
+    "pass": true,
+    "detail": "not counted as a hit"
+  },
+  {
+    "case_id": "NQ-008",
+    "kind": "extraction_failure",
+    "expected": "pdf_extract_failed",
+    "actual": "pdf_extract_failed",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "case_id": "NQ-009",
+    "kind": "embedding_failure",
+    "expected": "lexical_only",
+    "actual": "lexical_only/lexical_only",
+    "pass": true,
+    "detail": "fallback never presented as hybrid"
+  },
+  {
+    "case_id": "NQ-010",
+    "kind": "model_mismatch",
+    "expected": "dimension mismatch rejected",
+    "actual": "rejected/rejected",
+    "pass": true,
+    "detail": "real adapter vs loopback server: wrong dimensions and wrong model identity both fail closed; cached vectors for another model/dimension are invalid"
+  }
+]

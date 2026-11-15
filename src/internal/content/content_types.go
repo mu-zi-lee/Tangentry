@@ -29,6 +29,12 @@ type Item struct {
 	ViewCount       int64          `json:"viewCount,omitempty"`
 	PublishedText   string         `json:"publishedText,omitempty"`
 	SavedAt         int64          `json:"savedAt,omitempty"`
+	// ContentRevision is the monotonic saved-content revision (server-owned;
+	// clients cannot set it). Exposed for B/C source-version verification.
+	ContentRevision int64 `json:"contentRevision,omitempty"`
+	// ContentHash is the SHA-256 of the normalized source snapshot
+	// (server-owned). Legacy/PDF/OCR fallback fingerprint.
+	ContentHash string `json:"contentHash,omitempty"`
 	// Partial marks a card projection: bodies, transcripts and long
 	// descriptions are left out, so it must never be saved back.
 	Partial bool `json:"partial,omitempty"`

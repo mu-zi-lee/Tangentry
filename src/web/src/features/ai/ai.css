@@ -269,3 +269,27 @@
 .content-card > .bilingual-title { margin-inline: 16px; }
 .bilingual-title-compact .text-translation-control > a { display: none; }
 .bilingual-title-compact .text-translation-control .text-button { font-size: 0; width: 28px; height: 28px; justify-content: center; }
+
+/* B retrieval status, passage chips and toggle (phase 6). */
+.ai-retrieval-toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); cursor: pointer; margin-inline-start: auto; }
+.ai-retrieval-toggle input { accent-color: var(--accent, #4f46e5); }
+.ai-retrieval-status { display: flex; flex-direction: column; gap: 6px; padding: 8px 12px; margin: 6px 0; border-radius: 8px; font-size: 12px; border: 1px solid var(--border, #e5e7eb); }
+.ai-retrieval-ok { border-color: #16a34a55; background: #16a34a0d; }
+.ai-retrieval-info { border-color: #2563eb44; background: #2563eb08; }
+.ai-retrieval-warning { border-color: #d9770655; background: #d977060d; }
+.ai-retrieval-error { border-color: #dc262655; background: #dc26260d; }
+.ai-retrieval-label { font-weight: 600; }
+.ai-retrieval-hint { color: var(--muted); }
+.ai-retrieval-passages { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; margin: 0; padding: 0; }
+.ai-retrieval-chip { padding: 2px 8px; border-radius: 999px; background: var(--chip-bg, #f3f4f6); border: 1px solid var(--border, #e5e7eb); font-size: 11px; cursor: default; }
+.ai-retrieval-embedding { color: var(--muted); font-size: 11px; }
+
+/* B retrieval settings panel (AI 服务 · 原文检索). */
+.ai-retrieval-settings { display: flex; flex-direction: column; gap: 10px; padding: 12px 0; font-size: 13px; }
+.ai-retrieval-settings label { display: flex; flex-direction: column; gap: 4px; color: var(--muted); }
+.ai-retrieval-settings input, .ai-retrieval-settings select { padding: 6px 8px; border: 1px solid var(--border, #e5e7eb); border-radius: 6px; font-size: 13px; background: var(--bg, #fff); color: inherit; }
+.ai-retrieval-settings fieldset { display: flex; flex-wrap: wrap; gap: 10px; border: 1px solid var(--border, #e5e7eb); border-radius: 8px; padding: 8px 12px; }
+.ai-retrieval-settings fieldset label { flex: 1 1 120px; }
+.ai-retrieval-settings legend { font-size: 12px; color: var(--muted); padding-inline: 4px; }
+.ai-retrieval-settings-error { color: #dc2626; font-size: 12px; margin: 0; }
+.ai-retrieval-settings [role="status"] { color: var(--muted); font-size: 12px; }

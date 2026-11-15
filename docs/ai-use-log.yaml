@@ -480,3 +480,561 @@ entries:
       treated as data, not instructions. The approval applies to 33016ce;
       independent verification of the resulting merged head remains required
       before merge.
+  - id: B-AI-008
+    date: "2026-11-14"
+    owner: "WANG Jiaqi (B)"
+    tool: "OpenCode"
+    model: "qwen4-max-preview"
+    purpose: >-
+      Implementation Phase 0 (approval and preconditions gate) for FR-02,
+      NFR-02, INV-04 and INV-05 on the new branch owner/b-implementation
+      (created from main 83c7726). Verify the PR #2 approval chain read-only
+      via git and the GitHub REST API, record the approval in the ADR-002,
+      implementation-plan and requirements.yaml status headers (status and
+      approval reference only; no technical content changed), re-run the
+      baseline Go/frontend suites before any change, verify toolchains,
+      migration-number availability and the greenfield retrieval package, and
+      produce the Phase 0 report. No implementation code was written or
+      generated in this phase.
+    scope:
+      read:
+        - "git history (main, origin/main, merge commit 83c7726, head da21804)"
+        - "GitHub REST API read-only GET: pulls/2 and pulls/2/reviews (approval chain verification)"
+        - "docs/architecture/adr/002-question-relevant-retrieval.md, docs/plans/b-retrieval-preimplementation.md, docs/req/requirements.yaml + req-schema.json, docs/evidence/b-embedding-provider-notes.md, b-paddleocr-notes.md, b-eval-protocol.md, b-baseline.md, b-context-audit.md (section map), docs/ARCHITECTURE.md"
+        - "code landmarks: src/internal/ai/chat.go, settings.go, src/internal/adapters/aichat/protocol.go, src/internal/transport/http/ai_common.go, src/internal/app/feature_services.go, src/internal/content/content_types.go, src/internal/subtitles/saved.go, src/internal/adapters/sqlite/store.go + migrations/, src/internal/layering/layering_test.go, src/web/src/features/ai/chatContext.ts"
+      wrote:
+        - "docs/architecture/adr/002-question-relevant-retrieval.md (Status header, Decision heading status marker, appended Review-gate approval record)"
+        - "docs/plans/b-retrieval-preimplementation.md (Status header, appended Approval-gate record)"
+        - "docs/req/requirements.yaml (FR-02/NFR-02/INV-04/INV-05 approval pending -> approved; top-level note appended with the PR #2 review reference; schema-validated)"
+        - "docs/evidence/b-impl-phase0-approval.json, b-impl-phase0-approval.log, b-impl-phase0-baseline-go.log, b-impl-phase0-baseline-vitest.log, b-impl-phase0-report.md"
+        - "docs/ai-use-log.yaml (this entry)"
+        - "contributions/013-owner-b-implementation.md (Phase 0 section), contributions/README.md (index row 013)"
+        - "owner-local, not committed: docs/transcripts/owner-b/2026-11-14-phase0-gate.json, README.md (new index row)"
+      executed:
+        - "git checkout -b owner/b-implementation main (83c7726 == origin/main)"
+        - "curl read-only GitHub API pulls/2 + pulls/2/reviews; asserted the single APPROVED review 5897467590 by orangesummertime at 2026-11-13T20:19:58Z on da21804; merge_commit_sha 83c7726 matches local main"
+        - "go test ./... -count=1 in src (43 ok packages, 11 no-test packages, exit 0)"
+        - "npm ci --no-audit --no-fund (159 packages), npm run build (exit 0, chunk-size warning only), npm test -- --run (62 files / 251 tests passed) in src/web"
+        - "migration listing (latest 081_selected_subtitle_index.sql; 082/083/084 free), greenfield check (src/internal/retrieval absent), A-budget read-only check (git diff main empty for budget.go/ledger.go/aichat/budget.go)"
+        - "python3 yaml.safe_load + jsonschema validation of requirements.yaml against req-schema.json (PASS)"
+        - "git commit (documentation only); no push in this session"
+        - "Read-only export of this session via src/build/sexport at session end (after the commit); sha256 recorded in the local README"
+    network_writes: []
+    original_session_id: ses_e27efbad7ffeY2pIG6EzRIOgOQ
+    transcript: >-
+      owner-local docs/transcripts/owner-b/2026-11-14-phase0-gate.json
+      (raw OpenCode session export retained outside git; captured at session
+      end after the commit, so the final reply write may postdate the capture;
+      can be supplied for course review without altering its contents)
+    transcript_status: "exported"
+    human_review: "pending"
+    generated_code: false
+    notes: >-
+      No AI provider, embedding, rerank, OCR or completion endpoint was
+      contacted, and no browser was started. Network activity was limited to
+      read-only GitHub REST API GETs for approval verification and npm registry
+      reads during npm ci; no push and no GitHub API write. The baseline
+      vitest count on current main is 62 files / 251 tests (A's PR #6 tests
+      included), not the 61 / 231 recorded before that merge; both suites pass
+      unfiltered with -count=1 / --run. Toolchains are not on the default
+      non-interactive PATH; commands used per-invocation PATH prefixes
+      (~/.local/bin for node/npm, ~/sdk/go1.27.1/bin for go) with no persistent
+      environment change. One residual documentation inconsistency was found
+      and reported (plan overview paragraphs still describe a conditional
+      sweep trigger; ADR-002 and the plan's detailed budget section require the
+      unconditional sweep; ADR precedence applies, flagged for human
+      confirmation, no technical content edited). The Phase 7 evaluation set
+      (20+ questions with gold labels, owned by WANG Jiaqi) was asked about in
+      the Phase 0 report; Phase 7 waits for it. Implementation acceptance and
+      APPROVE remain human non-author actions; this phase claims neither.
+  - id: B-AI-009
+    date: "2026-11-14"
+    owner: "WANG Jiaqi (B)"
+    tool: "OpenCode"
+    model: "qwen4-max-preview"
+    purpose: >-
+      Implementation Phase 1 (domain core) for FR-02, NFR-02, INV-04, INV-05
+      on owner/b-implementation, after the human confirmed Phase 0 and the
+      unconditional-sweep reading. Test-first: wrote the B-T02/06/08/10/14/
+      15/16/17/19/21/22/29/39/40 unit suite plus budget-math worked examples,
+      recorded the first red run, then implemented the stdlib-only
+      src/internal/retrieval domain package (types/ports, splitter, lexical
+      scorer, sweep sampler, hybrid scoring, dedupe, six-layer assembler,
+      INV-04 preflight, INV-05 verifier, selector, budget mathematics) and
+      fixed the red failures within phase scope. No adapter, transport,
+      frontend or A-side code was changed.
+    scope:
+      read:
+        - "docs/architecture/adr/002-question-relevant-retrieval.md, docs/plans/b-retrieval-preimplementation.md (signatures, test table, budget formulas), docs/req/requirements.yaml B entries, docs/evidence/b-baseline.md (fixture shape), docs/evidence/b-eval-protocol.md (unit fairness)"
+        - "src/internal/layering/layering_test.go, src/internal/content/content_types.go, src/internal/subtitles/saved.go, src/web/src/features/ai/chatContext.ts (baseline reproduction)"
+      wrote:
+        - "src/internal/retrieval/*.go (new domain package: types, ports, errors, normalize, split, lexical, sweep, score, identity, dedupe, verify, preflight, assemble, selector, budget, version)"
+        - "src/internal/retrieval/*_test.go (fixtures, fakes, 31 test functions incl. B-Txx suite)"
+        - "docs/evidence/b-impl-phase1-red.log, b-impl-phase1-focused.log, b-impl-phase1-go-full.log, b-impl-phase1-layering.log, b-impl-phase1-web.log, b-impl-phase1-determinism.log, b-impl-phase1-retrieval.log, b-impl-phase1-report.md"
+        - "docs/ai-use-log.yaml (this entry)"
+        - "contributions/013-owner-b-implementation.md (Phase 1 section)"
+        - "owner-local, not committed: docs/transcripts/owner-b/2026-11-14-phase1-domain-core.json, README.md (new index row)"
+      executed:
+        - "go test ./internal/retrieval/ -count=1: first run red (8 failure groups; raw log retained), implementation fixes, then green (31 tests)"
+        - "go test ./internal/retrieval/... ./internal/ai/... ./internal/transport/http/... -count=1 (exit 0)"
+        - "go test ./... -count=1 (44 ok packages incl. new retrieval, 11 no-test packages, exit 0)"
+        - "go test ./internal/layering -count=1 (exit 0); go vet ./internal/retrieval/ (exit 0); gofmt -w then clean"
+        - "npm --prefix src/web test -- --run (62 files / 251 tests, exit 0); npm --prefix src/web run build (exit 0) — frontend unchanged"
+        - "two-run determinism diff (normalized outcomes identical, exit 0); in-test byte-identical JSON/context replay assertions"
+        - "git diff main -- A budget files and internal/ai + protocol.go (empty = untouched)"
+        - "git commit (phase 1); no push in this session"
+        - "Read-only export of this session via src/build/sexport at phase end (after the commit); sha256 recorded in the local README"
+    network_writes: []
+    original_session_id: ses_e27efbad7ffeY2pIG6EzRIOgOQ
+    transcript: >-
+      owner-local docs/transcripts/owner-b/2026-11-14-phase1-domain-core.json
+      (raw OpenCode session export retained outside git; one continuous
+      session with B-AI-008, captured at phase end after the commit, so the
+      final reply write may postdate the capture; can be supplied for course
+      review without altering its contents)
+    transcript_status: "exported"
+    human_review: "pending"
+    generated_code: true
+    notes: >-
+      No AI provider, embedding, rerank, OCR or completion endpoint was
+      contacted; no browser; no network writes (npm registry reads only
+      during the unchanged frontend gate). All tests use fixed fixtures,
+      fake repositories/embedders and pure functions; fake hash vectors are
+      unit-test-only and never used for an NFR claim. Design decisions
+      recorded in the phase report: sweep sample indices floor(k*N/S)
+      (exactly S samples, Coverage=S/N, Stride=ceil(N/S)); stdlib-only
+      matching normalization without full NFC (x/text excluded by the
+      domain import constraint); lexical fallback uses full top-K when
+      embedding capacity is zero (R=0 → lexical_only with results, per
+      B-T33); assembly budgets 0/negative are invalid at the domain boundary
+      while omission-as-default belongs to the wire layer (phase 5).
+      Test-expectation corrections during red→green are documented in the
+      report (shared R=25 cold-cache 24 not 25; trailing emoji sentence;
+      degraded-profile history disabled at 8k). Implementation acceptance
+      and APPROVE remain human non-author actions.
+  - id: B-AI-010
+    date: "2026-11-14"
+    owner: "WANG Jiaqi (B)"
+    tool: "OpenCode"
+    model: "qwen4-max-preview"
+    purpose: >-
+      Implementation Phase 2 (source loading and content version) for FR-02,
+      NFR-02, INV-04, INV-05 on owner/b-implementation, after the human
+      confirmed Phase 1. Test-first: wrote B-T03 (subtitle middle cue),
+      B-T19 storage half (stale after update), B-T28 revision part
+      (revision invalidation) and B-T38 (content-revision migration/backfill/
+      idempotency/single-owner) plus domain snapshot-hash/range tests,
+      recorded the red run, then implemented migration 084
+      (content_revision + content_hash with legacy backfill), the
+      retrieval.PassageSource SQLite adapter, normalized snapshot hashing,
+      and exposed the version fields in content.Item and the library API.
+    scope:
+      read:
+        - "docs/architecture/adr/002-question-relevant-retrieval.md (Content version), docs/plans/b-retrieval-preimplementation.md (Content revision, Migration coordination), docs/req/requirements.yaml (AC-INV-05-3/4, AC-FR-02-3), docs/evidence/b-baseline.md (B-BASE-02 fixture)"
+        - "src/internal/adapters/sqlite/store.go, migrations.go, library.go, saved_subtitles.go, article_previews.go, migrations_test.go, progress_test.go, subscriptions_test.go; src/internal/content/content.go, content_types.go, content_projection.go, identity.go; src/internal/subtitles/saved.go, subtitles.go; src/internal/transport/http/library.go"
+      wrote:
+        - "src/internal/retrieval/snapshot_hash.go + snapshot_hash_test.go (SnapshotHash, SnapshotRange)"
+        - "src/internal/content/content_types.go (ContentRevision/ContentHash fields, server-owned, omitempty)"
+        - "src/internal/adapters/sqlite/migrations/084_content_revision.sql (new; B-owned column set)"
+        - "src/internal/adapters/sqlite/content_version.go + content_version_test.go (itemSnapshot, addContentVersion backfill step)"
+        - "src/internal/adapters/sqlite/retrieval_source.go + retrieval_source_test.go (PassageSource adapter)"
+        - "src/internal/adapters/sqlite/migrations.go (register step 84), store.go (Save/Get/List version columns), library.go (Page version columns)"
+        - "src/internal/adapters/sqlite/progress_test.go, subscriptions_test.go (assert backfill then compare original fields; no assertion weakened)"
+        - "docs/evidence/b-impl-phase2-red.log, b-impl-phase2-focused.log, b-impl-phase2-go-full.log, b-impl-phase2-layering.log, b-impl-phase2-web.log, b-impl-phase2-tests.log, b-impl-phase2-determinism.log, b-impl-phase2-report.md"
+        - "docs/ai-use-log.yaml (this entry)"
+        - "contributions/013-owner-b-implementation.md (Phase 2 section)"
+        - "owner-local, not committed: docs/transcripts/owner-b/2026-11-14-phase2-source-version.json, README.md (new index row)"
+      executed:
+        - "go test ./internal/retrieval/ ./internal/adapters/sqlite/ -count=1: first run red (missing fields/functions + 3 existing-test expectations), then green"
+        - "go test ./internal/retrieval/... ./internal/ai/... ./internal/transport/http/... -count=1 (exit 0)"
+        - "go test ./... -count=1 (44 ok / 11 no-test, exit 0)"
+        - "go test ./internal/layering -count=1 (exit 0); go vet retrieval/sqlite/content (exit 0); gofmt clean"
+        - "npm --prefix src/web test -- --run (62 files / 251 tests, exit 0); npm --prefix src/web run build (exit 0)"
+        - "two-run determinism diff identical (exit 0); git diff main A-budget empty; published migrations unchanged (only 084 added)"
+        - "git commit (phase 2); no push in this session"
+        - "Read-only export of this session via src/build/sexport at phase end (after the commit); sha256 recorded in the local README"
+    network_writes: []
+    original_session_id: ses_e27efbad7ffeY2pIG6EzRIOgOQ
+    transcript: >-
+      owner-local docs/transcripts/owner-b/2026-11-14-phase2-source-version.json
+      (raw OpenCode session export retained outside git; one continuous
+      session with B-AI-008/009, captured at phase end after the commit; can
+      be supplied for course review without altering its contents)
+    transcript_status: "exported"
+    human_review: "pending"
+    generated_code: true
+    notes: >-
+      No AI provider, embedding, rerank, OCR or completion endpoint was
+      contacted; no browser; no network writes. All tests use temporary
+      SQLite fixtures, fixed synthetic subtitle/article data and pure
+      functions; no real credentials or user data. Migration 084 is additive
+      and idempotent (pragma-checked columns, backfill only empty hashes);
+      no published migration was edited. content_revision/content_hash are
+      server-owned (client values ignored, never embedded in the payload).
+      Two existing upgrade tests were updated to assert the new backfill
+      fields explicitly and then compare every original field unchanged; the
+      library card projection now exposes the version fields consistently.
+      Subtitle cue IDs are deterministic language-qualified indices (saved
+      cues have no database ID). Implementation acceptance and APPROVE remain
+      human non-author actions.
+  - id: B-AI-011
+    date: "2026-11-14"
+    owner: "WANG Jiaqi (B)"
+    tool: "OpenCode"
+    model: "qwen4-max-preview"
+    purpose: >-
+      Implementation Phase 3 (PDF extraction) for FR-02, NFR-02, INV-04,
+      INV-05 on owner/b-implementation, after the human confirmed Phase 2 had
+      no blocking leftovers. Test-first: wrote B-T04 (text layer + OCR
+      fallback + end-to-end page-50 selection), B-T27 (corrupt/encrypted/
+      timeout/page-count variants), B-T28 PDF part (hash invalidation →
+      stale_source), B-T34 (local fake runtime + cloud fake job API + token
+      redaction) and B-T37 OCR part (local-first, cloud guards), recorded the
+      red run, then implemented the PDFTextExtractor/OCRProvider/PDFTextStore
+      domain ports and extraction service, migration 082 pdf_page_text, the
+      vetted pure-Go native extractor, local PaddleOCR adapter and
+      feature-flagged cloud job adapter, and wired PDF pages into the
+      RetrievalSource port.
+    scope:
+      read:
+        - "docs/architecture/adr/002-question-relevant-retrieval.md (Server-side PDF extraction), docs/plans/b-retrieval-preimplementation.md (PDF extraction design), docs/evidence/b-paddleocr-notes.md (job flow, security), docs/req/requirements.yaml (AC-FR-02-10/16/18)"
+        - "github.com/ledongthuc/pdf module (LICENSE BSD-3-Clause, per-page GetPlainText API) via the Go module proxy; src/internal/adapters/sqlite store/migrations; src/internal/retrieval ports/verify/identity"
+      wrote:
+        - "src/internal/retrieval/pdf.go + pdf_test.go (ports, extraction service, statuses)"
+        - "src/internal/retrieval/errors.go (ErrStaleSource), verify.go (stale mapping), identity.go (LocatorDocumentHash), version.go (PDFPageVersion)"
+        - "src/internal/adapters/pdftext/native.go, local_ocr.go, cloud_ocr.go (+ native_test.go, local_ocr_test.go, cloud_ocr_test.go)"
+        - "src/internal/adapters/sqlite/migrations/082_pdf_page_text.sql (new), pdf_page_text.go (+ pdf_page_text_test.go), retrieval_source.go (PDF pages + stale-hash detection)"
+        - "src/go.mod / src/go.sum (github.com/ledongthuc/pdf pinned); docs/licenses/ledongthuc-pdf-BSD-3-Clause.txt"
+        - "docs/evidence/b-impl-phase3-red.log, b-impl-phase3-focused.log, b-impl-phase3-go-full.log, b-impl-phase3-layering.log, b-impl-phase3-web.log, b-impl-phase3-determinism.log, b-impl-phase3-report.md"
+        - "docs/ai-use-log.yaml (this entry)"
+        - "contributions/013-owner-b-implementation.md (Phase 3 section)"
+        - "owner-local, not committed: docs/transcripts/owner-b/2026-11-14-phase3-pdf.json, README.md (new index row)"
+      executed:
+        - "go get github.com/ledongthuc/pdf@v0.0.0-20261020125853-5e46805f718e (Go module proxy read; license recorded); go mod tidy"
+        - "go test ./internal/adapters/pdftext/ -count=1: first run red (implementation pending), then green"
+        - "go test focused (retrieval/ai/transport/pdftext/sqlite) -count=1 (exit 0)"
+        - "go test ./... -count=1 (45 ok / 11 no-test, exit 0)"
+        - "go test ./internal/layering -count=1 (exit 0); go vet (exit 0); gofmt clean"
+        - "npm --prefix src/web test -- --run (62 files / 251 tests, exit 0); npm --prefix src/web run build (exit 0)"
+        - "two-run determinism diff identical (exit 0); git diff main A-budget empty; published migrations unchanged (082/084 added)"
+        - "git commit (phase 3); no push in this session"
+        - "Read-only export of this session via src/build/sexport at phase end (after the commit); sha256 recorded in the local README"
+    network_writes: []
+    original_session_id: ses_e27efbad7ffeY2pIG6EzRIOgOQ
+    transcript: >-
+      owner-local docs/transcripts/owner-b/2026-11-14-phase3-pdf.json
+      (raw OpenCode session export retained outside git; one continuous
+      session with B-AI-008/009/010, captured at phase end after the commit;
+      can be supplied for course review without altering its contents)
+    transcript_status: "exported"
+    human_review: "pending"
+    generated_code: true
+    notes: >-
+      No real OCR runtime, cloud OCR endpoint, provider or token was used; no
+      browser. All OCR tests use a fake local runtime (CommandRunner) and a
+      fake httptest cloud job API; the only token-like string is a synthetic
+      test fixture proving redaction. The native extractor is the vetted
+      pure-Go github.com/ledongthuc/pdf (BSD-3-Clause, zero dependencies,
+      pinned pseudo-version; license recorded in docs/licenses). The only
+      network activity was a Go module proxy read to fetch that library and
+      npm registry reads during the unchanged frontend gate; no push and no
+      GitHub API write. Cloud OCR is feature-flagged off and requires recorded
+      consent before any upload; local OCR is the default and never falls back
+      to cloud silently. Migration 082 is additive/idempotent; no published
+      migration was edited. Implementation acceptance and APPROVE remain
+      human non-author actions.
+  - id: B-AI-012
+    date: "2026-11-14"
+    owner: "WANG Jiaqi (B)"
+    tool: "OpenCode"
+    model: "qwen4-max-preview"
+    purpose: >-
+      Implementation Phase 4 (embedding/rerank adapters + B-only budget) for
+      FR-02, NFR-02, INV-04, INV-05 on owner/b-implementation, after the human
+      confirmed Phase 3. Test-first: wrote B-T24 (B budget + A ledger
+      untouched), B-T26 (dimension/model/usage/auth failures), B-T30 (process
+      + persistent vector cache), B-T31 (settings + role/surface), B-T32
+      (weights), B-T33 (full cold-cache mode matrix with exact request
+      counts), B-T35 (masked settings + persistence/reload), B-T36 (rerank),
+      B-T37 embedding part (local-first), recorded red runs, then implemented
+      the B budget tracker, vector caches, embedding settings validation, the
+      local/custom/Bailian embedding adapter (both surfaces, role-correct
+      text_type, float/base64, dimension/model validation, usage handling),
+      the optional rerank adapter, and migrations 083/085. Also refactored the
+      selector to mode-aware batching (shared ceil((1+C)/B), split reserved
+      query) and aligned the provisional Phase-1 call-count assertions.
+    scope:
+      read:
+        - "docs/evidence/b-embedding-provider-notes.md (surfaces, model limits, local preset), docs/plans/b-retrieval-preimplementation.md (settings UI contract, budget formulas), docs/architecture/adr/002-question-relevant-retrieval.md (scoring, vector cache, B budget)"
+        - "src/internal/adapters/aichat/protocol.go (transport patterns: Bearer auth, redirect policy, redacted errors), src/internal/ai/settings.go (ValidEndpoint), src/internal/adapters/aichat/budget.go (A boundary, read-only)"
+      wrote:
+        - "src/internal/retrieval/embedding_budget.go, vector_cache.go, embedding_settings.go (+ embedding_domain_test.go); types.go (RerankResult); selector.go (mode-aware embedUnion)"
+        - "src/internal/adapters/aichat/embedding.go, rerank.go (+ embedding_test.go, rerank_test.go, budget_matrix_test.go)"
+        - "src/internal/adapters/sqlite/migrations/083_passage_embeddings.sql, 085_retrieval_settings.sql; vector_cache.go, retrieval_settings.go (+ retrieval_phase4_test.go)"
+        - "src/internal/retrieval/fixtures_test.go, selector_test.go (fake question-by-text; B-T39 shared formula; embedder-failure both modes)"
+        - "docs/evidence/b-impl-phase4-focused.log, b-impl-phase4-go-full.log, b-impl-phase4-layering.log, b-impl-phase4-web.log, b-impl-phase4-determinism.log, b-impl-phase4-report.md"
+        - "docs/ai-use-log.yaml (this entry)"
+        - "contributions/013-owner-b-implementation.md (Phase 4 section)"
+        - "owner-local, not committed: docs/transcripts/owner-b/2026-11-14-phase4-embedding.json, README.md (new index row)"
+      executed:
+        - "go test focused (retrieval/ai/transport/aichat/sqlite) -count=1 (exit 0)"
+        - "go test ./... -count=1 (45 ok / 11 no-test, exit 0)"
+        - "go test ./internal/layering -count=1 (exit 0); go vet (exit 0); gofmt clean"
+        - "npm --prefix src/web test -- --run (62 files / 251 tests, exit 0); npm --prefix src/web run build (exit 0)"
+        - "two-run determinism diff identical (exit 0, 26 PASS/run); B-T33 exact request counts (shared R24=24, split R25=25, split R24=24)"
+        - "git diff main A-budget + protocol.go empty; grep confirms B adapters never call reserveCompletion; published migrations unchanged (082/083/084/085 added)"
+        - "git commit (phase 4); no push in this session"
+        - "Read-only export of this session via src/build/sexport at phase end (after the commit); sha256 recorded in the local README"
+    network_writes: []
+    original_session_id: ses_e27efbad7ffeY2pIG6EzRIOgOQ
+    transcript: >-
+      owner-local docs/transcripts/owner-b/2026-11-14-phase4-embedding.json
+      (raw OpenCode session export retained outside git; one continuous
+      session with B-AI-008..011, captured at phase end after the commit; can
+      be supplied for course review without altering its contents)
+    transcript_status: "exported"
+    human_review: "pending"
+    generated_code: true
+    notes: >-
+      No real embedding/rerank provider, credential or network endpoint was
+      used; all adapter tests use httptest fake transports that count every
+      request and its role/text_type. The only key-like strings are synthetic
+      test fixtures (test-key, super-secret-key, etc.) proving masking and
+      redaction; no real secret is present. B uses its OWN BudgetTracker and
+      never calls A's reserveCompletion; A's budget.go/ledger.go/protocol.go
+      are byte-identical to main (empty git diff). The selector batching
+      refactor aligns shared mode to ceil((1+C)/B) and split to 1+ceil(C/B);
+      the Phase-1 B-T39 call-count assertion was updated from the provisional
+      split formula to the shared formula (documented, not weakened). Vector
+      cache: process-local default plus opt-in persistent SQLite (migration
+      083) per the human "both" decision; selector-level cache wiring lands in
+      Phase 5. Migrations 083/085 are additive/idempotent; no published
+      migration edited. Implementation acceptance and APPROVE remain human
+      non-author actions.
+  - id: B-AI-013
+    date: "2026-11-14"
+    owner: "WANG Jiaqi (B)"
+    tool: "OpenCode"
+    model: "qwen4-max-preview"
+    purpose: >-
+      Implementation Phase 5 (AI service + transport integration) for FR-02,
+      NFR-02, INV-04, INV-05 on owner/b-implementation, after the human
+      confirmed Phase 4. Test-first: wrote B-T01 (retrieval-off golden),
+      B-T05 (no_match zero chat), B-T07 (injection is data), B-T09 (invalid
+      inputs), B-T17 (byte cap), B-T25 (HTTP/SSE status mapping, no done on
+      rejection, sweep-limited != no_match, unknown-field rejection) and
+      relied on B-T11 full-suite regression, then integrated the namespaced
+      retrieval object into the chat request/response, the retrieval Engine
+      (validate -> preflight -> select -> assemble -> wire response) into the
+      AI service via an optional setter, the status -> HTTP/SSE mapping into
+      the transport, and wired the engine at the composition root.
+    scope:
+      read:
+        - "docs/architecture/adr/002-question-relevant-retrieval.md (wire envelope, six-layer assembly, invariants), docs/plans/b-retrieval-preimplementation.md (integration point, status mapping), docs/req/requirements.yaml (AC-FR-02-1/4/6/8, AC-INV-04-3)"
+        - "src/internal/ai/chat.go, translation_types.go, translation.go (chat flow, Service, constructor); src/internal/transport/http/ai_summary.go, ai_errors.go, ai_common.go, ports_ai.go, dependencies.go (handler, decoder, error mapping); src/internal/app/feature_services.go, wire_services.go (composition root)"
+      wrote:
+        - "src/internal/retrieval/wire.go (Request/Response/PassageRef/StatusError), engine.go (Engine.Run, budgetedEmbedder, LastUserQuestion)"
+        - "src/internal/ai/translation_types.go (ChatRequest.Retrieval, ChatResult.Retrieval, Service.retrievalEngine + SetRetrievalEngine), chat.go (retrieval branch, ignore client context, source replacement)"
+        - "src/internal/transport/http/ai_retrieval.go (+ ai_retrieval_test.go) status mapping; ai_summary.go (handler + SSE terminal retrieval frames)"
+        - "src/internal/app/wire_services.go (newRetrievalEngine), feature_services.go (SetRetrievalEngine wiring)"
+        - "src/internal/ai/chat_retrieval_test.go (B-T01/05/07/09/17 + assembled-context test)"
+        - "docs/evidence/b-impl-phase5-focused.log, b-impl-phase5-go-full.log, b-impl-phase5-layering.log, b-impl-phase5-web.log, b-impl-phase5-determinism.log, b-impl-phase5-report.md"
+        - "docs/ai-use-log.yaml (this entry)"
+        - "contributions/013-owner-b-implementation.md (Phase 5 section)"
+        - "owner-local, not committed: docs/transcripts/owner-b/2026-11-14-phase5-integration.json, README.md (new index row)"
+      executed:
+        - "go test focused (retrieval/ai/transport) -count=1 (exit 0)"
+        - "go test ./... -count=1 (45 ok / 11 no-test, exit 0) — B-T11 regression incl. retrieval-off golden"
+        - "go test ./internal/layering -count=1 (exit 0); go vet (exit 0); gofmt clean"
+        - "npm --prefix src/web test -- --run (62 files / 251 tests, exit 0); npm --prefix src/web run build (exit 0)"
+        - "two-run determinism diff identical (exit 0, 10 PASS/run); git diff main A-budget + protocol.go empty"
+        - "git commit (phase 5); no push in this session"
+        - "Read-only export of this session via src/build/sexport at phase end (after the commit); sha256 recorded in the local README"
+    network_writes: []
+    original_session_id: ses_e27efbad7ffeY2pIG6EzRIOgOQ
+    transcript: >-
+      owner-local docs/transcripts/owner-b/2026-11-14-phase5-integration.json
+      (raw OpenCode session export retained outside git; one continuous
+      session with B-AI-008..012, captured at phase end after the commit; can
+      be supplied for course review without altering its contents)
+    transcript_status: "exported"
+    human_review: "pending"
+    generated_code: true
+    notes: >-
+      No real provider, credential or network endpoint was used; AI-service
+      tests use a counting fake provider and fake passage source/embedder,
+      and transport tests use a fake AIService. The retrieval-off legacy path
+      is byte-identical (B-T01: provider receives the client context verbatim,
+      response field set unchanged, selector/embedder never called). The
+      retrieval branch runs only when enabled; rejections return zero chat
+      POST and a distinct status (B-T25), and a rejected SSE assembly never
+      emits event: done. ai imports retrieval (domain->domain, no cycle);
+      retrieval still imports only stdlib. A's budget.go/ledger.go/
+      protocol.go remain byte-identical to main. The composition root wires
+      the engine with the local-first default embedder (process-local cache);
+      a missing local server degrades to lexical_only at call time. No
+      migration added this phase. Implementation acceptance and APPROVE
+      remain human non-author actions.
+  - id: B-AI-014
+    date: "2026-11-14"
+    owner: "WANG Jiaqi (B)"
+    tool: "OpenCode"
+    model: "qwen4-max-preview"
+    purpose: >-
+      Implementation Phase 6 (frontend wiring) for FR-02, NFR-02, INV-04,
+      INV-05 on owner/b-implementation, after the human confirmed Phase 5.
+      Test-first: wrote vitest tests for the retrieval request fragment
+      (B-T01 off byte-compatible), settings validation (B-T31 per-model
+      dimensions/row limits, B-T32 weights, B-T35 masking, rerank-zero-budget
+      guard), status presentation (B-T25 distinct copy, sweep-limited !=
+      no_match; B-T05 no_match) and a RetrievalStatus component test, then
+      implemented the pure modules (retrieval.ts, retrievalSettings.ts,
+      retrievalPresentation.ts), the RetrievalStatus and RetrievalSettings
+      components, and wired an opt-in retrieval toggle + response rendering
+      into AIChatPanel. The legacy buildChatContext path is untouched when off.
+    scope:
+      read:
+        - "docs/plans/b-retrieval-preimplementation.md (frontend responsibilities, settings UI contract), docs/architecture/adr/002-question-relevant-retrieval.md (wire envelope, statuses)"
+        - "src/web/src/features/ai/AIInsights.tsx, chatContext.ts, callBudget.ts, chatPresentation.ts, types.ts, AISettings.tsx; src/web/src/shared/api/client.ts; src/web/vitest.config.ts, package.json; existing component-test pattern (renderToStaticMarkup)"
+      wrote:
+        - "src/web/src/features/ai/retrieval.ts (+test), retrievalSettings.ts (+test), retrievalPresentation.ts (+test)"
+        - "src/web/src/features/ai/RetrievalStatus.tsx (+test), RetrievalSettings.tsx"
+        - "src/web/src/features/ai/AIInsights.tsx (opt-in toggle, retrieval request fragment, response capture, RetrievalStatus render), ai.css (retrieval styles)"
+        - "docs/evidence/b-impl-phase6-web.log, b-impl-phase6-go.log, b-impl-phase6-determinism.log, b-impl-phase6-report.md"
+        - "docs/ai-use-log.yaml (this entry)"
+        - "contributions/013-owner-b-implementation.md (Phase 6 section)"
+        - "owner-local, not committed: docs/transcripts/owner-b/2026-11-14-phase6-frontend.json, README.md (new index row)"
+      executed:
+        - "npm --prefix src/web test -- --run (66 files / 278 tests, exit 0; +27 new retrieval tests)"
+        - "npm --prefix src/web run build (incl. tsc --noEmit, exit 0)"
+        - "go test ./... -count=1 (45 ok / 11 no-test, exit 0) + layering (exit 0) — frontend-only phase, no backend regression"
+        - "two-run frontend determinism diff identical (exit 0, 27 PASS/run); git diff main A-budget empty"
+        - "git commit (phase 6); no push in this session"
+        - "Read-only export of this session via src/build/sexport at phase end (after the commit); sha256 recorded in the local README"
+    network_writes: []
+    original_session_id: ses_e27efbad7ffeY2pIG6EzRIOgOQ
+    transcript: >-
+      owner-local docs/transcripts/owner-b/2026-11-14-phase6-frontend.json
+      (raw OpenCode session export retained outside git; one continuous
+      session with B-AI-008..013, captured at phase end after the commit; can
+      be supplied for course review without altering its contents)
+    transcript_status: "exported"
+    human_review: "pending"
+    generated_code: true
+    notes: >-
+      No real provider, credential or network endpoint was used; frontend
+      tests are pure-module vitest plus renderToStaticMarkup component tests
+      (node environment, no browser). The retrieval toggle defaults to off, so
+      the legacy buildChatContext path and chat body remain byte-compatible
+      (B-T01). The frontend only sends the retrieval request and renders the
+      server's response; it is never the authority for retrieval, embeddings
+      or locators, and never fabricates a passage. semantic_sweep_limited is
+      rendered as a coverage limitation, never as no_match, and valid passages
+      are kept. The settings form masks the key (hasKey only), enforces
+      per-model Bailian dimension choices and the rerank-with-zero-budget
+      guard. pdf.js remains display-only (unchanged). No backend code changed
+      this phase; A's budget files remain byte-identical to main.
+      Implementation acceptance and APPROVE remain human non-author actions.
+  - id: B-AI-014
+    date: "2026-11-14"
+    owner: "WANG Jiaqi (B)"
+    tool: "OpenCode"
+    model: "qwen4-max-preview"
+    purpose: >-
+      Draft the Phase-7 evaluation set for NFR-02 at the user's explicit
+      request ("phase07需要一个评估集，你可以自拟一个评估集吗？"). The protocol
+      reserves label approval to a human, so the set is marked
+      draft-pending-human-confirmation on every record and must not be used
+      for the NFR-02 claim until WANG Jiaqi confirms each label.
+    scope:
+      read:
+        - "docs/evidence/b-eval-protocol.md (dataset requirements, gold format, determinism, decision rule)"
+        - "owner-b-implementation-prompt.md (Phase 7 precondition)"
+        - "src/internal/retrieval/{split,normalize,lexical,sweep,selector,budget,identity,version,verify,types,ports}.go, src/web/src/features/ai/chatContext.ts (baseline), src/internal/retrieval/fixtures_test.go (fixture patterns)"
+      wrote:
+        - "test/offline/eval-b/gen/{go.mod,main.go} (deterministic generator; module tangentry/eval-b-gen with replace to src; uses the real retrieval splitter/grouping and validates every gold through retrieval.NewSelector)"
+        - "test/offline/eval-b/questions.yaml (24 primary + 2 provisional OCR gold records, protocol §3 format, annotator=AI draft UNCONFIRMED)"
+        - "test/offline/eval-b/fixtures/*.json (7 document snapshots + 3 negative fixtures), *.txt canonical baseline-replay texts, subtitle-lecture.srt"
+        - "test/offline/eval-b/dataset-manifest.json (hashes, rune counts, candidate counts, sweep sample indices/stride/coverage, per-question position/lexical/baseline/reachability flags)"
+        - "test/offline/eval-b/{README.md,eval-configs.yaml,negative-cases.yaml,verify_eval_set.py}"
+        - "test/offline/README.md (eval-b pointer); docs/ai-use-log.yaml (this entry)"
+      executed:
+        - "go run . -out .. (generator; all invariants asserted; exit 0)"
+        - "two-run determinism: sha256 of questions.yaml + manifest + all fixtures byte-identical (diff exit 0)"
+        - "python3 test/offline/eval-b/verify_eval_set.py (independent second implementation, 695 checks, exit 0)"
+    network_writes: []
+    transcript: "pending export (this session); to be retained owner-local per the shared convention"
+    transcript_status: "pending"
+    human_review: "pending"
+    generated_code: true
+    notes: >-
+      No provider, credential, network or browser was used; the generator is
+      offline and deterministic (no clock, no randomness). All documents are
+      fictional constructed templates, BMP-only, no real user data. Gold
+      granularity is guaranteed by calling the real retrieval
+      SplitSentences/GroupSegments/GroupCueSegments and by validating every
+      gold through the real selector pipeline (exact-phrase locator proof,
+      lexical reachability, fake-marker sweep reachability, candidate-count
+      cross-check via Sweep.Stride/Coverage). Fake vectors were used ONLY for
+      fixture-property validation during generation, never for an NFR-02
+      measurement. Known design points: BQ-021 is an intentional
+      coverage-limited miss (gold off every sampled sweep index) and stays in
+      the denominator; BQ-016 exposes the single-term proximity artifact
+      (lexical-only miss, hybrid reaches it via sampled index 0); the OCR
+      subset (BQ-025/026) is provisional expected-text and stays out of the
+      primary denominator until a real local PaddleOCR run verifies it.
+      Label confirmation, set freezing and the Phase-7 run remain human
+      non-author actions.
+  - id: B-AI-015
+    date: "2026-11-14"
+    owner: "WANG Jiaqi (B)"
+    tool: "OpenCode"
+    model: "qwen4-max-preview"
+    purpose: >-
+      Implementation Phase 7 (evaluation replay) for NFR-02 after the human
+      confirmed the AI-drafted evaluation set in session ("我是人类，我签署。
+      请你进入phase07") and separately authorized ONE live embedding pass
+      (protocol §9). Recorded the sign-off, froze the set (hashes), built the
+      offline replay harness (baseline vs lexical-only vs hybrid at 120k and
+      8k, budget-invariant runs, negative set, B-T12 double-run), generated
+      frozen vectors through the real aichat.EmbeddingClient adapter, ran the
+      evaluation and the B-T12/B-T13/B-T18 acceptance tests, and produced
+      docs/evidence/b-eval-report.md. NFR-02 decision rule: all PASS
+      (hybrid-split 23/24 = 0.9583).
+    scope:
+      read:
+        - "docs/evidence/b-eval-protocol.md, docs/plans/b-retrieval-preimplementation.md (B-T12/13/18), owner-b-implementation-prompt.md (Phase 7)"
+        - "src/internal/retrieval/{selector,assemble,budget,verify,embedding_settings,embedding_budget}.go, src/internal/adapters/aichat/embedding.go (real adapter used by vectorgen)"
+      wrote:
+        - "test/offline/eval-b/questions.yaml + dataset-manifest.json (status confirmed, annotator WANG Jiaqi, freeze-hashes.txt)"
+        - "test/offline/eval-b/{evalutil,replay,vectorgen,report}/ (harness; module tangentry/eval-b-gen), go.mod/go.sum"
+        - "test/offline/eval-b/vectors/{frozen-vectors.json,generation-log.json}, runs/*.json; docs/evidence/b-impl-phase7-vectorgen.log (live pass stdout)"
+        - "test/offline/eval-b/{README.md,eval-configs.yaml,negative-cases.yaml,verify_eval_set.py} (confirmation + deviation records)"
+        - "docs/evidence/b-eval-report.md, b-eval-per-question.json, b-impl-phase7-report.md, b-impl-phase7-replay.log, b-impl-phase7-eval-tests.log, b-impl-phase7-go-full.log"
+        - "contributions/013-owner-b-implementation.md (Phase 7 section); docs/ai-use-log.yaml (this entry)"
+      executed:
+        - "go run ./vectorgen -authorize <human statement> -spend-cap-cny 10 (ONE live pass: Bailian DashScope text-embedding-v4, 1024 dims, batch 8, split text_type; 740 requests, 544390 tokens, 0 errors; key read at runtime from ~/.bailian/config.json, never written to disk/logs)"
+        - "go run ./replay -eval . -out runs (offline; two runs byte-identical; negatives 12/12)"
+        - "go test ./replay -count=1 -v (B-T12/B-T13/B-T18 + negatives + budget invariants, exit 0)"
+        - "go test ./... -count=1 in src (46 ok / 11 no-test, exit 0) + layering (exit 0)"
+        - "python3 verify_eval_set.py (696 checks, exit 0); go run ./report (b-eval-report.md)"
+    network_writes:
+      - "Aliyun Bailian DashScope text-embedding API (dashscope.aliyuncs.com): 740 embedding POSTs, explicitly authorized by the human in session with spend cap CNY 10; actual usage 544390 tokens (~CNY 0.27); per-request text_type/status/usage ledger in vectors/generation-log.json; API key redacted everywhere; no other network use"
+    transcript: "pending export (this session); to be retained owner-local per the shared convention"
+    transcript_status: "pending"
+    human_review: "pending"
+    generated_code: true
+    notes: >-
+      The evaluation set was AI-drafted (B-AI-014) and human-confirmed BEFORE
+      any run; freeze hashes recorded; no gold label changed after seeing
+      results and no question dropped. The only hybrid miss (BQ-021) is the
+      intentional coverage-limited fixture and stays in the denominator.
+      Recorded deviation: Bailian text-embedding-v4 replaces the local-first
+      bge-m3 default (no local server/model in this environment); hybrid-shared
+      is a labeled simulation, hybrid-split carries the NFR-02 decision. OCR
+      subset excluded (PaddleOCR unavailable) and reported as
+      pdf_ocr_unavailable. Replay is zero-network and deterministic (B-T12
+      sha256 recorded); fake vectors were used only for pre-run fixture
+      validation, never for the claim. No src/ implementation code changed;
+      A's budget files untouched. PR + non-author review remain human actions;
+      no push in this session.

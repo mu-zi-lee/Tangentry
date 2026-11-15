@@ -1,0 +1,6 @@
+# Phase 2 gate 1: focused packages (-count=1)
+$ cd src && go test ./internal/retrieval/... ./internal/ai/... ./internal/transport/http/... -count=1
+ok  	tangentry/internal/retrieval	7.267s
+ok  	tangentry/internal/ai	0.262s
+ok  	tangentry/internal/transport/http	2.374s
+EXIT_CODE:0

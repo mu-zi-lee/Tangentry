@@ -1,0 +1,137 @@
+# Phase 1 retrieval suite: green run with full test listing (-count=1 -v)
+$ cd src && go test ./internal/retrieval/ -count=1 -v
+=== RUN   TestBT16_PropertyMatrix
+--- PASS: TestBT16_PropertyMatrix (0.04s)
+=== RUN   TestBT17_ByteCap
+--- PASS: TestBT17_ByteCap (0.00s)
+=== RUN   TestBT21_PostEmbeddingDropOrder
+--- PASS: TestBT21_PostEmbeddingDropOrder (0.00s)
+=== RUN   TestBT22_HistoryOverflow
+--- PASS: TestBT22_HistoryOverflow (0.00s)
+=== RUN   TestAssemblyDegradedProfile
+--- PASS: TestAssemblyDegradedProfile (0.00s)
+=== RUN   TestAssemblyDefaults
+--- PASS: TestAssemblyDefaults (0.00s)
+=== RUN   TestBudgetMathWorkedExamples
+=== RUN   TestBudgetMathWorkedExamples/shared_R0
+=== RUN   TestBudgetMathWorkedExamples/shared_R1
+=== RUN   TestBudgetMathWorkedExamples/shared_R24
+=== RUN   TestBudgetMathWorkedExamples/split_R0
+=== RUN   TestBudgetMathWorkedExamples/split_R1
+=== RUN   TestBudgetMathWorkedExamples/split_R24
+=== RUN   TestBudgetMathWorkedExamples/split_R25
+=== RUN   TestBudgetMathWorkedExamples/shared_R25_capped
+--- PASS: TestBudgetMathWorkedExamples (0.00s)
+    --- PASS: TestBudgetMathWorkedExamples/shared_R0 (0.00s)
+    --- PASS: TestBudgetMathWorkedExamples/shared_R1 (0.00s)
+    --- PASS: TestBudgetMathWorkedExamples/shared_R24 (0.00s)
+    --- PASS: TestBudgetMathWorkedExamples/split_R0 (0.00s)
+    --- PASS: TestBudgetMathWorkedExamples/split_R1 (0.00s)
+    --- PASS: TestBudgetMathWorkedExamples/split_R24 (0.00s)
+    --- PASS: TestBudgetMathWorkedExamples/split_R25 (0.00s)
+    --- PASS: TestBudgetMathWorkedExamples/shared_R25_capped (0.00s)
+=== RUN   TestBudgetMathInvalid
+--- PASS: TestBudgetMathInvalid (0.00s)
+=== RUN   TestBudgetMathSweepDisabled
+--- PASS: TestBudgetMathSweepDisabled (0.00s)
+=== RUN   TestBudgetMathCharPressure
+--- PASS: TestBudgetMathCharPressure (0.00s)
+=== RUN   TestBudgetMathInvariantGrid
+--- PASS: TestBudgetMathInvariantGrid (0.00s)
+=== RUN   TestBT10_InvalidAssemblyBudget
+--- PASS: TestBT10_InvalidAssemblyBudget (0.00s)
+=== RUN   TestBT02_MiddleAnswer
+--- PASS: TestBT02_MiddleAnswer (0.10s)
+=== RUN   TestBT06_Dedupe
+--- PASS: TestBT06_Dedupe (0.00s)
+=== RUN   TestBT39_ZeroOverlapDegenerateLexical
+--- PASS: TestBT39_ZeroOverlapDegenerateLexical (0.82s)
+=== RUN   TestBT40_DistractorSaturated
+=== RUN   TestBT40_DistractorSaturated/A_gold_on_sample
+=== RUN   TestBT40_DistractorSaturated/B_gold_off_sample
+=== RUN   TestBT40_DistractorSaturated/C_char_pressure
+--- PASS: TestBT40_DistractorSaturated (2.32s)
+    --- PASS: TestBT40_DistractorSaturated/A_gold_on_sample (0.86s)
+    --- PASS: TestBT40_DistractorSaturated/B_gold_off_sample (0.70s)
+    --- PASS: TestBT40_DistractorSaturated/C_char_pressure (0.76s)
+=== RUN   TestBT21_PreflightZeroRequests
+=== RUN   TestBT21_PreflightZeroRequests/below_minimum
+=== RUN   TestBT21_PreflightZeroRequests/zero
+=== RUN   TestBT21_PreflightZeroRequests/negative
+=== RUN   TestBT21_PreflightZeroRequests/above_max
+--- PASS: TestBT21_PreflightZeroRequests (0.67s)
+    --- PASS: TestBT21_PreflightZeroRequests/below_minimum (0.00s)
+    --- PASS: TestBT21_PreflightZeroRequests/zero (0.00s)
+    --- PASS: TestBT21_PreflightZeroRequests/negative (0.00s)
+    --- PASS: TestBT21_PreflightZeroRequests/above_max (0.00s)
+=== RUN   TestSelectorSweepDisabledByConfig
+--- PASS: TestSelectorSweepDisabledByConfig (0.69s)
+=== RUN   TestSelectorNoMatch
+--- PASS: TestSelectorNoMatch (0.03s)
+=== RUN   TestSelectorEmptyAndInvalidInput
+=== RUN   TestSelectorEmptyAndInvalidInput/empty
+=== RUN   TestSelectorEmptyAndInvalidInput/whitespace
+=== RUN   TestSelectorEmptyAndInvalidInput/nul
+--- PASS: TestSelectorEmptyAndInvalidInput (0.70s)
+    --- PASS: TestSelectorEmptyAndInvalidInput/empty (0.00s)
+    --- PASS: TestSelectorEmptyAndInvalidInput/whitespace (0.00s)
+    --- PASS: TestSelectorEmptyAndInvalidInput/nul (0.00s)
+=== RUN   TestSelectorEmbedderFailure
+--- PASS: TestSelectorEmbedderFailure (0.80s)
+=== RUN   TestDeterminismTwoRuns
+--- PASS: TestDeterminismTwoRuns (0.94s)
+=== RUN   TestSweepSampler
+--- PASS: TestSweepSampler (0.00s)
+=== RUN   TestWeightsValidation
+--- PASS: TestWeightsValidation (0.00s)
+=== RUN   TestBT29_Splitter
+=== RUN   TestBT29_Splitter/cjk
+=== RUN   TestBT29_Splitter/latin
+=== RUN   TestBT29_Splitter/abbrev
+=== RUN   TestBT29_Splitter/eg
+=== RUN   TestBT29_Splitter/decimal
+=== RUN   TestBT29_Splitter/quotes
+=== RUN   TestBT29_Splitter/ascii_quotes
+=== RUN   TestBT29_Splitter/code
+=== RUN   TestBT29_Splitter/emoji
+=== RUN   TestBT29_Splitter/empty
+=== RUN   TestBT29_Splitter/whitespace
+=== RUN   TestBT29_Splitter/no_terminator
+--- PASS: TestBT29_Splitter (0.00s)
+    --- PASS: TestBT29_Splitter/cjk (0.00s)
+    --- PASS: TestBT29_Splitter/latin (0.00s)
+    --- PASS: TestBT29_Splitter/abbrev (0.00s)
+    --- PASS: TestBT29_Splitter/eg (0.00s)
+    --- PASS: TestBT29_Splitter/decimal (0.00s)
+    --- PASS: TestBT29_Splitter/quotes (0.00s)
+    --- PASS: TestBT29_Splitter/ascii_quotes (0.00s)
+    --- PASS: TestBT29_Splitter/code (0.00s)
+    --- PASS: TestBT29_Splitter/emoji (0.00s)
+    --- PASS: TestBT29_Splitter/empty (0.00s)
+    --- PASS: TestBT29_Splitter/whitespace (0.00s)
+    --- PASS: TestBT29_Splitter/no_terminator (0.00s)
+=== RUN   TestBT29_SegmentGrouping
+--- PASS: TestBT29_SegmentGrouping (0.00s)
+=== RUN   TestBT29_CueGrouping
+--- PASS: TestBT29_CueGrouping (0.00s)
+=== RUN   TestBT08_Oversize
+--- PASS: TestBT08_Oversize (0.00s)
+=== RUN   TestBT14_VerifyReread
+--- PASS: TestBT14_VerifyReread (0.00s)
+=== RUN   TestBT15_ForgedPassages
+=== RUN   TestBT15_ForgedPassages/forged_id
+=== RUN   TestBT15_ForgedPassages/negative_start
+=== RUN   TestBT15_ForgedPassages/beyond_end
+=== RUN   TestBT15_ForgedPassages/hash_mismatch
+=== RUN   TestBT15_ForgedPassages/text_mismatch
+--- PASS: TestBT15_ForgedPassages (0.00s)
+    --- PASS: TestBT15_ForgedPassages/forged_id (0.00s)
+    --- PASS: TestBT15_ForgedPassages/negative_start (0.00s)
+    --- PASS: TestBT15_ForgedPassages/beyond_end (0.00s)
+    --- PASS: TestBT15_ForgedPassages/hash_mismatch (0.00s)
+    --- PASS: TestBT15_ForgedPassages/text_mismatch (0.00s)
+=== RUN   TestBT19_StaleVersion
+--- PASS: TestBT19_StaleVersion (0.00s)
+PASS
+ok  	tangentry/internal/retrieval	7.124s
+EXIT_CODE:0

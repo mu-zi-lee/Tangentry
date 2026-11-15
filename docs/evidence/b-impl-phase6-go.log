@@ -1,0 +1,66 @@
+# Phase 6 gate: Go regression (frontend-only phase; B-T11)
+$ cd src && go test ./... -count=1
+ok  	tangentry/cmd/tangentry-desktop	1.627s
+?   	tangentry/cmd/tangentry-mcp	[no test files]
+?   	tangentry/cmd/tangentry-server	[no test files]
+ok  	tangentry/internal/adapters/aichat	3.503s
+ok  	tangentry/internal/adapters/articles	1.368s
+ok  	tangentry/internal/adapters/feeds	0.766s
+ok  	tangentry/internal/adapters/filesystem	0.221s
+?   	tangentry/internal/adapters/htmlimage	[no test files]
+?   	tangentry/internal/adapters/papers	[no test files]
+ok  	tangentry/internal/adapters/pdftext	1.509s
+ok  	tangentry/internal/adapters/platforms/bilibili	1.945s
+ok  	tangentry/internal/adapters/platforms/discourse	0.865s
+ok  	tangentry/internal/adapters/platforms/douyin	0.024s
+ok  	tangentry/internal/adapters/platforms/xiaohongshu	0.112s
+ok  	tangentry/internal/adapters/platforms/xiaoyuzhou	0.086s
+ok  	tangentry/internal/adapters/platforms/youtube	0.104s
+ok  	tangentry/internal/adapters/sqlite	4.989s
+ok  	tangentry/internal/adapters/storage/local	0.022s
+ok  	tangentry/internal/adapters/storage/webdav	0.399s
+ok  	tangentry/internal/adapters/tools	5.650s
+ok  	tangentry/internal/agent	0.013s
+ok  	tangentry/internal/agent/gateway	0.425s
+ok  	tangentry/internal/agent/mcp	0.554s
+ok  	tangentry/internal/ai	0.490s
+ok  	tangentry/internal/app	0.560s
+ok  	tangentry/internal/articles	0.007s
+ok  	tangentry/internal/automaticsubtitles	0.012s
+ok  	tangentry/internal/automaticsubtitles/worker	0.007s
+ok  	tangentry/internal/backup	2.096s
+?   	tangentry/internal/config	[no test files]
+ok  	tangentry/internal/content	0.008s
+ok  	tangentry/internal/credentials	0.031s
+ok  	tangentry/internal/desktop	0.012s
+ok  	tangentry/internal/discovery	0.058s
+?   	tangentry/internal/documents	[no test files]
+ok  	tangentry/internal/downloads	1.307s
+ok  	tangentry/internal/favoritesync	0.397s
+?   	tangentry/internal/history	[no test files]
+?   	tangentry/internal/jobs	[no test files]
+ok  	tangentry/internal/layering	0.088s
+ok  	tangentry/internal/netpolicy	0.013s
+ok  	tangentry/internal/notes	1.600s
+ok  	tangentry/internal/papers	0.010s
+ok  	tangentry/internal/platformfetch	0.011s
+ok  	tangentry/internal/playback	3.033s
+?   	tangentry/internal/preferences	[no test files]
+ok  	tangentry/internal/readingprogress	0.452s
+ok  	tangentry/internal/readstate	0.006s
+ok  	tangentry/internal/retrieval	8.807s
+ok  	tangentry/internal/server	1.936s
+ok  	tangentry/internal/subscriptions	1.780s
+ok  	tangentry/internal/subtitles	0.009s
+ok  	tangentry/internal/transcription	0.671s
+ok  	tangentry/internal/transport/http	3.413s
+?   	tangentry/web	[no test files]
+?   	tangentry/web/tests/server	[no test files]
+EXIT_CODE:0
+
+$ cd src && go test ./internal/layering -count=1
+ok  	tangentry/internal/layering	0.031s
+EXIT_CODE:0
+
+$ git diff main -- A budget files (must be empty)
+EXIT_CODE:0

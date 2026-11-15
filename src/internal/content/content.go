@@ -20,9 +20,17 @@ type Repository interface {
 	Delete(context.Context, string) error
 }
 
-type Service struct{ repository Repository }
+type Service struct {
+	repository Repository
+	savedHook  func(context.Context, Item)
+}
 
 func NewService(repository Repository) *Service { return &Service{repository: repository} }
+
+// SetSavedHook connects an optional observer invoked after each successful
+// save, at the composition root before serving (e.g. PDF text extraction).
+// The hook never fails the save itself.
+func (s *Service) SetSavedHook(hook func(context.Context, Item)) { s.savedHook = hook }
 
 func (s *Service) List(ctx context.Context) ([]Item, error) { return s.repository.List(ctx) }
 
@@ -46,7 +54,11 @@ func (s *Service) Save(ctx context.Context, item Item) (Item, error) {
 		return Item{}, err
 	}
 	item.SavedAt = time.Now().Unix()
-	return s.repository.Save(ctx, item)
+	saved, err := s.repository.Save(ctx, item)
+	if err == nil && s.savedHook != nil {
+		s.savedHook(ctx, saved)
+	}
+	return saved, err
 }
 
 func (s *Service) Delete(ctx context.Context, id string) error {

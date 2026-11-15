@@ -16,7 +16,7 @@ var migrationFiles embed.FS
 
 // Go steps run after a version's SQL in the same transaction, for data
 // rewrites SQL alone cannot express.
-var migrationSteps = map[int]func(*sql.Tx) error{14: archiveLegacySnapshots, 70: addBackupWebDAVColumns, 71: addBackupRetryColumns, 73: configureSingleBackupPlan}
+var migrationSteps = map[int]func(*sql.Tx) error{14: archiveLegacySnapshots, 70: addBackupWebDAVColumns, 71: addBackupRetryColumns, 73: configureSingleBackupPlan, 84: addContentVersion}
 
 // A file holding only one ADD COLUMN is skipped when the column exists:
 // older builds added some columns before recording their version.

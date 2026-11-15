@@ -1,0 +1,6 @@
+-- B owns the content_revision/content_hash column set (ADR-002 "Content
+-- version"; plan "Migration coordination with C/E"). The columns and the
+-- legacy backfill (revision 1 + computed normalized-snapshot hash) are
+-- applied by the Go step addContentVersion in the same transaction, because
+-- the hash cannot be computed in SQL. C/E must not add a duplicate column
+-- migration; they consume content.Item.ContentRevision/ContentHash.

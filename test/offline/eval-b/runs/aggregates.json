@@ -1,0 +1,74 @@
+[
+  {
+    "run_id": "baseline-120000",
+    "path": "baseline",
+    "budget": 120000,
+    "hits": 6,
+    "denominator": 24,
+    "recall": 0.25,
+    "blocked": false
+  },
+  {
+    "run_id": "lexical-120000",
+    "path": "lexical",
+    "budget": 120000,
+    "hits": 19,
+    "denominator": 24,
+    "recall": 0.7916666666666666,
+    "blocked": false
+  },
+  {
+    "run_id": "hybrid-split-120000",
+    "path": "hybrid",
+    "budget": 120000,
+    "hits": 23,
+    "denominator": 24,
+    "recall": 0.9583333333333334,
+    "blocked": false
+  },
+  {
+    "run_id": "hybrid-shared-120000",
+    "path": "hybrid",
+    "budget": 120000,
+    "hits": 23,
+    "denominator": 24,
+    "recall": 0.9583333333333334,
+    "blocked": false
+  },
+  {
+    "run_id": "baseline-8000",
+    "path": "baseline",
+    "budget": 8000,
+    "hits": 6,
+    "denominator": 24,
+    "recall": 0.25,
+    "blocked": false
+  },
+  {
+    "run_id": "lexical-8000",
+    "path": "lexical",
+    "budget": 8000,
+    "hits": 19,
+    "denominator": 24,
+    "recall": 0.7916666666666666,
+    "blocked": false
+  },
+  {
+    "run_id": "hybrid-split-8000",
+    "path": "hybrid",
+    "budget": 8000,
+    "hits": 23,
+    "denominator": 24,
+    "recall": 0.9583333333333334,
+    "blocked": false
+  },
+  {
+    "run_id": "hybrid-shared-8000",
+    "path": "hybrid",
+    "budget": 8000,
+    "hits": 23,
+    "denominator": 24,
+    "recall": 0.9583333333333334,
+    "blocked": false
+  }
+]

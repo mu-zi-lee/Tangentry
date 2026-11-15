@@ -1,0 +1,20 @@
+texts: 5876 document + 26 query; ~1141461 tokens; estimated cost ~CNY 0.571 (cap 10.00)
+connection test OK: model=text-embedding-v4 dims=1024
+progress role=document: 8/5876 texts
+progress role=document: 408/5876 texts
+progress role=document: 808/5876 texts
+progress role=document: 1208/5876 texts
+progress role=document: 1608/5876 texts
+progress role=document: 2008/5876 texts
+progress role=document: 2408/5876 texts
+progress role=document: 2808/5876 texts
+progress role=document: 3208/5876 texts
+progress role=document: 3608/5876 texts
+progress role=document: 4008/5876 texts
+progress role=document: 4408/5876 texts
+progress role=document: 4808/5876 texts
+progress role=document: 5208/5876 texts
+progress role=document: 5608/5876 texts
+progress role=query: 8/26 texts
+DONE: 740 requests, 544390 tokens, 5876 document + 26 query vectors, vector hash 78ce366df26f1d4324b16f62b7aed08680a5e3b936d654b0fb760386f6add2ce
+All replay runs are now offline (frozen vectors). The key was never written to disk.

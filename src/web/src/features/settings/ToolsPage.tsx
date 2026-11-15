@@ -21,7 +21,7 @@ function routeFromURL(): SettingsRoute {
   const [head, tail] = migrated.split('/')
   const section = head === 'ai' ? 'ai' : head === 'data' ? 'data' : head
   const valid = settingsById.has(section as SettingsSection)
-  const tab = section === 'ai' && ['provider', 'text', 'asr'].includes(tail) ? tail as SettingsTab
+  const tab = section === 'ai' && ['provider', 'text', 'asr', 'retrieval'].includes(tail) ? tail as SettingsTab
     : section === 'data' && ['storage', 'backup'].includes(tail) ? tail as SettingsTab : undefined
   const platform = (section === 'accounts' || section === 'discovery') && tail ? tail : undefined
   return { section: valid ? section as SettingsSection : 'overview', tab, platform, hasHash: Boolean(raw) }

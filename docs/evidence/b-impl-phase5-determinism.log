@@ -1,0 +1,13 @@
+# Phase 5 gate extra: two-run determinism (normalized outcomes)
+EXIT_CODE:0 (0 = identical)
+PASS count: 10 per run
+--- PASS: TestBT01_RetrievalOffGolden
+--- PASS: TestBT05_NoMatch
+--- PASS: TestBT07_InjectionIsData
+--- PASS: TestBT09_InvalidInputs
+--- PASS: TestBT17_ByteCap
+--- PASS: TestBT_RetrievalOnUsesAssembledContext
+--- PASS: TestBT25_HTTPStatusMapping
+--- PASS: TestBT25_SSENoDoneOnRejection
+--- PASS: TestBT25_SweepLimitedNotNoMatch
+--- PASS: TestBT25_UnknownFieldRejected

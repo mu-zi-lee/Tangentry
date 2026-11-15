@@ -1,0 +1,12 @@
+# Phase 1 gate extra: two-run determinism (normalized test outcomes)
+$ diff run1 run2 (wall-clock timings stripped; timings are not replay output)
+EXIT_CODE:0 (0 = identical)
+
+Byte-identical replay assertions inside the suite:
+  TestDeterminismTwoRuns: selection JSON + assembly context byte-compare across two full runs
+  TestBT06_Dedupe: selection JSON byte-compare across two runs
+  TestSweepSampler: identical sampled indices across calls
+
+PASS count per run:
+31
+31

@@ -1,0 +1,99 @@
+# Phase-7 run configuration matrix for the eval-b evaluation set.
+# Protocol: docs/evidence/b-eval-protocol.md §5 (determinism + budget runs).
+# Set CONFIRMED by WANG Jiaqi (B) 2026-11-14 (human sign-off in session).
+#
+# AUTHORIZED DEVIATION (protocol §5/§9, recorded 2026-11-14): no local
+# embedding server/model exists in this environment. The human explicitly
+# authorized ONE live generation pass via Aliyun Bailian DashScope
+# (text-embedding-v4, 1024 dims, batch 8, split text_type=query/document,
+# key from ~/.bailian/config.json top-level api_key, redacted, spend cap
+# CNY 10). Vectors are frozen to vectors/frozen-vectors.json (payload hash
+# recorded); every replay run below is offline with zero provider requests.
+# hybrid-split carries the NFR-02 decision; hybrid-shared is a labeled
+# simulation (document-type vectors for all texts), not a real local run.
+#
+# Every run records: providerKind, endpoint family (never the key),
+# embeddingModel, dimensions, batchSize, textType, instruct, modelHash,
+# vectorHash, topK, sweepCandidates, sweepRatio, embeddingSlotBudget,
+# embeddingCharBudget, sweepSlots/lexicalSlots, sweepChars/lexicalChars,
+# spareSlots, observed cold-cache request count + role/text_type per request,
+# sampled index set, stride, sweepCoverage, hybridWeights, rerank settings,
+# batching mode. Frozen offline runs use zero network.
+
+stable_defaults:
+  embedding:
+    provider_kind: bailian          # AUTHORIZED deviation from local-first
+    model: text-embedding-v4        # pinned; vector payload hash recorded
+    dimensions: 1024
+    batch_size: 8
+    instruct: ""
+    encoding: float
+    surface: dashscope              # split: text_type=query/document
+  retrieval:
+    top_k: 100
+    sweep_candidates: 90
+    weights: {lexical: 0.35, embedding: 0.65, rerank: 0.0}
+    rerank: off
+    max_embedding_chars: 100000
+  ocr: local-paddleocr              # UNAVAILABLE in this environment; OCR subset
+                                    # reported as pdf_ocr_unavailable, never pooled
+  vector_source: frozen             # vectors/frozen-vectors.json (payload hash in
+                                    # the report); fake/hash vectors are NEVER
+                                    # acceptable for the NFR-02 claim
+
+# Recall runs (enter the 120k / 8k denominators; never pooled).
+recall_runs:
+  - id: primary-120k-shared
+    budget_runes: 120000
+    batching_mode: shared           # local server without text_type
+    max_embedding_requests: 24      # 24*8-1 = 191 slots -> 100 lexical + 90 sweep + 1 spare
+  - id: primary-120k-split
+    budget_runes: 120000
+    batching_mode: split            # DashScope/Bailian text_type=query/document
+    max_embedding_requests: 25      # (25-1)*8 = 192 slots; query request reserved
+  - id: stress-8k-shared
+    budget_runes: 8000
+    batching_mode: shared
+    max_embedding_requests: 24
+  - id: stress-8k-split
+    budget_runes: 8000
+    batching_mode: split
+    max_embedding_requests: 25
+
+# Budget-invariant runs (protocol §5): NOT part of the recall denominator.
+# Run each in BOTH batching modes; assert shares stay nonnegative and within
+# budget, sweepSlots <= sweepCandidates, lexicalSlots <= topK, request count
+# ceil((1+C)/B) shared / 1+ceil(C/B) split, never above maxEmbeddingRequests.
+budget_runs:
+  - id: budget-starved
+    max_embedding_requests: 1
+    purpose: >
+      shared: slotBudget 7 -> sweepSlots 3 / lexicalSlots 4.
+      split: slotBudget 0 -> lexical_only fallback, zero embedding requests.
+  - id: char-bound
+    max_embedding_requests: 25
+    max_embedding_chars: 20000
+    document: fixture:article-charbound   # ~750-rune single-sentence segments
+    purpose: >
+      charBudget ~19,980 binds before the 190 request slots: lexical share
+      fits ~14 passages, sweep share ~12 (of 90 requested). The sweep must
+      still receive >= 1 passage of capacity; report which share shrank.
+  - id: high-budget
+    max_embedding_requests: 25
+    top_k: 100
+    sweep_candidates: 90
+    purpose: >
+      sweep never exceeds sweepCandidates even with a large request budget;
+      split mode reserves the query request separately.
+
+# Subset reporting rules (protocol §2):
+# - paraphrase (BQ-018/BQ-019): report separately; lexical misses must not
+#   hide inside aggregate recall. Both golds are ON sampled sweep indices;
+#   report zero-overlap recall AT the recorded sweepCoverage.
+# - distractor (BQ-020/BQ-021): report separately from the degenerate-lexical
+#   subset. BQ-021 is OFF every sampled index: the coverage-limited miss is
+#   an expected, reported outcome - never drop it from the denominator.
+# - ocr-provisional (BQ-025/BQ-026): excluded from the primary denominator
+#   until local PaddleOCR output is verified against the expected text and
+#   a human confirms the labels; report independently with extractor version.
+# - negative set: see negative-cases.yaml; never mixed into recall.

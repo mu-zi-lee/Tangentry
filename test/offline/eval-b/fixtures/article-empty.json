@@ -1,0 +1,9 @@
+{
+  "ContentID": "fixture:article-empty",
+  "Kind": "article",
+  "Version": "content-revision:1",
+  "Blocks": [],
+  "Posts": null,
+  "Tracks": null,
+  "Pages": null
+}

@@ -59,7 +59,16 @@ func TestProgressUpgradeKeepsVersionFourData(t *testing.T) {
 		t.Fatal(err)
 	}
 	items, err := store.List(ctx)
-	if err != nil || len(items) != 1 || !reflect.DeepEqual(items[0], item) {
+	if err != nil || len(items) != 1 {
+		t.Fatal("library changed")
+	}
+	// Migration 84 backfills server-owned version fields; every original
+	// field must remain identical.
+	if items[0].ContentRevision != 1 || items[0].ContentHash == "" {
+		t.Fatal("content version backfill missing")
+	}
+	items[0].ContentRevision, items[0].ContentHash = 0, ""
+	if !reflect.DeepEqual(items[0], item) {
 		t.Fatal("library changed")
 	}
 	jobs, err := store.ListDownloads(ctx)

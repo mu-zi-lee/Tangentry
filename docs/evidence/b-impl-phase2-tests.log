@@ -1,0 +1,29 @@
+# Phase 2 new tests: verbose listing (-count=1)
+$ go test ./internal/retrieval/ ./internal/adapters/sqlite/ -count=1 -run 'BT03|BT19|BT28|BT38|SnapshotHash|SnapshotRange|RetrievalSource' -v
+=== RUN   TestSnapshotHashDeterminism
+--- PASS: TestSnapshotHashDeterminism (0.00s)
+=== RUN   TestSnapshotRange
+--- PASS: TestSnapshotRange (0.00s)
+=== RUN   TestBT19_StaleVersion
+--- PASS: TestBT19_StaleVersion (0.00s)
+PASS
+ok  	tangentry/internal/retrieval	0.005s
+=== RUN   TestBT38_ContentRevisionMigration
+--- PASS: TestBT38_ContentRevisionMigration (0.01s)
+=== RUN   TestBT38_FreshDatabaseVersioning
+--- PASS: TestBT38_FreshDatabaseVersioning (0.03s)
+=== RUN   TestBT38_SingleColumnOwner
+--- PASS: TestBT38_SingleColumnOwner (0.00s)
+=== RUN   TestBT38_OldDumpFixtureSanity
+--- PASS: TestBT38_OldDumpFixtureSanity (0.00s)
+=== RUN   TestBT03_SubtitleMiddleCue
+--- PASS: TestBT03_SubtitleMiddleCue (0.08s)
+=== RUN   TestBT19_StaleAfterUpdate
+--- PASS: TestBT19_StaleAfterUpdate (0.03s)
+=== RUN   TestBT28_RevisionInvalidation
+--- PASS: TestBT28_RevisionInvalidation (0.03s)
+=== RUN   TestRetrievalSourceDiscussionAndReadRange
+--- PASS: TestRetrievalSourceDiscussionAndReadRange (0.03s)
+PASS
+ok  	tangentry/internal/adapters/sqlite	0.224s
+EXIT_CODE:0

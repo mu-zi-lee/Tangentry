@@ -1,0 +1,23 @@
+# Phase 3 gate extra: two-run determinism (normalized outcomes)
+EXIT_CODE:0 (0 = identical)
+PASS count: 20 per run
+--- PASS: TestBT04_TextLayerStored
+--- PASS: TestBT04_OCRFallback
+--- PASS: TestBT27_PDFVariants
+--- PASS: TestBT28_HashChangeInvalidates
+--- PASS: TestBT37_LocalFirstOCR
+--- PASS: TestPDFExtractionConcurrency
+--- PASS: TestBT34_CloudJobFlow
+--- PASS: TestBT34_CloudFailures
+--- PASS: TestBT34_TokenRedaction
+--- PASS: TestBT37_CloudGuards
+--- PASS: TestBT34_LocalOCR
+--- PASS: TestBT04_NativeTextLayer
+--- PASS: TestBT27_NativeFailures
+--- PASS: TestNativeEmptyPage
+--- PASS: TestNoteSearchAndExportMatchLocalSourceWithoutSearchingURLs
+--- PASS: TestBT04_PDFEndToEnd
+--- PASS: TestBT28_PDFHashChange
+--- PASS: TestPDFPageTextSchema
+--- PASS: TestBT28_RevisionInvalidation
+--- PASS: TestPDFAnchorMigrationPreservesArticleAnchorsAndAllLegacyColumns
