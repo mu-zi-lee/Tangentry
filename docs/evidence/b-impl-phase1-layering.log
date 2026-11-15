@@ -1,0 +1,13 @@
+# Phase 1 gate 3: layering + vet + A-budget read-only proof
+$ cd src && go test ./internal/layering -count=1
+ok  	tangentry/internal/layering	0.031s
+EXIT_CODE:0
+
+$ cd src && go vet ./internal/retrieval/
+EXIT_CODE:0
+
+$ git diff main -- src/internal/ai/budget.go src/internal/ai/ledger.go src/internal/adapters/aichat/budget.go
+EXIT_CODE:0 (empty output = A budget untouched)
+
+$ git diff main --stat -- src/internal/ai/ src/internal/adapters/aichat/protocol.go
+EXIT_CODE:0 (empty output = no A-side changes)

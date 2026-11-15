@@ -1,0 +1,58 @@
+# Phase 1 gate 2: full Go suite (-count=1)
+$ cd src && go test ./... -count=1
+ok  	tangentry/cmd/tangentry-desktop	1.549s
+?   	tangentry/cmd/tangentry-mcp	[no test files]
+?   	tangentry/cmd/tangentry-server	[no test files]
+ok  	tangentry/internal/adapters/aichat	3.215s
+ok  	tangentry/internal/adapters/articles	1.273s
+ok  	tangentry/internal/adapters/feeds	0.770s
+ok  	tangentry/internal/adapters/filesystem	0.270s
+?   	tangentry/internal/adapters/htmlimage	[no test files]
+?   	tangentry/internal/adapters/papers	[no test files]
+ok  	tangentry/internal/adapters/platforms/bilibili	2.013s
+ok  	tangentry/internal/adapters/platforms/discourse	0.939s
+ok  	tangentry/internal/adapters/platforms/douyin	0.011s
+ok  	tangentry/internal/adapters/platforms/xiaohongshu	0.156s
+ok  	tangentry/internal/adapters/platforms/xiaoyuzhou	0.078s
+ok  	tangentry/internal/adapters/platforms/youtube	0.108s
+ok  	tangentry/internal/adapters/sqlite	4.494s
+ok  	tangentry/internal/adapters/storage/local	0.008s
+ok  	tangentry/internal/adapters/storage/webdav	0.363s
+ok  	tangentry/internal/adapters/tools	5.573s
+ok  	tangentry/internal/agent	0.012s
+ok  	tangentry/internal/agent/gateway	0.220s
+ok  	tangentry/internal/agent/mcp	0.326s
+ok  	tangentry/internal/ai	0.498s
+ok  	tangentry/internal/app	0.494s
+ok  	tangentry/internal/articles	0.007s
+ok  	tangentry/internal/automaticsubtitles	0.015s
+ok  	tangentry/internal/automaticsubtitles/worker	0.007s
+ok  	tangentry/internal/backup	2.163s
+?   	tangentry/internal/config	[no test files]
+ok  	tangentry/internal/content	0.007s
+ok  	tangentry/internal/credentials	0.032s
+ok  	tangentry/internal/desktop	0.006s
+ok  	tangentry/internal/discovery	0.063s
+?   	tangentry/internal/documents	[no test files]
+ok  	tangentry/internal/downloads	1.354s
+ok  	tangentry/internal/favoritesync	0.406s
+?   	tangentry/internal/history	[no test files]
+?   	tangentry/internal/jobs	[no test files]
+ok  	tangentry/internal/layering	0.096s
+ok  	tangentry/internal/netpolicy	0.015s
+ok  	tangentry/internal/notes	1.833s
+ok  	tangentry/internal/papers	0.013s
+ok  	tangentry/internal/platformfetch	0.009s
+ok  	tangentry/internal/playback	3.038s
+?   	tangentry/internal/preferences	[no test files]
+ok  	tangentry/internal/readingprogress	0.489s
+ok  	tangentry/internal/readstate	0.011s
+ok  	tangentry/internal/retrieval	8.245s
+ok  	tangentry/internal/server	2.003s
+ok  	tangentry/internal/subscriptions	1.968s
+ok  	tangentry/internal/subtitles	0.010s
+ok  	tangentry/internal/transcription	0.699s
+ok  	tangentry/internal/transport/http	2.974s
+?   	tangentry/web	[no test files]
+?   	tangentry/web/tests/server	[no test files]
+EXIT_CODE:0

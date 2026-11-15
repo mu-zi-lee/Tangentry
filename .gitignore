@@ -40,3 +40,6 @@ bin/
 /UI-REDESIGN-PROGRESS.md
 IMPLEMENTATION-GUIDE.md
 /src/data/e2e
+
+# Python bytecode (eval validators)
+__pycache__/

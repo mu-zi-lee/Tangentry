@@ -1,7 +1,11 @@
 # B · Hybrid question-relevant retrieval: implementation and test plan
 
-**Status: proposed; independent review and approval pending. No retrieval code
-exists in this branch.** This plan covers FR-02, NFR-02, INV-04 and INV-05. The
+**Status: approved.** PR #2 (`owner/b-retrieval`) review
+[5897467590](https://github.com/orangesummertime/CS5351_SE_Group2/pull/2#pullrequestreview-5897467590)
+by orangesummertime (non-author), APPROVED at `2026-11-13T20:19:58Z` on commit
+`da21804`, merged into `main` as merge commit `83c7726` (2026-11-14). No
+retrieval code exists in this branch yet. This plan covers FR-02, NFR-02, INV-04
+and INV-05. The
 design rationale is in [ADR-002](../architecture/adr/002-question-relevant-retrieval.md);
 the full-chain code map is in [the context audit](../evidence/b-context-audit.md).
 
@@ -785,3 +789,14 @@ a non-author reviewer records a decision on this plan, the ADR, the hybrid
 model/budget, the passage contract, the PDF extraction/store design and the test
 design. The current status is `pending`; this document is not evidence of working
 retrieval.
+
+**Approval recorded (2026-11-14, Phase 0):** the gate above was satisfied by PR #2
+review
+[5897467590](https://github.com/orangesummertime/CS5351_SE_Group2/pull/2#pullrequestreview-5897467590)
+by orangesummertime (non-author), APPROVED at `2026-11-13T20:19:58Z` on head
+`da21804bbc7154ebb60d1c1769294b2dea56da43`; merged into `main` as
+`83c7726fab2dd06006df12db4a2f8e01bae9d2cc` on 2026-11-14. The `pending` sentence
+above is retained as history; the authoritative status is the header. Final
+implementation acceptance still requires a non-author human review of the
+implementation PR. Verification evidence:
+`docs/evidence/b-impl-phase0-approval.log` and `b-impl-phase0-approval.json`.

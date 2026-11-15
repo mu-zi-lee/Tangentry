@@ -1,0 +1,13 @@
+# Phase 5 gate 3: layering + vet + read-only proofs
+$ cd src && go test ./internal/layering -count=1
+ok  	tangentry/internal/layering	0.033s
+EXIT_CODE:0
+
+$ go vet ./internal/retrieval/ ./internal/ai/ ./internal/transport/http/ ./internal/app/
+EXIT_CODE:0
+
+$ git diff main -- A budget files + protocol.go (must be empty)
+EXIT_CODE:0
+
+$ gofmt -l (changed packages)
+EXIT_CODE:0 (empty = formatted)

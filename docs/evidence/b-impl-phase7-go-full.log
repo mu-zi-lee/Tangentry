@@ -1,0 +1,59 @@
+ok  	tangentry/cmd/tangentry-desktop	1.622s
+?   	tangentry/cmd/tangentry-mcp	[no test files]
+?   	tangentry/cmd/tangentry-server	[no test files]
+ok  	tangentry/internal/adapters/aichat	3.538s
+ok  	tangentry/internal/adapters/articles	1.079s
+ok  	tangentry/internal/adapters/feeds	0.789s
+ok  	tangentry/internal/adapters/filesystem	0.212s
+?   	tangentry/internal/adapters/htmlimage	[no test files]
+?   	tangentry/internal/adapters/papers	[no test files]
+ok  	tangentry/internal/adapters/pdftext	1.582s
+ok  	tangentry/internal/adapters/platforms/bilibili	2.119s
+ok  	tangentry/internal/adapters/platforms/discourse	0.812s
+ok  	tangentry/internal/adapters/platforms/douyin	0.025s
+ok  	tangentry/internal/adapters/platforms/xiaohongshu	0.139s
+ok  	tangentry/internal/adapters/platforms/xiaoyuzhou	0.056s
+ok  	tangentry/internal/adapters/platforms/youtube	0.122s
+ok  	tangentry/internal/adapters/sqlite	5.076s
+ok  	tangentry/internal/adapters/storage/local	0.006s
+ok  	tangentry/internal/adapters/storage/webdav	0.375s
+ok  	tangentry/internal/adapters/tools	5.644s
+ok  	tangentry/internal/agent	0.013s
+ok  	tangentry/internal/agent/gateway	0.226s
+ok  	tangentry/internal/agent/mcp	0.389s
+ok  	tangentry/internal/ai	0.577s
+ok  	tangentry/internal/app	0.594s
+ok  	tangentry/internal/articles	0.007s
+ok  	tangentry/internal/automaticsubtitles	0.016s
+ok  	tangentry/internal/automaticsubtitles/worker	0.007s
+ok  	tangentry/internal/backup	2.084s
+?   	tangentry/internal/config	[no test files]
+ok  	tangentry/internal/content	0.011s
+ok  	tangentry/internal/credentials	0.032s
+ok  	tangentry/internal/desktop	0.010s
+ok  	tangentry/internal/discovery	0.069s
+?   	tangentry/internal/documents	[no test files]
+ok  	tangentry/internal/downloads	1.414s
+ok  	tangentry/internal/favoritesync	0.445s
+?   	tangentry/internal/history	[no test files]
+?   	tangentry/internal/jobs	[no test files]
+ok  	tangentry/internal/layering	0.088s
+ok  	tangentry/internal/netpolicy	0.007s
+ok  	tangentry/internal/notes	1.880s
+ok  	tangentry/internal/papers	0.008s
+ok  	tangentry/internal/platformfetch	0.005s
+ok  	tangentry/internal/playback	3.030s
+?   	tangentry/internal/preferences	[no test files]
+ok  	tangentry/internal/readingprogress	0.520s
+ok  	tangentry/internal/readstate	0.005s
+ok  	tangentry/internal/retrieval	8.835s
+ok  	tangentry/internal/server	1.967s
+ok  	tangentry/internal/subscriptions	2.060s
+ok  	tangentry/internal/subtitles	0.015s
+ok  	tangentry/internal/transcription	0.804s
+ok  	tangentry/internal/transport/http	3.444s
+?   	tangentry/web	[no test files]
+?   	tangentry/web/tests/server	[no test files]
+exit=0
+ok  	tangentry/internal/layering	0.030s
+layering exit=0

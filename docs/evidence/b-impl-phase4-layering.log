@@ -1,0 +1,22 @@
+# Phase 4 gate 3: layering + vet + read-only proofs
+$ cd src && go test ./internal/layering -count=1
+ok  	tangentry/internal/layering	0.034s
+EXIT_CODE:0
+
+$ go vet ./internal/retrieval/ ./internal/adapters/aichat/ ./internal/adapters/sqlite/
+EXIT_CODE:0
+
+$ git diff main -- A budget files + protocol.go (must be empty)
+EXIT_CODE:0
+
+$ grep reserveCompletion in B adapters (comment only)
+src/internal/adapters/aichat/embedding.go:24:// (reserveCompletion is not called here).
+
+$ gofmt -l (changed packages)
+EXIT_CODE:0 (empty = formatted)
+
+$ published migrations unchanged (082/083/084/085 added by B)
+ .../adapters/sqlite/migrations/082_pdf_page_text.sql | 20 ++++++++++++++++++++
+ .../sqlite/migrations/084_content_revision.sql       |  6 ++++++
+ 2 files changed, 26 insertions(+)
+EXIT_CODE:0

@@ -1,0 +1,8 @@
+# Phase 3 gate 1: focused packages (-count=1)
+$ cd src && go test ./internal/retrieval/... ./internal/ai/... ./internal/transport/http/... ./internal/adapters/pdftext/ ./internal/adapters/sqlite/ -count=1
+ok  	tangentry/internal/retrieval	7.751s
+ok  	tangentry/internal/ai	0.312s
+ok  	tangentry/internal/transport/http	2.695s
+ok  	tangentry/internal/adapters/pdftext	1.160s
+ok  	tangentry/internal/adapters/sqlite	3.784s
+EXIT_CODE:0

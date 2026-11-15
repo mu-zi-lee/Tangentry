@@ -5,9 +5,18 @@ import (
 
 	"tangentry/internal/ai"
 	"tangentry/internal/automaticsubtitles"
+	"tangentry/internal/retrieval"
 	"tangentry/internal/subtitles"
 	"tangentry/internal/transcription"
 )
+
+// RetrievalSettingsService persists B's embedding/rerank configuration and
+// applies it at runtime. Responses are masked (hasKey only); keys are
+// write-only inputs.
+type RetrievalSettingsService interface {
+	Get(ctx context.Context) (retrieval.MaskedSettings, error)
+	Save(ctx context.Context, input retrieval.EmbeddingSettings) (retrieval.MaskedSettings, error)
+}
 
 type AIService interface {
 	Status() ai.Status

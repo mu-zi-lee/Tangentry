@@ -1,0 +1,100 @@
+{
+  "fetched_at_utc": "2026-11-14",
+  "source": "GitHub REST API (read-only GET, unauthenticated)",
+  "pr": {
+    "number": 2,
+    "title": "Owner B: hybrid retrieval, configurable embeddings, and PDF/PaddleOCR review package",
+    "state": "closed",
+    "merged": true,
+    "merged_at": "2026-11-14T03:02:32Z",
+    "merge_commit_sha": "83c7726fab2dd06006df12db4a2f8e01bae9d2cc",
+    "author": "Wjq1024",
+    "head_sha": "da21804bbc7154ebb60d1c1769294b2dea56da43",
+    "head_ref": "owner/b-retrieval",
+    "base_sha": "ec7ab55ef701e41f61b0573d996556b4c88f622d",
+    "base_ref": "main",
+    "url": "https://github.com/orangesummertime/CS5351_SE_Group2/pull/2"
+  },
+  "approved_review": {
+    "id": 5897467590,
+    "reviewer": "orangesummertime",
+    "state": "APPROVED",
+    "submitted_at": "2026-11-13T20:19:58Z",
+    "commit_id": "da21804bbc7154ebb60d1c1769294b2dea56da43",
+    "html_url": "https://github.com/orangesummertime/CS5351_SE_Group2/pull/2#pullrequestreview-5897467590",
+    "body": "Technical re-review of `da21804`: approved. The merge reconciliation preserves all existing A log entries and requirement objects, retains contribution records 010–012, and contains no product-source difference from main. The subsequent commit only appends B's review/session record. YAML parsing, unique-ID checks, whitespace validation and the complete tracked-tree text scan pass. Previous design findings remain addressed; no further source change is requested.\n\nThis review did not open owner-local exports or independently rerun the reported regression suite.\n\n— Kefan CHEN"
+  },
+  "review_history_summary": [
+    {
+      "id": 5873209475,
+      "reviewer": "orangesummertime",
+      "state": "DISMISSED",
+      "submitted_at": "2026-11-12T10:58:48Z",
+      "commit_id": "55ec38bed49808671edd2835b5573b739351ded4"
+    },
+    {
+      "id": 5877012547,
+      "reviewer": "orangesummertime",
+      "state": "DISMISSED",
+      "submitted_at": "2026-11-12T15:21:32Z",
+      "commit_id": "78efdcaf47ff7ec74f455451c9934fe10df1b1cc"
+    },
+    {
+      "id": 5877534488,
+      "reviewer": "orangesummertime",
+      "state": "DISMISSED",
+      "submitted_at": "2026-11-12T15:51:02Z",
+      "commit_id": "66fc582cd16003bba3bcbd770af872cb6e4ecc5d"
+    },
+    {
+      "id": 5878026493,
+      "reviewer": "orangesummertime",
+      "state": "DISMISSED",
+      "submitted_at": "2026-11-12T16:21:21Z",
+      "commit_id": "062a21d9edd617cbf10c435774a9a07e69f6f386"
+    },
+    {
+      "id": 5883441555,
+      "reviewer": "orangesummertime",
+      "state": "DISMISSED",
+      "submitted_at": "2026-11-12T23:12:07Z",
+      "commit_id": "d37fe93a0f685ae47079939ded6449de068e85ef"
+    },
+    {
+      "id": 5885065511,
+      "reviewer": "orangesummertime",
+      "state": "COMMENTED",
+      "submitted_at": "2026-11-13T02:16:35Z",
+      "commit_id": "70d725d0f67919d595806353867c380c7d34542f"
+    },
+    {
+      "id": 5886286992,
+      "reviewer": "orangesummertime",
+      "state": "COMMENTED",
+      "submitted_at": "2026-11-13T04:48:24Z",
+      "commit_id": "257c70ba6822b93fea457f50fa85e19e7bb3e345"
+    },
+    {
+      "id": 5886632749,
+      "reviewer": "orangesummertime",
+      "state": "COMMENTED",
+      "submitted_at": "2026-11-13T05:31:37Z",
+      "commit_id": "077e93b4bc302c82f7c424339db477b59f944f64"
+    },
+    {
+      "id": 5897067743,
+      "reviewer": "orangesummertime",
+      "state": "DISMISSED",
+      "submitted_at": "2026-11-13T19:47:40Z",
+      "commit_id": "33016ce3351007eabf13cdd65c3e99df2fa14b8e"
+    },
+    {
+      "id": 5897467590,
+      "reviewer": "orangesummertime",
+      "state": "APPROVED",
+      "submitted_at": "2026-11-13T20:19:58Z",
+      "commit_id": "da21804bbc7154ebb60d1c1769294b2dea56da43"
+    }
+  ],
+  "non_author_check": "reviewer orangesummertime != author Wjq1024"
+}

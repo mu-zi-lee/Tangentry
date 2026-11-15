@@ -1,0 +1,6 @@
+{
+  "arch": "amd64",
+  "go_version": "go1.27.1",
+  "harness": "test/offline/eval-b/replay",
+  "os": "linux"
+}

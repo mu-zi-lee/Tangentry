@@ -132,6 +132,10 @@ func (h *aiHandler) aiChat(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, context.Canceled) {
 			return
 		}
+		if se, ok := retrievalStatusError(err); ok {
+			writeRetrievalStatus(w, se.Status, result.Retrieval)
+			return
+		}
 		status, body := classifyChatError(err)
 		writeAIBudgetError(w, status, body, result.Budget, chatPartial(result))
 		return
@@ -152,6 +156,10 @@ func (h *aiHandler) aiChatStream(w http.ResponseWriter, r *http.Request, input a
 		result, err := h.ai.AI.Chat(r.Context(), input)
 		if err != nil {
 			if errors.Is(err, context.Canceled) {
+				return
+			}
+			if se, ok := retrievalStatusError(err); ok {
+				writeRetrievalStatus(w, se.Status, result.Retrieval)
 				return
 			}
 			status, body := classifyChatError(err)
@@ -182,6 +190,14 @@ func (h *aiHandler) aiChatStream(w http.ResponseWriter, r *http.Request, input a
 	if err != nil {
 		if errors.Is(err, context.Canceled) {
 			// Client disconnected; do not attempt a terminal frame.
+			return
+		}
+		// A rejected retrieval assembly carries its distinct status and never
+		// emits event: done (B-T25).
+		if se, ok := retrievalStatusError(err); ok {
+			payload, _ := json.Marshal(retrievalTerminal(se, result.Retrieval, forwarded.String()))
+			_, _ = fmt.Fprintf(w, "data: %s\n\n", payload)
+			flusher.Flush()
 			return
 		}
 		// The stream error terminal carries the budget report and the partial

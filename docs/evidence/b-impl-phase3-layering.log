@@ -1,0 +1,18 @@
+# Phase 3 gate 3: layering + vet + read-only proofs
+$ cd src && go test ./internal/layering -count=1
+ok  	tangentry/internal/layering	0.035s
+EXIT_CODE:0
+
+$ go vet ./internal/retrieval/ ./internal/adapters/pdftext/ ./internal/adapters/sqlite/
+EXIT_CODE:0
+
+$ git diff main -- src/internal/ai/budget.go src/internal/ai/ledger.go src/internal/adapters/aichat/budget.go
+EXIT_CODE:0 (empty = A budget untouched)
+
+$ git diff main --stat -- src/internal/adapters/sqlite/migrations/ (published unchanged; 082/084 added)
+ src/internal/adapters/sqlite/migrations/084_content_revision.sql | 6 ++++++
+ 1 file changed, 6 insertions(+)
+EXIT_CODE:0
+
+$ gofmt -l (changed packages)
+EXIT_CODE:0 (empty list = formatted)

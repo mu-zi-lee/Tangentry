@@ -4,6 +4,7 @@ import (
 	"context"
 	"sync"
 
+	"tangentry/internal/retrieval"
 	"tangentry/internal/subtitles"
 )
 
@@ -39,6 +40,9 @@ type ChatRequest struct {
 	// MaxProviderCalls optionally caps started completion POSTs for this
 	// invocation. Omitted means unlimited; explicit values must be 1..100.
 	MaxProviderCalls *int `json:"maxProviderCalls,omitempty"`
+	// Retrieval is B's optional namespaced retrieval object. Omitted or
+	// Enabled=false preserves the legacy path byte-identically (B-T01).
+	Retrieval *retrieval.Request `json:"retrieval,omitempty"`
 }
 type ChatResult struct {
 	ContentID string        `json:"contentId"`
@@ -46,6 +50,8 @@ type ChatResult struct {
 	UpdatedAt int64         `json:"updatedAt"`
 	// Budget is present only for limited invocations.
 	Budget *BudgetReport `json:"budget,omitempty"`
+	// Retrieval is present only when retrieval ran (B's namespaced object).
+	Retrieval *retrieval.Response `json:"retrieval,omitempty"`
 }
 type Chatter interface {
 	Chat(context.Context, Config, string, []ChatMessage) (string, error)
@@ -104,6 +110,7 @@ type Service struct {
 	closed          bool
 	wait            sync.WaitGroup
 	saveSummaryNote func(context.Context, SummaryResult) error
+	retrievalEngine *retrieval.Engine
 }
 
 // SetSummaryNoteWriter connects the optional notes use case at the composition root.
@@ -111,5 +118,14 @@ type Service struct {
 func (s *Service) SetSummaryNoteWriter(writer func(context.Context, SummaryResult) error) {
 	s.mu.Lock()
 	s.saveSummaryNote = writer
+	s.mu.Unlock()
+}
+
+// SetRetrievalEngine connects B's optional retrieval engine at the composition
+// root. Without it, retrieval requests are not ready and the legacy chat path
+// is unchanged (B-T01).
+func (s *Service) SetRetrievalEngine(engine *retrieval.Engine) {
+	s.mu.Lock()
+	s.retrievalEngine = engine
 	s.mu.Unlock()
 }

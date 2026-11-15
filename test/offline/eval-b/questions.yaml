@@ -1,0 +1,502 @@
+# Phase-7 evaluation set for NFR-02 (hybrid retrieval).
+# CONFIRMED: human sign-off received in OpenCode session on 2026-11-14
+# (user statement: "我是人类，我签署。请你进入phase07"). Labels were AI-drafted
+# (B-AI-014) and are now confirmed by the human owner; provenance retained.
+# Frozen for Phase 7: any edit or regeneration invalidates this confirmation.
+# Regenerate (requires re-confirmation): cd test/offline/eval-b/gen && go run . -out ..
+version: 1
+status: confirmed
+generated_by: "OpenCode (Qwen4 Max Preview), AI-drafted at user request"
+generated_at: "2026-11-14"
+confirmed_by: "WANG Jiaqi (B) - human sign-off in OpenCode session"
+confirmed_at: "2026-11-14"
+confirmation_statement: "我是人类，我签署。请你进入phase07"
+protocol: "docs/evidence/b-eval-protocol.md"
+primary_denominator_rule: "answerable=true AND subset != ocr-provisional; 120k and 8k reported separately"
+questions:
+  - question_id: BQ-001
+    doc_id: "fixture:article-main"
+    question: "同步失败后默认的重试间隔是多少秒？"
+    answerable: true
+    gold_source: article
+    gold_locator: "article:266:s0-s2"
+    gold_passage_text: "同步失败后的默认重试间隔为47秒，最大重试次数为9次。重试采用指数退避，抖动上限为3秒。"
+    gold_passage_sha256: "3d13edf50e77299c74e38477f5edd0225e52acee4d7d55b3e31e70a4874860aa"
+    gold_source_version: "content-revision:1"
+    annotator: "WANG Jiaqi"
+    annotated_at: "2026-11-14"
+    subset: primary
+    position_third: middle
+    primary_denominator: true
+    gold_unit_index: 266
+    gold_sentence_range: "0-2"
+    gold_rune_range: "0-44"
+    notes: "Middle-third numeric fact; baseline head/tail misses it."
+  - question_id: BQ-002
+    doc_id: "fixture:article-main"
+    question: "多设备同时编辑时冲突如何仲裁？"
+    answerable: true
+    gold_source: article
+    gold_locator: "article:285:s0-s2"
+    gold_passage_text: "多设备冲突仲裁采用向量时钟比较，版本号大者优先落盘。仲裁结果会写入审计日志并通知全部在线设备。"
+    gold_passage_sha256: "b9b80443c94f7f5d16980c8cdec5af36e9cc8ec95f44b3515877cb5396e5969f"
+    gold_source_version: "content-revision:1"
+    annotator: "WANG Jiaqi"
+    annotated_at: "2026-11-14"
+    subset: primary
+    position_third: middle
+    primary_denominator: true
+    gold_unit_index: 285
+    gold_sentence_range: "0-2"
+    gold_rune_range: "0-47"
+    notes: "Middle-third mechanism fact."
+  - question_id: BQ-003
+    doc_id: "fixture:article-main"
+    question: "本地数据库加密的密钥派生迭代次数是多少？"
+    answerable: true
+    gold_source: article
+    gold_locator: "article:303:s0-s2"
+    gold_passage_text: "本地数据库使用SQLCipher页级加密，密钥派生迭代256000次。密钥材料仅存于设备安全区，不出本机。"
+    gold_passage_sha256: "471b038c45cba2a283c0b4f766a8c0ab957ac1f3454bd0b5fe5a7223b5b2d27a"
+    gold_source_version: "content-revision:1"
+    annotator: "WANG Jiaqi"
+    annotated_at: "2026-11-14"
+    subset: primary
+    position_third: middle
+    primary_denominator: true
+    gold_unit_index: 303
+    gold_sentence_range: "0-2"
+    gold_rune_range: "0-53"
+    notes: "Middle-third numeric fact."
+  - question_id: BQ-004
+    doc_id: "fixture:article-main"
+    question: "这份手册描述的产品内部构建代号是什么？"
+    answerable: true
+    gold_source: article
+    gold_locator: "article:2:s0-s2"
+    gold_passage_text: "本手册描述的产品代号为星舟，内部构建代号SZ-9。文档密级为内部公开，禁止外传。"
+    gold_passage_sha256: "55838742f3fe4084a16e41edfec706270770cd91e63fc73c335fcfac2b630fd9"
+    gold_source_version: "content-revision:1"
+    annotator: "WANG Jiaqi"
+    annotated_at: "2026-11-14"
+    subset: primary
+    position_third: head
+    primary_denominator: true
+    gold_unit_index: 2
+    gold_sentence_range: "0-2"
+    gold_rune_range: "0-40"
+    notes: "Head control; baseline must hit at 120k and 8k."
+  - question_id: BQ-005
+    doc_id: "fixture:article-main"
+    question: "离线导出格式SZEX使用哪种校验和？"
+    answerable: true
+    gold_source: article
+    gold_locator: "article:570:s0-s2"
+    gold_passage_text: "附录Z：离线导出格式为SZEX，校验和采用CRC32C。导出文件可用任意兼容工具打开。"
+    gold_passage_sha256: "0243022dfbe146fbafde971942790b20067172f777e39a568c0bbc8c30dfc4ab"
+    gold_source_version: "content-revision:1"
+    annotator: "WANG Jiaqi"
+    annotated_at: "2026-11-14"
+    subset: primary
+    position_third: tail
+    primary_denominator: true
+    gold_unit_index: 570
+    gold_sentence_range: "0-2"
+    gold_rune_range: "0-43"
+    notes: "Tail control; baseline must hit at 120k and 8k."
+  - question_id: BQ-006
+    doc_id: "fixture:article-main"
+    question: "增量同步的默认带宽上限是多少？"
+    answerable: true
+    gold_source: article
+    gold_locator: "article:322:s0-s2"
+    gold_passage_text: "增量同步的带宽上限默认为每秒2048KB，超出后自动降级为批量补传。带宽策略可按网络类型分别配置。"
+    gold_passage_sha256: "46dfd8d093947e262fe5ac9392144d15ed50c45a89275186f985f188abd311b8"
+    gold_source_version: "content-revision:1"
+    annotator: "WANG Jiaqi"
+    annotated_at: "2026-11-14"
+    subset: primary
+    position_third: middle
+    primary_denominator: true
+    gold_unit_index: 322
+    gold_sentence_range: "0-2"
+    gold_rune_range: "0-49"
+    notes: "Heading trap: query terms appear in a head heading; the answer is in the middle."
+  - question_id: BQ-007
+    doc_id: "fixture:article-main"
+    question: "断点续传的校验块大小是多少？"
+    answerable: true
+    gold_source: article
+    gold_locator: "article:272:s0"
+    gold_passage_text: "断点续传的校验块大小为4MB，校验失败时仅重传受损块。"
+    gold_passage_sha256: "4335a481b3e52cc71f8ebfa704e963b18cbef32ff415e44c6e8ee7f837356a90"
+    gold_source_version: "content-revision:1"
+    annotator: "WANG Jiaqi"
+    annotated_at: "2026-11-14"
+    subset: primary
+    position_third: middle
+    primary_denominator: true
+    gold_unit_index: 272
+    gold_sentence_range: "0-1"
+    gold_rune_range: "0-27"
+    notes: "Repeated gold sentence (second copy also inside the baseline blind window); dedupe must keep one copy."
+  - question_id: BQ-008
+    doc_id: "fixture:article-main"
+    question: "心跳超时判定是多少秒？"
+    answerable: true
+    gold_source: article
+    gold_locator: "article:329:s0-s2"
+    gold_passage_text: "心跳超时判定为90秒无响应，超时后连接标记为失效并触发重连。重连成功后自动补发离线队列。"
+    gold_passage_sha256: "e32c4c38716153f056108c40303e4650e71cadbb36e2669b15faeae4cdeea049"
+    gold_source_version: "content-revision:1"
+    annotator: "WANG Jiaqi"
+    annotated_at: "2026-11-14"
+    subset: primary
+    position_third: middle
+    primary_denominator: true
+    gold_unit_index: 329
+    gold_sentence_range: "0-2"
+    gold_rune_range: "0-44"
+    notes: "Middle-third numeric fact."
+  - question_id: BQ-009
+    doc_id: "fixture:subtitle-lecture"
+    question: "讲座中提到的Raft日志压缩阈值是多少条？"
+    answerable: true
+    gold_source: subtitle
+    gold_locator: "subtitle:zh:1632-1635"
+    gold_passage_text: |-
+      讲师：接下来讨论日志压缩，这是控制存储体积的关键手段。
+      讲师：Raft日志压缩阈值是五万条，超过即触发快照。
+      讲师：快照完成后旧日志可以安全删除，但要先确认多数派已持久化。
+      讲师：压缩期间写入不中断，新条目继续追加到活跃日志段。
+    gold_passage_sha256: "f25d126e43d5ccc92e038f0f5cb343bfd2539c959f119711266e2cee22501af6"
+    gold_source_version: "content-revision:1"
+    annotator: "WANG Jiaqi"
+    annotated_at: "2026-11-14"
+    subset: primary
+    position_third: middle
+    primary_denominator: true
+    gold_cue_ids: ["cue-1632", "cue-1633", "cue-1634", "cue-1635"]
+    gold_cue_range: "1632-1635"
+    notes: "Middle cue group; baseline misses."
+  - question_id: BQ-010
+    doc_id: "fixture:subtitle-lecture"
+    question: "讲座里说的租约时长默认设置为几秒？"
+    answerable: true
+    gold_source: subtitle
+    gold_locator: "subtitle:zh:1768-1771"
+    gold_passage_text: |-
+      讲师：下面讲租约机制，它用于减少不必要的选举开销。
+      讲师：默认租约时长为十五秒，续约提前三秒发起。
+      讲师：租约丢失后节点退回到普通跟随者状态，等待下一次心跳。
+      讲师：租约参数需要和心跳间隔配合调整，避免频繁抖动。
+    gold_passage_sha256: "5e0be06d6e83bd3ec3e3dc6e2b553856dbc6694f0802e6ed00fe53049264d8ae"
+    gold_source_version: "content-revision:1"
+    annotator: "WANG Jiaqi"
+    annotated_at: "2026-11-14"
+    subset: primary
+    position_third: middle
+    primary_denominator: true
+    gold_cue_ids: ["cue-1768", "cue-1769", "cue-1770", "cue-1771"]
+    gold_cue_range: "1768-1771"
+    notes: "Middle cue group; baseline misses. Wording avoids the filler bigram 是多 (single-term proximity artifact)."
+  - question_id: BQ-011
+    doc_id: "fixture:subtitle-lecture"
+    question: "这一讲的主题是什么？"
+    answerable: true
+    gold_source: subtitle
+    gold_locator: "subtitle:zh:0-3"
+    gold_passage_text: |-
+      讲师：欢迎来到分布式系统导论第十二讲。
+      本讲主题是一致性协议，重点讨论领导人选举与日志复制。
+      讲师：课程目标是理解多数派仲裁为什么能保证安全。
+      讲师：先回顾上一讲的拜占庭容错与崩溃容错的区别。
+    gold_passage_sha256: "0a71670ca4cae3354f0fa3ba0291c8ea164671398406a8390e2cc1a3949d8c47"
+    gold_source_version: "content-revision:1"
+    annotator: "WANG Jiaqi"
+    annotated_at: "2026-11-14"
+    subset: primary
+    position_third: head
+    primary_denominator: true
+    gold_cue_ids: ["cue-0000", "cue-0001", "cue-0002", "cue-0003"]
+    gold_cue_range: "0-3"
+    notes: "Head cue-group control; baseline hits at both budgets."
+  - question_id: BQ-012
+    doc_id: "fixture:subtitle-lecture"
+    question: "课后作业要求做什么？"
+    answerable: true
+    gold_source: subtitle
+    gold_locator: "subtitle:zh:3396-3399"
+    gold_passage_text: |-
+      讲师：最后布置课后任务，请认真记录。
+      讲师：课后作业是复现领导人选举实验。
+      作业下周提交，逾期不接受，实验报告需包含日志截图。
+      讲师：本讲到此结束，感谢收看，下一讲讲分布式事务。
+    gold_passage_sha256: "c3194e7f5af48ced8ab82845966a8538807382309b9d9ca9ebf3fd4171b7e47b"
+    gold_source_version: "content-revision:1"
+    annotator: "WANG Jiaqi"
+    annotated_at: "2026-11-14"
+    subset: primary
+    position_third: tail
+    primary_denominator: true
+    gold_cue_ids: ["cue-3396", "cue-3397", "cue-3398", "cue-3399"]
+    gold_cue_range: "3396-3399"
+    notes: "Tail cue-group control; baseline hits at both budgets."
+  - question_id: BQ-013
+    doc_id: "fixture:subtitle-lecture"
+    question: "脑裂场景必须用什么方式仲裁？"
+    answerable: true
+    gold_source: subtitle
+    gold_locator: "subtitle:zh:1700-1703"
+    gold_passage_text: |-
+      讲师：这里强调一个高频考点，关于分区后的仲裁规则。
+      注意：脑裂场景必须用多数派仲裁。
+      讲师：少数派一侧必须拒绝写入，否则会出现双主冲突。
+      讲师：恢复后以多数派日志为准，落后节点自动补齐。
+    gold_passage_sha256: "2da76c590e874f45fa3e64f0ae0f3e297853bf3b0ab855cfce20dba3f97ffe7d"
+    gold_source_version: "content-revision:1"
+    annotator: "WANG Jiaqi"
+    annotated_at: "2026-11-14"
+    subset: primary
+    position_third: middle
+    primary_denominator: true
+    gold_cue_ids: ["cue-1700", "cue-1701", "cue-1702", "cue-1703"]
+    gold_cue_range: "1700-1703"
+    notes: "Repeated cue (middle group labeled as gold; second copy also inside the blind window); dedupe keeps one."
+  - question_id: BQ-014
+    doc_id: "fixture:pdf-report"
+    question: "报告中峰值负载出现在第几天？"
+    answerable: true
+    gold_source: pdf
+    gold_locator: "pdf:36bbb46d131cd2c59aa1ba55a4302af13377e625bc32c9532714bfa75f8072f3:95:s0-s3"
+    gold_passage_text: "绿洲实验室年度能耗报告（虚构评估文档），第95页。本年度峰值负载出现在第213天，持续6小时。峰值期间备用回路自动投入，未发生越限告警。"
+    gold_passage_sha256: "c3b47a0f171fb377983ca07e852b98103ab20b7d189b5fd29bfe753e1bf9fc50"
+    gold_source_version: "pdf-sha256:36bbb46d131cd2c59aa1ba55a4302af13377e625bc32c9532714bfa75f8072f3;extractor=fixture-text-layer;version=eval-set-v1"
+    annotator: "WANG Jiaqi"
+    annotated_at: "2026-11-14"
+    subset: primary
+    position_third: middle
+    primary_denominator: true
+    gold_unit_index: 95
+    gold_sentence_range: "0-3"
+    gold_rune_range: "0-68"
+    notes: "Middle page (95/190); page-local gold segment."
+  - question_id: BQ-015
+    doc_id: "fixture:pdf-report"
+    question: "冷却系统改造后PUE降到了多少？"
+    answerable: true
+    gold_source: pdf
+    gold_locator: "pdf:36bbb46d131cd2c59aa1ba55a4302af13377e625bc32c9532714bfa75f8072f3:105:s0-s3"
+    gold_passage_text: "绿洲实验室年度能耗报告（虚构评估文档），第105页。冷却系统改造后PUE从1.62降到1.41。改造内容包括封闭冷通道与变频水泵，投资回收期约三十一个月。"
+    gold_passage_sha256: "c3c4faab78798cf07cb1044a2a756fb63022db5c0e6df047dfac9b82d1d3ee47"
+    gold_source_version: "pdf-sha256:36bbb46d131cd2c59aa1ba55a4302af13377e625bc32c9532714bfa75f8072f3;extractor=fixture-text-layer;version=eval-set-v1"
+    annotator: "WANG Jiaqi"
+    annotated_at: "2026-11-14"
+    subset: primary
+    position_third: middle
+    primary_denominator: true
+    gold_unit_index: 105
+    gold_sentence_range: "0-3"
+    gold_rune_range: "0-77"
+    notes: "Middle page (105/190); decimal numbers must not split sentences."
+  - question_id: BQ-016
+    doc_id: "fixture:pdf-report"
+    question: "这份报告的编号是什么？"
+    answerable: true
+    gold_source: pdf
+    gold_locator: "pdf:36bbb46d131cd2c59aa1ba55a4302af13377e625bc32c9532714bfa75f8072f3:1:s0-s3"
+    gold_passage_text: "绿洲实验室年度能耗报告（虚构评估文档），第1页。报告编号OASIS-2026-EN，密级为内部公开。本报告由能耗管理小组编制，数据截至去年十二月三十一日。"
+    gold_passage_sha256: "5bb34399c0f28bc30d92bd3918d1b5534e7de2ae2b0de32bef9573929409f0e4"
+    gold_source_version: "pdf-sha256:36bbb46d131cd2c59aa1ba55a4302af13377e625bc32c9532714bfa75f8072f3;extractor=fixture-text-layer;version=eval-set-v1"
+    annotator: "WANG Jiaqi"
+    annotated_at: "2026-11-14"
+    subset: primary
+    position_third: head
+    primary_denominator: true
+    gold_unit_index: 1
+    gold_sentence_range: "0-3"
+    gold_rune_range: "0-77"
+    notes: "Head page control (page 1)."
+  - question_id: BQ-017
+    doc_id: "fixture:pdf-report"
+    question: "原始数据存放在哪个编号的离线仓库？"
+    answerable: true
+    gold_source: pdf
+    gold_locator: "pdf:36bbb46d131cd2c59aa1ba55a4302af13377e625bc32c9532714bfa75f8072f3:190:s0-s3"
+    gold_passage_text: "绿洲实验室年度能耗报告（虚构评估文档），第190页。附录页：原始数据存放于编号D-77的离线仓库。借阅需经实验室主任审批，复制件须登记用途。"
+    gold_passage_sha256: "9b5e39dbde09f8aee9ab0f8e7141ee20012536deaa5cf3d4c25fafa1c9fd4b59"
+    gold_source_version: "pdf-sha256:36bbb46d131cd2c59aa1ba55a4302af13377e625bc32c9532714bfa75f8072f3;extractor=fixture-text-layer;version=eval-set-v1"
+    annotator: "WANG Jiaqi"
+    annotated_at: "2026-11-14"
+    subset: primary
+    position_third: tail
+    primary_denominator: true
+    gold_unit_index: 190
+    gold_sentence_range: "0-3"
+    gold_rune_range: "0-70"
+    notes: "Tail page control (page 190)."
+  - question_id: BQ-018
+    doc_id: "fixture:article-main"
+    question: "如何防止多个客户端同时修改同一条记录造成的数据损坏？"
+    answerable: true
+    gold_source: article
+    gold_locator: "article:287:s0-s3"
+    gold_passage_text: "乐观并发控制依靠版本戳完成校验，提交前比较版本戳，若发现版本戳落后则拒绝本次提交并提示重新拉取最新版本。随后由调用方决定合并策略，从而避免脏写，该机制不需要悲观锁，吞吐更高，适合读多写少的场景。压测表明冲突率低于千分之三，灰度环境已稳定运行九十天，未观察到异常。"
+    gold_passage_sha256: "ce8b6145cc7b469ca59de8c8cc122084ef912ce38cf97a49c9a8b4f5dec8209a"
+    gold_source_version: "content-revision:1"
+    annotator: "WANG Jiaqi"
+    annotated_at: "2026-11-14"
+    subset: paraphrase
+    position_third: middle
+    primary_denominator: true
+    gold_unit_index: 287
+    gold_sentence_range: "0-3"
+    gold_rune_range: "0-131"
+    notes: "AC-FR-02-19/B-T39 same-language zero-overlap paraphrase; gold placed ON a sampled sweep index; reported separately."
+  - question_id: BQ-019
+    doc_id: "fixture:article-main"
+    question: "离线状态下新建的笔记什么时候才会上传到服务器？"
+    answerable: true
+    gold_source: article
+    gold_locator: "article:334:s0-s2"
+    gold_passage_text: "Offline-created notes are queued locally and uploaded only after the next successful handshake with the relay service. The queue is flushed in creation order once connectivity is restored and the session token has been refreshed, and until then the notes remain visible on the originating device and carry a pending badge."
+    gold_passage_sha256: "b04c9880d40c804f88e515b6c55956a12799c3985de9ec94a5476d3cde2d9ce1"
+    gold_source_version: "content-revision:1"
+    annotator: "WANG Jiaqi"
+    annotated_at: "2026-11-14"
+    subset: paraphrase
+    position_third: middle
+    primary_denominator: true
+    gold_unit_index: 334
+    gold_sentence_range: "0-2"
+    gold_rune_range: "0-322"
+    notes: "AC-FR-02-19/B-T39 cross-language pair: Chinese question, English gold; ON a sampled sweep index; reported separately."
+  - question_id: BQ-020
+    doc_id: "fixture:article-distractor-on"
+    question: "冷启动阶段系统采用哪种特殊运行模式？"
+    answerable: true
+    gold_source: article
+    gold_locator: "article:456:s0-s3"
+    gold_passage_text: "预热期间设备以低速巡检方式工作，仅加载最小配置集，待温度传感器读数稳定后才切换到正常吞吐。运维手册将该过程称为暖机序列，其时长取决于环境温度与固件版本，历史均值为四分半钟。暖机结束后指示灯由橙色转为绿色，并写入一条审计事件，全程无需人工干预。"
+    gold_passage_sha256: "8ee148d657a0a6e35cc39ceff620a9d7eca88eee000a2024f191c00e187a3b96"
+    gold_source_version: "content-revision:1"
+    annotator: "WANG Jiaqi"
+    annotated_at: "2026-11-14"
+    subset: distractor
+    position_third: middle
+    primary_denominator: true
+    gold_unit_index: 456
+    gold_sentence_range: "0-3"
+    gold_rune_range: "0-121"
+    notes: "AC-FR-02-20/B-T40 distractor-saturated document; >=100 passages contain the query terms; gold is a zero-overlap middle passage; reported separately. Gold ON a sampled sweep index (reachable outcome)."
+  - question_id: BQ-021
+    doc_id: "fixture:article-distractor-off"
+    question: "灰度发布期间如何回滚到上一个稳定版本？"
+    answerable: true
+    gold_source: article
+    gold_locator: "article:455:s0-s3"
+    gold_passage_text: "值班工程师把流量切回旧集群，随后核对配置指纹一致，再逐步放开入口权重，确认监控曲线平稳后签字关闭工单。旧集群保留最近三次构建产物，切换前需校验哈希与签名，操作全程录屏留档。该流程在演练环境验证过十一次，平均耗时七分钟，未触发告警。"
+    gold_passage_sha256: "e1ae042bf1b8a0ba6da23b82e6010f4b8fb46efa5eca6e13892468f416efb665"
+    gold_source_version: "content-revision:1"
+    annotator: "WANG Jiaqi"
+    annotated_at: "2026-11-14"
+    subset: distractor
+    position_third: middle
+    primary_denominator: true
+    gold_unit_index: 455
+    gold_sentence_range: "0-3"
+    gold_rune_range: "0-115"
+    notes: "AC-FR-02-20/B-T40 distractor-saturated document; >=100 passages contain the query terms; gold is a zero-overlap middle passage; reported separately. Gold OFF every sampled sweep index (coverage-limited outcome; expected hybrid miss)."
+  - question_id: BQ-022
+    doc_id: "fixture:article-charbound"
+    question: "长文压力测试文档的编号是多少？"
+    answerable: true
+    gold_source: article
+    gold_locator: "article:103:s0"
+    gold_passage_text: "长文压力测试文档的编号是CB-77，该编号用于索引全部长文样本与对应的字符预算配置，本文档的每个段落都被刻意构造为接近八百字符上限的单句，以便在嵌入字符预算收紧时观察词法份额与语义扫描份额的收缩顺序，演练过程中记录了不同预算档位下的候选数量、请求次数与命中情况，所有曲线均归档保存，供后续回归对比使用，任何预算调整都必须重新运行完整回放并保留逐题证据，不允许事后修改黄金标签或删除未命中题目。"
+    gold_passage_sha256: "6c5b1d771ccdd46fd1152fd46e24e8ca7bc3d275921663347af3f42f4abceb76"
+    gold_source_version: "content-revision:1"
+    annotator: "WANG Jiaqi"
+    annotated_at: "2026-11-14"
+    subset: primary
+    position_third: middle
+    primary_denominator: true
+    gold_unit_index: 103
+    gold_sentence_range: "0-1"
+    gold_rune_range: "0-196"
+    notes: "Character-bound fixture: ~750-rune single-sentence segments make maxEmbeddingChars bind before request slots (see eval-configs.yaml char-bound runs)."
+  - question_id: BQ-023
+    doc_id: "fixture:article-main"
+    question: "日志保留期默认是多少天？"
+    answerable: true
+    gold_source: article
+    gold_locator: "article:259:s0-s2"
+    gold_passage_text: "运行日志默认保留30天，审计日志保留180天。过期日志由清理任务在每日低峰时段删除。"
+    gold_passage_sha256: "058450aa490850ad6e54e3bb2177ae9e97636eaa0e32499c265ba5eb244efe09"
+    gold_source_version: "content-revision:1"
+    annotator: "WANG Jiaqi"
+    annotated_at: "2026-11-14"
+    subset: primary
+    position_third: middle
+    primary_denominator: true
+    gold_unit_index: 259
+    gold_sentence_range: "0-2"
+    gold_rune_range: "0-42"
+    notes: "Middle-third numeric fact."
+  - question_id: BQ-024
+    doc_id: "fixture:subtitle-lecture"
+    question: "讲座中提到的快照传输超时是多少秒？"
+    answerable: true
+    gold_source: subtitle
+    gold_locator: "subtitle:zh:1904-1907"
+    gold_passage_text: |-
+      讲师：快照传输也有超时保护，防止慢节点拖垮整体。
+      讲师：快照传输超时设置为三十秒，超时后自动重试。
+      讲师：重试三次仍失败则标记该节点为落后，改用日志追赶。
+      讲师：传输带宽可以限速，避免挤占正常复制流量。
+    gold_passage_sha256: "d01150791d6ff8c5d1937e6f01e331f393cfea70243d85d9126c0f087b9c5887"
+    gold_source_version: "content-revision:1"
+    annotator: "WANG Jiaqi"
+    annotated_at: "2026-11-14"
+    subset: primary
+    position_third: middle
+    primary_denominator: true
+    gold_cue_ids: ["cue-1904", "cue-1905", "cue-1906", "cue-1907"]
+    gold_cue_range: "1904-1907"
+    notes: "Middle cue group; baseline misses."
+  - question_id: BQ-025
+    doc_id: "fixture:pdf-ocr-subset"
+    question: "扫描件中提到的设备巡检周期是多少天？"
+    answerable: true
+    gold_source: pdf
+    gold_locator: "pdf:b45c74439bf59bc9c651afb86454aee1da1809ed6b8dfdedbade55e137abb741:15:s0-s3"
+    gold_passage_text: "绿洲实验室年度能耗报告（虚构评估文档），第15页。设备巡检周期为14天，特殊天气后需加巡。巡检记录须双人签字确认，缺项视为未完成。"
+    gold_passage_sha256: "1396a59bc30b0ff7cb48491ea78f086267c128a4b07c44bcf454c772f3ab5f91"
+    gold_source_version: "pdf-sha256:b45c74439bf59bc9c651afb86454aee1da1809ed6b8dfdedbade55e137abb741;extractor=local-paddleocr;version=pending-verification"
+    annotator: "WANG Jiaqi"
+    annotated_at: "2026-11-14"
+    subset: ocr-provisional
+    position_third: middle
+    primary_denominator: false
+    gold_unit_index: 15
+    gold_sentence_range: "0-3"
+    gold_rune_range: "0-65"
+    notes: "PROVISIONAL: gold labeled against expected OCR text; excluded from the primary denominator until local PaddleOCR output is verified to match (normalized) and a human confirms."
+  - question_id: BQ-026
+    doc_id: "fixture:pdf-ocr-subset"
+    question: "扫描件里备用电源的切换时间要求是多少？"
+    answerable: true
+    gold_source: pdf
+    gold_locator: "pdf:b45c74439bf59bc9c651afb86454aee1da1809ed6b8dfdedbade55e137abb741:17:s0-s3"
+    gold_passage_text: "绿洲实验室年度能耗报告（虚构评估文档），第17页。备用电源切换时间不得超过50毫秒。切换试验每季度开展一次，试验报告归档保存五年。"
+    gold_passage_sha256: "15db7ba9eb0d2ec9b9b67f33cd2f1895b34872943d2799cf3a298a53637bd694"
+    gold_source_version: "pdf-sha256:b45c74439bf59bc9c651afb86454aee1da1809ed6b8dfdedbade55e137abb741;extractor=local-paddleocr;version=pending-verification"
+    annotator: "WANG Jiaqi"
+    annotated_at: "2026-11-14"
+    subset: ocr-provisional
+    position_third: middle
+    primary_denominator: false
+    gold_unit_index: 17
+    gold_sentence_range: "0-3"
+    gold_rune_range: "0-65"
+    notes: "PROVISIONAL: same OCR verification gate as BQ-025; reported independently."

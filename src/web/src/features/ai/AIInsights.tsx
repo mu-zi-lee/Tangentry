@@ -12,6 +12,8 @@ import { mergeModelLists, modelsForTask } from './modelPicker'
 import { LIMITED_CANCELLED_NOTICE, LIMITED_INCOMPLETE_NOTICE, LIMITED_INTERRUPTED_NOTICE, budgetBlocker, budgetSummaryText, callLimitField, classifyChatStreamFrame, parseCallLimit, resolveLimitedChatTerminal } from './callBudget'
 import { CallLimitField } from './CallLimitField'
 import type { AIBudgetReport } from './types'
+import { retrievalRequestFragment, type RetrievalResponse } from './retrieval'
+import { RetrievalStatus } from './RetrievalStatus'
 import './ai.css'
 
 function clock(seconds: number) { const total = Math.max(0, Math.floor(seconds)); const m = Math.floor(total / 60); return `${m}:${String(total % 60).padStart(2, '0')}` }
@@ -353,6 +355,9 @@ export function AIChatPanel({ contentId, context, revision }: { contentId: strin
   const [chatRevision, setChatRevision] = useState(revision)
   const [callLimitInput, setCallLimitInput] = useState('')
   const [budget, setBudget] = useState<AIBudgetReport | undefined>(undefined)
+  // Retrieval is opt-in; off keeps the legacy buildChatContext path untouched.
+  const [retrievalEnabled, setRetrievalEnabled] = useState(false)
+  const [retrievalResponse, setRetrievalResponse] = useState<RetrievalResponse | null>(null)
   const callLimitError = (() => { const parsed = parseCallLimit(callLimitInput); return parsed.ok ? '' : parsed.message })()
   const abort = useRef<AbortController | null>(null)
   const composer = useRef<HTMLTextAreaElement>(null)
@@ -393,7 +398,7 @@ export function AIChatPanel({ contentId, context, revision }: { contentId: strin
     if (!parsedLimit.ok) { setError(parsedLimit.message); return }
     const next = [...conversation, { role: 'user' as const, content: value }]
     follow.current = true
-    setMessages(next); setInput(''); setPending(true); setError(''); setBudget(undefined)
+    setMessages(next); setInput(''); setPending(true); setError(''); setBudget(undefined); setRetrievalResponse(null)
     const controller = new AbortController(); abort.current = controller
     // An explicitly limited run may only complete on a completed SSE frame; a
     // normal EOF after deltas without one is an interrupted result, not success.
@@ -409,15 +414,17 @@ export function AIChatPanel({ contentId, context, revision }: { contentId: strin
       if (report.status === 'usage_unknown' || report.status === 'budget_exhausted' || report.status === 'cancelled' || report.status === 'provider_error') budgetBlocked = true
     }
     try {
-      const response = await fetch('/api/ai/chat', { method: 'POST', signal: controller.signal, headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' }, body: JSON.stringify({ contentId, context, messages: next.filter(message => message.content.trim()).slice(-39), model, revision: chatRevision, ...callLimitField(parsedLimit.value) }) })
+      const response = await fetch('/api/ai/chat', { method: 'POST', signal: controller.signal, headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' }, body: JSON.stringify({ contentId, context, messages: next.filter(message => message.content.trim()).slice(-39), model, revision: chatRevision, ...callLimitField(parsedLimit.value), ...retrievalRequestFragment(retrievalEnabled) }) })
       if (!response.ok || !response.body) {
-        const body = await response.json().catch(() => ({})) as { message?: string; budget?: AIBudgetReport }
+        const body = await response.json().catch(() => ({})) as { message?: string; budget?: AIBudgetReport; retrieval?: RetrievalResponse }
         if (body.budget) { acceptBudget(body.budget) }
+        if (body.retrieval) setRetrievalResponse(body.retrieval)
         throw new Error(body.message ?? '对话暂时不可用。')
       }
       if (!response.headers.get('Content-Type')?.includes('text/event-stream')) {
-        const result = await response.json() as { messages: ChatMessage[]; budget?: AIBudgetReport }
+        const result = await response.json() as { messages: ChatMessage[]; budget?: AIBudgetReport; retrieval?: RetrievalResponse }
         if (result.budget) acceptBudget(result.budget)
+        if (result.retrieval) setRetrievalResponse(result.retrieval)
         setMessages(result.messages)
         return
       }
@@ -427,7 +434,9 @@ export function AIChatPanel({ contentId, context, revision }: { contentId: strin
       const consume = (event: string) => {
         const payload = event.split(/\r?\n/).filter(line => line.startsWith('data:')).map(line => line.slice(5).trimStart()).join('\n')
         if (!payload) return
-        const frame = classifyChatStreamFrame(JSON.parse(payload) as { delta?: string; error?: string; errorCode?: string; status?: string; budget?: AIBudgetReport; partial?: string })
+        const rawFrame = JSON.parse(payload) as { delta?: string; error?: string; errorCode?: string; status?: string; budget?: AIBudgetReport; partial?: string; retrieval?: RetrievalResponse }
+        if (rawFrame.retrieval) setRetrievalResponse(rawFrame.retrieval)
+        const frame = classifyChatStreamFrame(rawFrame)
         if (frame.status === 'completed') sawCompletedFrame = true
         if (frame.budget) acceptBudget(frame.budget)
         if (frame.terminal) {
@@ -494,7 +503,7 @@ export function AIChatPanel({ contentId, context, revision }: { contentId: strin
     if (index >= 0) void send(messages[index].content, messages.slice(0, index))
   }
   return <div className="ai-chat-panel">
-    <div className="ai-chat-actions"><span>{pending ? '正在回答' : messages.length ? '当前内容的对话' : '新对话'}</span><Button variant="quiet" iconOnly type="button" className="icon-button" title="清空对话" aria-label="清空对话" disabled={pending || messages.length === 0} onClick={() => void clear()}><Trash2 size={15}/></Button></div>
+    <div className="ai-chat-actions"><span>{pending ? '正在回答' : messages.length ? '当前内容的对话' : '新对话'}</span><label className="ai-retrieval-toggle" title="启用后由服务端检索相关原文片段（默认关闭，保持原有上下文）"><input type="checkbox" checked={retrievalEnabled} disabled={pending} onChange={event => setRetrievalEnabled(event.target.checked)}/>原文检索</label><Button variant="quiet" iconOnly type="button" className="icon-button" title="清空对话" aria-label="清空对话" disabled={pending || messages.length === 0} onClick={() => void clear()}><Trash2 size={15}/></Button></div>
     <div ref={conversation} className="ai-chat-messages" role="log" aria-label="对话记录" aria-live="polite" onScroll={event => { const node = event.currentTarget; follow.current = node.scrollHeight - node.scrollTop - node.clientHeight < 48 }}>
       {messages.length === 0 && <div className="ai-chat-empty"><MessageCircle size={23} strokeWidth={1.5} aria-hidden="true"/><h3>关于这篇内容，想了解什么？</h3><div className="ai-chat-suggestions">{suggestions.map(value => <Button variant="quiet" key={value} type="button" disabled={pending || !model || !ready} onClick={() => void send(value)}>{value}<ArrowUp size={14} aria-hidden="true"/></Button>)}</div></div>}
       {messages.map((message, index) => <article key={`${message.role}-${index}`} className={`ai-chat-message ai-chat-${message.role}`} aria-label={message.role === 'user' ? '你的提问' : 'AI 回答'}>
@@ -513,6 +522,7 @@ export function AIChatPanel({ contentId, context, revision }: { contentId: strin
     </div>
     {ready && !model && <p className="ai-chat-setup" role="status">请在<a href="/tools#ai/text">AI 设置</a>中选择对话模型。</p>}
     {budget && <p className="ai-chat-budget" role="status">{budgetSummaryText(budget)}</p>}
+    <RetrievalStatus response={retrievalResponse}/>
     <CallLimitField id="chat-call-limit" value={callLimitInput} onChange={setCallLimitInput} error={callLimitError} budget={undefined}/>
     <form className="ai-chat-composer" onSubmit={event => { event.preventDefault(); void send() }}>
       <textarea ref={composer} aria-label="输入问题" value={input} maxLength={12000} onChange={event => setInput(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); void send() } }} placeholder="围绕这篇内容提问…" rows={2}/>

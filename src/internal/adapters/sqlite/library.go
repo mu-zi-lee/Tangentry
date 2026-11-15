@@ -43,7 +43,7 @@ func (s *Store) Page(ctx context.Context, q content.Query) (content.Page, error)
 	if limit == 0 {
 		limit = -1
 	}
-	rows, err = s.db.QueryContext(ctx, `SELECT `+cardPayloadSQL("payload")+`, saved_at FROM saved_content WHERE `+where+` ORDER BY saved_at DESC, id LIMIT ? OFFSET ?`, append(args, limit, q.Offset)...)
+	rows, err = s.db.QueryContext(ctx, `SELECT `+cardPayloadSQL("payload")+`, saved_at, content_revision, content_hash FROM saved_content WHERE `+where+` ORDER BY saved_at DESC, id LIMIT ? OFFSET ?`, append(args, limit, q.Offset)...)
 	if err != nil {
 		return content.Page{}, err
 	}
@@ -51,14 +51,15 @@ func (s *Store) Page(ctx context.Context, q content.Query) (content.Page, error)
 	for rows.Next() {
 		var payload string
 		var item content.Item
-		if err := rows.Scan(&payload, &item.SavedAt); err != nil {
+		if err := rows.Scan(&payload, &item.SavedAt, &item.ContentRevision, &item.ContentHash); err != nil {
 			return content.Page{}, err
 		}
-		savedAt := item.SavedAt
+		savedAt, revision, hash := item.SavedAt, item.ContentRevision, item.ContentHash
 		if err := json.Unmarshal([]byte(payload), &item); err != nil {
 			return content.Page{}, err
 		}
 		item.SavedAt = savedAt
+		item.ContentRevision, item.ContentHash = revision, hash
 		page.Items = append(page.Items, item)
 	}
 	if err := rows.Err(); err != nil {

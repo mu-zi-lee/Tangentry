@@ -1,0 +1,90 @@
+{
+  "aggregates": [
+    {
+      "run_id": "baseline-120000",
+      "path": "baseline",
+      "budget": 120000,
+      "hits": 6,
+      "denominator": 24,
+      "recall": 0.25,
+      "blocked": false
+    },
+    {
+      "run_id": "lexical-120000",
+      "path": "lexical",
+      "budget": 120000,
+      "hits": 19,
+      "denominator": 24,
+      "recall": 0.7916666666666666,
+      "blocked": false
+    },
+    {
+      "run_id": "hybrid-split-120000",
+      "path": "hybrid",
+      "budget": 120000,
+      "hits": 23,
+      "denominator": 24,
+      "recall": 0.9583333333333334,
+      "blocked": false
+    },
+    {
+      "run_id": "hybrid-shared-120000",
+      "path": "hybrid",
+      "budget": 120000,
+      "hits": 23,
+      "denominator": 24,
+      "recall": 0.9583333333333334,
+      "blocked": false
+    },
+    {
+      "run_id": "baseline-8000",
+      "path": "baseline",
+      "budget": 8000,
+      "hits": 6,
+      "denominator": 24,
+      "recall": 0.25,
+      "blocked": false
+    },
+    {
+      "run_id": "lexical-8000",
+      "path": "lexical",
+      "budget": 8000,
+      "hits": 19,
+      "denominator": 24,
+      "recall": 0.7916666666666666,
+      "blocked": false
+    },
+    {
+      "run_id": "hybrid-split-8000",
+      "path": "hybrid",
+      "budget": 8000,
+      "hits": 23,
+      "denominator": 24,
+      "recall": 0.9583333333333334,
+      "blocked": false
+    },
+    {
+      "run_id": "hybrid-shared-8000",
+      "path": "hybrid",
+      "budget": 8000,
+      "hits": 23,
+      "denominator": 24,
+      "recall": 0.9583333333333334,
+      "blocked": false
+    }
+  ],
+  "confirmed_at": "2026-11-14",
+  "confirmed_by": "WANG Jiaqi (B) - human sign-off in OpenCode session",
+  "determinism": {
+    "byte_identical": true,
+    "run1_sha256": "563953f9fcd374219f1b5904b29aa89625ededcf819f25c53553994bd9ea90bc",
+    "run2_sha256": "563953f9fcd374219f1b5904b29aa89625ededcf819f25c53553994bd9ea90bc"
+  },
+  "frozen_vectors": true,
+  "negatives_pass": 12,
+  "negatives_total": 12,
+  "set_status": "confirmed",
+  "vector_dimensions": 1024,
+  "vector_model": "text-embedding-v4",
+  "vector_sha256": "78ce366df26f1d4324b16f62b7aed08680a5e3b936d654b0fb760386f6add2ce"
+}

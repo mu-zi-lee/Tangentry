@@ -4,14 +4,29 @@ scope: group
 baseline_commit: 45611ad0e214a2d9de6f0ec5a5aa84fc493d76f2
 note: >-
   Group registry of candidate requirements. A owns FR-01, NFR-01, INV-01,
-  INV-02 and INV-03 (provider call budget). B owns FR-02, NFR-02, INV-04 and
-  INV-05 (question-relevant retrieval). D owns FR-04 and NFR-04 (multi-content
-  comparison). B and D entries are pending independent review. Test IDs use
-  owner prefixes (A-Txx, B-Txx, D-Txx). Append entries per owner and retain
-  existing requirement and test IDs. C and E remain candidate areas in README.
-  The group confirmed implementation under A's existing plan on 2026-11-13.
-  This does not approve final implementation acceptance or the other owners'
-  requirements.
+  INV-02 and INV-03 (provider call budget). B owns FR-02, NFR-02, INV-04
+  and INV-05 (question-relevant retrieval). D owns FR-04 and NFR-04
+  (multi-content comparison).
+
+  Test IDs use owner prefixes (A-Txx, B-Txx, D-Txx). Append entries per
+  owner and retain existing requirement and test IDs; never renumber or
+  replace existing entries. C and E remain candidate areas in README,
+  with their scope, ownership and task assignments still open.
+
+  A requirements: The group confirmed implementation under A's existing
+  plan on 2026-11-13. This does not approve final implementation
+  acceptance or the other owners' requirements.
+
+  B requirements (FR-02, NFR-02, INV-04, INV-05): Approved via PR #2
+  (owner/b-retrieval), review 5897467590 by orangesummertime (non-author),
+  APPROVED at 2026-11-13T20:19:58Z on commit da21804, and merged into
+  main as merge commit 83c7726 on 2026-11-14. This approves the design
+  for implementation; final implementation acceptance still requires
+  a non-author human review of the implementation PR.
+
+  D requirements (FR-04, NFR-04): Approved for implementation via PR #8
+  (owner/d) by a non-author group member. Final implementation acceptance
+  still requires a separate non-author human review of the implementation PR.
 requirements:
   - id: FR-01
     type: functional
@@ -151,7 +166,7 @@ requirements:
   - id: FR-02
     type: functional
     owner: "WANG Jiaqi (B)"
-    approval: pending
+    approval: approved
     priority: Must
     source:
       - "../../README.md#L36"
@@ -381,7 +396,7 @@ requirements:
   - id: NFR-02
     type: nonfunctional
     owner: "WANG Jiaqi (B)"
-    approval: pending
+    approval: approved
     priority: Must
     source:
       - "../../README.md#L36"
@@ -470,7 +485,7 @@ requirements:
   - id: INV-04
     type: invariant
     owner: "WANG Jiaqi (B)"
-    approval: pending
+    approval: approved
     priority: Must
     source:
       - "../../README.md#L36"
@@ -552,7 +567,7 @@ requirements:
   - id: INV-05
     type: invariant
     owner: "WANG Jiaqi (B)"
-    approval: pending
+    approval: approved
     priority: Must
     source:
       - "../../README.md#L64-L69"

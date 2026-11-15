@@ -1,6 +1,10 @@
 # ADR-002 · Hybrid question-relevant retrieval for long-content chat
 
-- **Status:** proposed; independent human review pending. No retrieval code exists.
+- **Status:** approved. PR #2 (`owner/b-retrieval`) review
+  [5897467590](https://github.com/orangesummertime/CS5351_SE_Group2/pull/2#pullrequestreview-5897467590)
+  by orangesummertime (non-author), APPROVED at `2026-11-13T20:19:58Z` on commit
+  `da21804`, merged into `main` as merge commit `83c7726` (2026-11-14).
+  Implementation is authorized under this approval; no retrieval code exists yet.
 - **Owner:** WANG Jiaqi (B).
 - **Related:** [FR-02, NFR-02, INV-04 and INV-05](../../req/requirements.yaml), [implementation plan](../../plans/b-retrieval-preimplementation.md), [context audit](../../evidence/b-context-audit.md), [baseline](../../evidence/b-baseline.md), [evaluation protocol](../../evidence/b-eval-protocol.md), [debt register](../../debt-register.md).
 - **Baseline:** `45611ad0e214a2d9de6f0ec5a5aa84fc493d76f2`.
@@ -60,7 +64,7 @@ The full-chain audit also records two concrete gaps that shape the decision:
   a server-authoritative PDF passage needs a server-side extractor and a
   page-text store.
 
-## Decision (proposed, subject to human review)
+## Decision (approved via PR #2 review 5897467590; see Status header)
 
 Use **server-side hybrid retrieval** at **sentence/segment granularity**:
 
@@ -687,3 +691,15 @@ and B budget, sentence/segment granularity, the PDF text-layer/PaddleOCR design,
 the content-revision migration, the namespaced `retrieval` wire envelope, and
 the server-authoritative split. No approval from another branch or repository is
 carried forward.
+
+**Approval recorded (2026-11-14, Phase 0):** the gate above was satisfied by PR #2
+(`owner/b-retrieval`) review
+[5897467590](https://github.com/orangesummertime/CS5351_SE_Group2/pull/2#pullrequestreview-5897467590):
+orangesummertime (non-author; the PR author is Wjq1024) submitted an APPROVED
+review at `2026-11-13T20:19:58Z` on head `da21804bbc7154ebb60d1c1769294b2dea56da43`,
+and the PR merged into `main` as `83c7726fab2dd06006df12db4a2f8e01bae9d2cc` on
+2026-11-14. The approval covers this ADR, the implementation plan and the B
+requirement entries (FR-02, NFR-02, INV-04, INV-05). It does not constitute final
+implementation acceptance; that remains a human non-author review after the
+implementation PR. Verification evidence:
+`docs/evidence/b-impl-phase0-approval.log` and `b-impl-phase0-approval.json`.

@@ -58,6 +58,11 @@ The canonical list and expected outcomes are in
 
 ## Fixtures and evidence
 
+- **Phase-7 evaluation set (DRAFT, human confirmation pending):**
+  [`eval-b/`](eval-b/README.md) — 24 primary + 2 provisional OCR questions with
+  gold labels in protocol format, deterministic fixtures, run-config matrix
+  and negative set. AI-drafted at the user's request; WANG Jiaqi must confirm
+  every label before the NFR-02 run (`b-eval-protocol.md` §3).
 - Baseline fixtures and raw output: [`docs/evidence/b-baseline.md`](../../docs/evidence/b-baseline.md),
   [`docs/evidence/b-baseline.log`](../../docs/evidence/b-baseline.log).
 - FTS/byte/Unicode probes: [`docs/evidence/b-fts-probe.log`](../../docs/evidence/b-fts-probe.log),

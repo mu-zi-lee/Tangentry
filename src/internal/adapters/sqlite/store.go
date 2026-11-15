@@ -44,7 +44,9 @@ func (s *Store) Close() error { return s.db.Close() }
 func (s *Store) Get(ctx context.Context, id string) (content.Item, error) {
 	var payload string
 	var savedAt int64
-	err := s.db.QueryRowContext(ctx, `SELECT payload, saved_at FROM saved_content WHERE id=?`, id).Scan(&payload, &savedAt)
+	var revision int64
+	var hash string
+	err := s.db.QueryRowContext(ctx, `SELECT payload, saved_at, content_revision, content_hash FROM saved_content WHERE id=?`, id).Scan(&payload, &savedAt, &revision, &hash)
 	if errors.Is(err, sql.ErrNoRows) {
 		return content.Item{}, content.ErrNotFound
 	}
@@ -56,12 +58,13 @@ func (s *Store) Get(ctx context.Context, id string) (content.Item, error) {
 		return content.Item{}, err
 	}
 	items[0].SavedAt = savedAt
+	items[0].ContentRevision, items[0].ContentHash = revision, hash
 	s.applyArticlePreviews(ctx, items)
 	return items[0], nil
 }
 
 func (s *Store) List(ctx context.Context) ([]content.Item, error) {
-	rows, err := s.db.QueryContext(ctx, `SELECT payload, saved_at FROM saved_content ORDER BY saved_at DESC, id`)
+	rows, err := s.db.QueryContext(ctx, `SELECT payload, saved_at, content_revision, content_hash FROM saved_content ORDER BY saved_at DESC, id`)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +73,9 @@ func (s *Store) List(ctx context.Context) ([]content.Item, error) {
 	for rows.Next() {
 		var payload string
 		var savedAt int64
-		if err := rows.Scan(&payload, &savedAt); err != nil {
+		var revision int64
+		var hash string
+		if err := rows.Scan(&payload, &savedAt, &revision, &hash); err != nil {
 			return nil, err
 		}
 		var item content.Item
@@ -78,6 +83,7 @@ func (s *Store) List(ctx context.Context) ([]content.Item, error) {
 			return nil, err
 		}
 		item.SavedAt = savedAt
+		item.ContentRevision, item.ContentHash = revision, hash
 		items = append(items, item)
 	}
 	if err = rows.Err(); err != nil {
@@ -90,15 +96,20 @@ func (s *Store) List(ctx context.Context) ([]content.Item, error) {
 
 func (s *Store) Save(ctx context.Context, item content.Item) (content.Item, error) {
 	item.PreviewText = ""
+	// Revision and hash are server-owned: never trusted from the caller and
+	// never embedded in the payload (the columns are authoritative).
+	item.ContentRevision, item.ContentHash = 0, ""
 	payload, err := json.Marshal(item)
 	if err != nil {
 		return content.Item{}, err
 	}
-	_, err = s.db.ExecContext(ctx, `INSERT INTO saved_content(id,payload,saved_at) VALUES(?,?,?) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload`, item.ID, string(payload), item.SavedAt)
+	hash := itemSnapshotHash(item)
+	_, err = s.db.ExecContext(ctx, `INSERT INTO saved_content(id,payload,saved_at,content_revision,content_hash) VALUES(?,?,?,1,?)
+		ON CONFLICT(id) DO UPDATE SET payload=excluded.payload, content_revision=saved_content.content_revision+1, content_hash=excluded.content_hash`, item.ID, string(payload), item.SavedAt, hash)
 	if err != nil {
 		return content.Item{}, err
 	}
-	err = s.db.QueryRowContext(ctx, `SELECT saved_at FROM saved_content WHERE id=?`, item.ID).Scan(&item.SavedAt)
+	err = s.db.QueryRowContext(ctx, `SELECT saved_at, content_revision, content_hash FROM saved_content WHERE id=?`, item.ID).Scan(&item.SavedAt, &item.ContentRevision, &item.ContentHash)
 	return item, err
 }
 

@@ -1,0 +1,13 @@
+# Phase 2 gate 3: layering + vet + A-budget read-only proof
+$ cd src && go test ./internal/layering -count=1
+ok  	tangentry/internal/layering	0.029s
+EXIT_CODE:0
+
+$ go vet ./internal/retrieval/ ./internal/adapters/sqlite/ ./internal/content/
+EXIT_CODE:0
+
+$ git diff main -- src/internal/ai/budget.go src/internal/ai/ledger.go src/internal/adapters/aichat/budget.go
+EXIT_CODE:0 (empty = A budget untouched)
+
+$ git diff main --stat -- src/internal/adapters/sqlite/migrations/ (published migrations must be unchanged; only 084 added)
+EXIT_CODE:0

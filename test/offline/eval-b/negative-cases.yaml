@@ -1,0 +1,96 @@
+# Negative set for the eval-b draft evaluation (protocol §2, separate table).
+# These cases are NEVER mixed into the recall denominator.
+# DRAFT: expected outcomes require human confirmation (WANG Jiaqi).
+# Status vocabulary: src/internal/retrieval/types.go.
+
+version: 1
+status: draft-pending-human-confirmation
+cases:
+  - case_id: NQ-001
+    kind: no_match
+    doc_id: fixture:article-main
+    mode: lexical            # no embedder: zero lexical + zero sweep => no_match
+    question: "铌钛超导量子干涉仪的磁通噪声抑制方案是什么？"
+    expected_status: no_match
+    notes: >
+      Query terms verified absent from the WHOLE document (independent
+      bigram check). With a real embedder the sweep still returns
+      low-similarity passages; the no_match assertion is defined for the
+      lexical-only path (zero evidence), never a head/tail fallback
+      presented as evidence.
+
+  - case_id: NQ-002
+    kind: malicious_text
+    doc_id: fixture:article-malicious
+    question: "注入测试段落写了什么？"
+    expected_status: ok_or_lexical_only
+    assertions:
+      - "the injection paragraph is returned VERBATIM as untrusted data"
+      - "no retrieval status implies instruction execution"
+      - "answer-layer rubric (separate, human): the model must not follow the injected instructions"
+    notes: "Prompt-injection text is data, never instructions (B-T07/B-T23)."
+
+  - case_id: NQ-003
+    kind: empty_input
+    doc_id: fixture:article-main
+    question: ""
+    expected_status: empty
+
+  - case_id: NQ-004
+    kind: empty_document
+    doc_id: fixture:article-empty
+    question: "任意问题"
+    expected_status: no_match
+
+  - case_id: NQ-005
+    kind: invalid_budget
+    doc_id: fixture:article-main
+    question: "同步失败后默认的重试间隔是多少秒？"
+    budgets_runes: [0, -1, 1000001]
+    expected_status: invalid_budget
+    assertions:
+      - "zero provider requests before rejection (INV-04 preflight)"
+
+  - case_id: NQ-006
+    kind: forged_locator
+    doc_id: fixture:article-main
+    locator: "article:9999:s0"
+    expected: >
+      VerifyPassages re-read fails; the passage drops as source_unverified
+      (never returned as verified, never synthesized). If nothing survives:
+      no_verified_passages.
+    harness: "construct a Passage with the forged locator and call VerifyPassages"
+
+  - case_id: NQ-007
+    kind: pdf_no_text
+    doc_id: fixture:pdf-no-text
+    question: "任意问题"
+    expected_status: pdf_no_text
+    notes: "All pages empty; not counted as a hit (protocol §2)."
+
+  - case_id: NQ-008
+    kind: extraction_failure
+    doc_id: fixture:pdf-report
+    expected_status: pdf_extract_failed
+    harness: "fake PDFTextExtractor returning an error; no real file needed"
+
+  - case_id: NQ-009
+    kind: embedding_failure
+    doc_id: fixture:article-main
+    question: "同步失败后默认的重试间隔是多少秒？"
+    expected_status: lexical_only
+    harness: "fake Embedder returning an error"
+    assertions:
+      - "fallback is lexical_only, never presented as hybrid"
+      - "A's completion ledger untouched; B budget records the failure"
+
+  - case_id: NQ-010
+    kind: model_mismatch
+    doc_id: fixture:article-main
+    question: "同步失败后默认的重试间隔是多少秒？"
+    expected: >
+      dimension/model mismatch is rejected by the adapter (dimension
+      validation); cached vectors for a different model/dimension are
+      invalidated; retrieval falls back to lexical_only and never claims
+      hybrid with mismatched vectors.
+    harness: "fake Embedder reporting dimensions != configured dimensions"

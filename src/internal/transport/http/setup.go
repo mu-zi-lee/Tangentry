@@ -32,7 +32,7 @@ func New(library *content.Service, discover *discovery.Service, assets fs.FS, op
 			XiaohongshuImageItems: optionsValue.XiaohongshuImageItems,
 		},
 		Library: LibraryDependencies{Content: library, Articles: optionsValue.Articles, ArticleImageHTTP: optionsValue.ArticleImageHTTP, Documents: optionsValue.Documents},
-		AI:      AIDependencies{AI: optionsValue.AI, Transcription: optionsValue.Transcription, ModelDownloads: optionsValue.ModelDownloads, Automatic: optionsValue.Automatic},
+		AI:      AIDependencies{AI: optionsValue.AI, RetrievalSettings: optionsValue.RetrievalSettings, Transcription: optionsValue.Transcription, ModelDownloads: optionsValue.ModelDownloads, Automatic: optionsValue.Automatic},
 		Podcast: PodcastDependencies{Captions: optionsValue.PodcastCaptions, EpisodeID: optionsValue.PodcastEpisodeID, PublicCaptions: optionsValue.PublicPodcastCaptions, SavedSubtitles: optionsValue.SavedSubtitles, Inbox: optionsValue.SubscriptionInbox, Content: library},
 		Media: MediaDependencies{
 			Subtitles: optionsValue.Subtitles, SavedSubtitles: optionsValue.SavedSubtitles,

@@ -1,0 +1,73 @@
+# Phase 5 gate 4/5: frontend (unchanged; run for completeness)
+$ cd src/web && npm test -- --run
+
+> tangentry-web@0.0.3.6 test
+> vitest run --run
+
+
+ RUN  v5.0.5 /home/xenoplore/CS5351-Final/CS5351_SE_Group2/src/web
+
+(node:352974) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:353082) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ Test Files  62 passed (62)
+      Tests  251 passed (251)
+   Start at  15:19:37
+   Duration  1.44s (import 48%, transform 33%, tests 14%, worker 5%)
+
+    Isolate  62 workers spawned · ~138ms startup each (spawn + environment, per file)
+             at least ~433ms faster with isolate: false — reuses workers across files instead of one per file
+
+EXIT_CODE:0
+
+$ cd src/web && npm run build
+
+> tangentry-web@0.0.3.6 build
+> node scripts/prepare-pdf.mjs && tsc --noEmit && vite build
+
+vite v8.3.4 building client environment for production...
+transforming...
+✓ 2495 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                      1.70 kB │ gzip:   0.80 kB
+dist/assets/pdf.worker.min-CjEcRF4W.mjs          1,264.34 kB
+dist/assets/LocalVideoPlayer-DtFQldPs.css            1.62 kB │ gzip:   0.57 kB
+dist/assets/BilibiliPage-DHlWSci7.css                2.85 kB │ gzip:   0.91 kB
+dist/assets/sha2-DDiS2x7Z.css                        5.83 kB │ gzip:   1.59 kB
+dist/assets/MediaReader-C92CTvuD.css                 7.53 kB │ gzip:   1.92 kB
+dist/assets/DownloadsPage-BZV52MiV.css              17.19 kB │ gzip:   3.66 kB
+dist/assets/GlobalNotesPage-L7-lLsh0.css            21.36 kB │ gzip:   4.28 kB
+dist/assets/NotesPanel-j-7GvvWb.css                 38.17 kB │ gzip:   5.73 kB
+dist/assets/SubscriptionsPage-CAiGfUj3.css          42.07 kB │ gzip:   7.25 kB
+dist/assets/usePlaybackPosition-BjbD4I1a.css        65.59 kB │ gzip:  10.99 kB
+dist/assets/index-1vVY6yTH.css                     166.56 kB │ gzip:  28.86 kB
+dist/assets/captions-C9vbklDa.js                     0.45 kB │ gzip:   0.30 kB
+dist/assets/saveFile-BRzTunPE.js                     0.68 kB │ gzip:   0.46 kB
+dist/assets/MarkdownRenderer-BjVgpk8E.js             2.72 kB │ gzip:   1.22 kB
+dist/assets/textAnchors-Dzo4wajT.js                  2.95 kB │ gzip:   1.25 kB
+dist/assets/YouTubeReadingWorkspace-DYW8Okq2.js      3.30 kB │ gzip:   1.70 kB
+dist/assets/refresh-cw-BZB7lkg7.js                   4.83 kB │ gzip:   2.22 kB
+dist/assets/ContentReadingWorkspace-EYZaDghZ.js      5.52 kB │ gzip:   2.51 kB
+dist/assets/BilibiliPage-E9yGL8ya.js                 6.77 kB │ gzip:   2.77 kB
+dist/assets/ReadingWorkspace-vyR5NzuH.js             6.91 kB │ gzip:   3.01 kB
+dist/assets/LocalVideoPlayer-C11sjls4.js            14.46 kB │ gzip:   5.02 kB
+dist/assets/sha2-QKOoXVos.js                        18.50 kB │ gzip:   7.53 kB
+dist/assets/DownloadsPage-BpWdewDb.js               24.94 kB │ gzip:   7.09 kB
+dist/assets/GlobalNotesPage-CkJdpaqh.js             38.49 kB │ gzip:  11.78 kB
+dist/assets/NotesPanel-DZ7Uf2U9.js                  78.50 kB │ gzip:  23.82 kB
+dist/assets/SubscriptionsPage-Bc4CY1AE.js           90.83 kB │ gzip:  24.19 kB
+dist/assets/MediaReader-BhaRkNv5.js                 95.46 kB │ gzip:  29.72 kB
+dist/assets/usePlaybackPosition-DdcZt1UH.js        136.00 kB │ gzip:  42.56 kB
+dist/assets/pdf-Cstx9BdB.js                        430.24 kB │ gzip: 129.30 kB
+dist/assets/index-G2L8KFV1.js                      786.59 kB │ gzip: 232.43 kB
+
+[plugin builtin:vite-reporter] 
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 824ms
+EXIT_CODE:0

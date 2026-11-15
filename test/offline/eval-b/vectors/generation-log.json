@@ -1,0 +1,6712 @@
+{
+  "authorization_statement": "人类用户在 OpenCode 会话中显式授权（2026-11-14，选择'授权百炼通行'）：阿里云百炼 DashScope text-embedding-v4，1024维，batch 8，split text_type=query/document，密钥运行时读自 ~/.bailian/config.json 顶层 api_key（绝不落盘），花费上限 CNY 10，一次 live 生成通行后冻结向量、全部回放零网络。",
+  "authorized_at": "2026-11-14T09:21:24Z",
+  "budget_chars": 761010,
+  "budget_requests": 740,
+  "budget_status": "completed",
+  "connection_probe": {
+    "Model": "text-embedding-v4",
+    "Dimensions": 1024,
+    "OK": true
+  },
+  "document_vectors": 5876,
+  "endpoint_family": "dashscope.aliyuncs.com (DashScope text-embedding surface)",
+  "estimated_cost_cny": 0.5707305,
+  "finished_at": "2026-11-14T09:25:15Z",
+  "key_source": "~/.bailian/config.json top-level api_key (REDACTED, never logged)",
+  "provider_kind": "bailian",
+  "query_vectors": 26,
+  "request_count": 740,
+  "requests": [
+    {
+      "seq": 1,
+      "role": "",
+      "text_type": "query",
+      "model": "text-embedding-v4",
+      "batch_size": 1,
+      "http_status": 200,
+      "total_tokens": 8
+    },
+    {
+      "seq": 2,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 689
+    },
+    {
+      "seq": 3,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 615
+    },
+    {
+      "seq": 4,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 641
+    },
+    {
+      "seq": 5,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 642
+    },
+    {
+      "seq": 6,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 663
+    },
+    {
+      "seq": 7,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 636
+    },
+    {
+      "seq": 8,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 447
+    },
+    {
+      "seq": 9,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1110
+    },
+    {
+      "seq": 10,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 576
+    },
+    {
+      "seq": 11,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 615
+    },
+    {
+      "seq": 12,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 612
+    },
+    {
+      "seq": 13,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 696
+    },
+    {
+      "seq": 14,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 568
+    },
+    {
+      "seq": 15,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 573
+    },
+    {
+      "seq": 16,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 588
+    },
+    {
+      "seq": 17,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 541
+    },
+    {
+      "seq": 18,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 648
+    },
+    {
+      "seq": 19,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1423
+    },
+    {
+      "seq": 20,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 565
+    },
+    {
+      "seq": 21,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 559
+    },
+    {
+      "seq": 22,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 576
+    },
+    {
+      "seq": 23,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 628
+    },
+    {
+      "seq": 24,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 732
+    },
+    {
+      "seq": 25,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 606
+    },
+    {
+      "seq": 26,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 632
+    },
+    {
+      "seq": 27,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 566
+    },
+    {
+      "seq": 28,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 684
+    },
+    {
+      "seq": 29,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 987
+    },
+    {
+      "seq": 30,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 590
+    },
+    {
+      "seq": 31,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 518
+    },
+    {
+      "seq": 32,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 541
+    },
+    {
+      "seq": 33,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 621
+    },
+    {
+      "seq": 34,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 538
+    },
+    {
+      "seq": 35,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 749
+    },
+    {
+      "seq": 36,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1108
+    },
+    {
+      "seq": 37,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 692
+    },
+    {
+      "seq": 38,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 577
+    },
+    {
+      "seq": 39,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 604
+    },
+    {
+      "seq": 40,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1106
+    },
+    {
+      "seq": 41,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 649
+    },
+    {
+      "seq": 42,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1032
+    },
+    {
+      "seq": 43,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 635
+    },
+    {
+      "seq": 44,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 559
+    },
+    {
+      "seq": 45,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1058
+    },
+    {
+      "seq": 46,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 685
+    },
+    {
+      "seq": 47,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 691
+    },
+    {
+      "seq": 48,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 580
+    },
+    {
+      "seq": 49,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 718
+    },
+    {
+      "seq": 50,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 699
+    },
+    {
+      "seq": 51,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1020
+    },
+    {
+      "seq": 52,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 600
+    },
+    {
+      "seq": 53,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 745
+    },
+    {
+      "seq": 54,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 621
+    },
+    {
+      "seq": 55,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1425
+    },
+    {
+      "seq": 56,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 632
+    },
+    {
+      "seq": 57,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 589
+    },
+    {
+      "seq": 58,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 961
+    },
+    {
+      "seq": 59,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 674
+    },
+    {
+      "seq": 60,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 972
+    },
+    {
+      "seq": 61,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 584
+    },
+    {
+      "seq": 62,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 539
+    },
+    {
+      "seq": 63,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 764
+    },
+    {
+      "seq": 64,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1482
+    },
+    {
+      "seq": 65,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 601
+    },
+    {
+      "seq": 66,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 623
+    },
+    {
+      "seq": 67,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 620
+    },
+    {
+      "seq": 68,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 540
+    },
+    {
+      "seq": 69,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 521
+    },
+    {
+      "seq": 70,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 619
+    },
+    {
+      "seq": 71,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 643
+    },
+    {
+      "seq": 72,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 631
+    },
+    {
+      "seq": 73,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1164
+    },
+    {
+      "seq": 74,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 617
+    },
+    {
+      "seq": 75,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 596
+    },
+    {
+      "seq": 76,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 582
+    },
+    {
+      "seq": 77,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 502
+    },
+    {
+      "seq": 78,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 611
+    },
+    {
+      "seq": 79,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 642
+    },
+    {
+      "seq": 80,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 633
+    },
+    {
+      "seq": 81,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 646
+    },
+    {
+      "seq": 82,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 645
+    },
+    {
+      "seq": 83,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1085
+    },
+    {
+      "seq": 84,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 629
+    },
+    {
+      "seq": 85,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 628
+    },
+    {
+      "seq": 86,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 657
+    },
+    {
+      "seq": 87,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 654
+    },
+    {
+      "seq": 88,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1088
+    },
+    {
+      "seq": 89,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1074
+    },
+    {
+      "seq": 90,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 593
+    },
+    {
+      "seq": 91,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 584
+    },
+    {
+      "seq": 92,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 546
+    },
+    {
+      "seq": 93,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 545
+    },
+    {
+      "seq": 94,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 594
+    },
+    {
+      "seq": 95,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 658
+    },
+    {
+      "seq": 96,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 557
+    },
+    {
+      "seq": 97,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 534
+    },
+    {
+      "seq": 98,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 553
+    },
+    {
+      "seq": 99,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 757
+    },
+    {
+      "seq": 100,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1065
+    },
+    {
+      "seq": 101,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 694
+    },
+    {
+      "seq": 102,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 545
+    },
+    {
+      "seq": 103,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 518
+    },
+    {
+      "seq": 104,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 573
+    },
+    {
+      "seq": 105,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1476
+    },
+    {
+      "seq": 106,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 586
+    },
+    {
+      "seq": 107,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1174
+    },
+    {
+      "seq": 108,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 647
+    },
+    {
+      "seq": 109,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 575
+    },
+    {
+      "seq": 110,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1072
+    },
+    {
+      "seq": 111,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1020
+    },
+    {
+      "seq": 112,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 631
+    },
+    {
+      "seq": 113,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 638
+    },
+    {
+      "seq": 114,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 617
+    },
+    {
+      "seq": 115,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 754
+    },
+    {
+      "seq": 116,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 672
+    },
+    {
+      "seq": 117,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 573
+    },
+    {
+      "seq": 118,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 598
+    },
+    {
+      "seq": 119,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 639
+    },
+    {
+      "seq": 120,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1526
+    },
+    {
+      "seq": 121,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1116
+    },
+    {
+      "seq": 122,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 543
+    },
+    {
+      "seq": 123,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 666
+    },
+    {
+      "seq": 124,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 648
+    },
+    {
+      "seq": 125,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 575
+    },
+    {
+      "seq": 126,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1031
+    },
+    {
+      "seq": 127,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 641
+    },
+    {
+      "seq": 128,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 631
+    },
+    {
+      "seq": 129,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 590
+    },
+    {
+      "seq": 130,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 538
+    },
+    {
+      "seq": 131,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 546
+    },
+    {
+      "seq": 132,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1084
+    },
+    {
+      "seq": 133,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 624
+    },
+    {
+      "seq": 134,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 555
+    },
+    {
+      "seq": 135,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 593
+    },
+    {
+      "seq": 136,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 527
+    },
+    {
+      "seq": 137,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1071
+    },
+    {
+      "seq": 138,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 646
+    },
+    {
+      "seq": 139,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1450
+    },
+    {
+      "seq": 140,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 601
+    },
+    {
+      "seq": 141,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 747
+    },
+    {
+      "seq": 142,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 572
+    },
+    {
+      "seq": 143,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 681
+    },
+    {
+      "seq": 144,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 676
+    },
+    {
+      "seq": 145,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 988
+    },
+    {
+      "seq": 146,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 770
+    },
+    {
+      "seq": 147,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 988
+    },
+    {
+      "seq": 148,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 628
+    },
+    {
+      "seq": 149,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 960
+    },
+    {
+      "seq": 150,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 601
+    },
+    {
+      "seq": 151,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 689
+    },
+    {
+      "seq": 152,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 578
+    },
+    {
+      "seq": 153,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 600
+    },
+    {
+      "seq": 154,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 674
+    },
+    {
+      "seq": 155,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 634
+    },
+    {
+      "seq": 156,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 634
+    },
+    {
+      "seq": 157,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 638
+    },
+    {
+      "seq": 158,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 570
+    },
+    {
+      "seq": 159,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 633
+    },
+    {
+      "seq": 160,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1064
+    },
+    {
+      "seq": 161,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 666
+    },
+    {
+      "seq": 162,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1049
+    },
+    {
+      "seq": 163,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 661
+    },
+    {
+      "seq": 164,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 603
+    },
+    {
+      "seq": 165,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 781
+    },
+    {
+      "seq": 166,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 616
+    },
+    {
+      "seq": 167,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 594
+    },
+    {
+      "seq": 168,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 516
+    },
+    {
+      "seq": 169,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 621
+    },
+    {
+      "seq": 170,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 639
+    },
+    {
+      "seq": 171,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 557
+    },
+    {
+      "seq": 172,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1173
+    },
+    {
+      "seq": 173,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1055
+    },
+    {
+      "seq": 174,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1001
+    },
+    {
+      "seq": 175,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1052
+    },
+    {
+      "seq": 176,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 534
+    },
+    {
+      "seq": 177,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1080
+    },
+    {
+      "seq": 178,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1084
+    },
+    {
+      "seq": 179,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 531
+    },
+    {
+      "seq": 180,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 614
+    },
+    {
+      "seq": 181,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 981
+    },
+    {
+      "seq": 182,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 555
+    },
+    {
+      "seq": 183,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 526
+    },
+    {
+      "seq": 184,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 638
+    },
+    {
+      "seq": 185,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 683
+    },
+    {
+      "seq": 186,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 558
+    },
+    {
+      "seq": 187,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 694
+    },
+    {
+      "seq": 188,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1019
+    },
+    {
+      "seq": 189,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 676
+    },
+    {
+      "seq": 190,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 634
+    },
+    {
+      "seq": 191,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 575
+    },
+    {
+      "seq": 192,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1068
+    },
+    {
+      "seq": 193,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 656
+    },
+    {
+      "seq": 194,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 615
+    },
+    {
+      "seq": 195,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 603
+    },
+    {
+      "seq": 196,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 688
+    },
+    {
+      "seq": 197,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 495
+    },
+    {
+      "seq": 198,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 646
+    },
+    {
+      "seq": 199,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 576
+    },
+    {
+      "seq": 200,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 673
+    },
+    {
+      "seq": 201,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 941
+    },
+    {
+      "seq": 202,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 584
+    },
+    {
+      "seq": 203,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 662
+    },
+    {
+      "seq": 204,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1461
+    },
+    {
+      "seq": 205,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 575
+    },
+    {
+      "seq": 206,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 590
+    },
+    {
+      "seq": 207,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1051
+    },
+    {
+      "seq": 208,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 585
+    },
+    {
+      "seq": 209,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 612
+    },
+    {
+      "seq": 210,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 662
+    },
+    {
+      "seq": 211,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 701
+    },
+    {
+      "seq": 212,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1043
+    },
+    {
+      "seq": 213,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 550
+    },
+    {
+      "seq": 214,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1053
+    },
+    {
+      "seq": 215,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1067
+    },
+    {
+      "seq": 216,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 694
+    },
+    {
+      "seq": 217,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 579
+    },
+    {
+      "seq": 218,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 616
+    },
+    {
+      "seq": 219,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 662
+    },
+    {
+      "seq": 220,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 623
+    },
+    {
+      "seq": 221,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1094
+    },
+    {
+      "seq": 222,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 612
+    },
+    {
+      "seq": 223,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 680
+    },
+    {
+      "seq": 224,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 987
+    },
+    {
+      "seq": 225,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 579
+    },
+    {
+      "seq": 226,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 577
+    },
+    {
+      "seq": 227,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 509
+    },
+    {
+      "seq": 228,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1021
+    },
+    {
+      "seq": 229,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 650
+    },
+    {
+      "seq": 230,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 596
+    },
+    {
+      "seq": 231,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1018
+    },
+    {
+      "seq": 232,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 618
+    },
+    {
+      "seq": 233,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1013
+    },
+    {
+      "seq": 234,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1031
+    },
+    {
+      "seq": 235,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 747
+    },
+    {
+      "seq": 236,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 631
+    },
+    {
+      "seq": 237,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 981
+    },
+    {
+      "seq": 238,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 607
+    },
+    {
+      "seq": 239,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 591
+    },
+    {
+      "seq": 240,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1157
+    },
+    {
+      "seq": 241,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 550
+    },
+    {
+      "seq": 242,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 694
+    },
+    {
+      "seq": 243,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 641
+    },
+    {
+      "seq": 244,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 611
+    },
+    {
+      "seq": 245,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 687
+    },
+    {
+      "seq": 246,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 451
+    },
+    {
+      "seq": 247,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1414
+    },
+    {
+      "seq": 248,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 638
+    },
+    {
+      "seq": 249,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 653
+    },
+    {
+      "seq": 250,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1089
+    },
+    {
+      "seq": 251,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 552
+    },
+    {
+      "seq": 252,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 633
+    },
+    {
+      "seq": 253,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 780
+    },
+    {
+      "seq": 254,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 631
+    },
+    {
+      "seq": 255,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1001
+    },
+    {
+      "seq": 256,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 644
+    },
+    {
+      "seq": 257,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1026
+    },
+    {
+      "seq": 258,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 679
+    },
+    {
+      "seq": 259,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 615
+    },
+    {
+      "seq": 260,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 723
+    },
+    {
+      "seq": 261,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 720
+    },
+    {
+      "seq": 262,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 623
+    },
+    {
+      "seq": 263,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 686
+    },
+    {
+      "seq": 264,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1006
+    },
+    {
+      "seq": 265,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1033
+    },
+    {
+      "seq": 266,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1086
+    },
+    {
+      "seq": 267,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 511
+    },
+    {
+      "seq": 268,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1498
+    },
+    {
+      "seq": 269,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 578
+    },
+    {
+      "seq": 270,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 559
+    },
+    {
+      "seq": 271,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 487
+    },
+    {
+      "seq": 272,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 603
+    },
+    {
+      "seq": 273,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 579
+    },
+    {
+      "seq": 274,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 704
+    },
+    {
+      "seq": 275,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 635
+    },
+    {
+      "seq": 276,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1594
+    },
+    {
+      "seq": 277,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 620
+    },
+    {
+      "seq": 278,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1138
+    },
+    {
+      "seq": 279,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1127
+    },
+    {
+      "seq": 280,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1004
+    },
+    {
+      "seq": 281,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1018
+    },
+    {
+      "seq": 282,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1068
+    },
+    {
+      "seq": 283,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1068
+    },
+    {
+      "seq": 284,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1034
+    },
+    {
+      "seq": 285,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 607
+    },
+    {
+      "seq": 286,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 564
+    },
+    {
+      "seq": 287,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 610
+    },
+    {
+      "seq": 288,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 558
+    },
+    {
+      "seq": 289,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 539
+    },
+    {
+      "seq": 290,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 637
+    },
+    {
+      "seq": 291,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 584
+    },
+    {
+      "seq": 292,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 590
+    },
+    {
+      "seq": 293,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 592
+    },
+    {
+      "seq": 294,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 705
+    },
+    {
+      "seq": 295,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 590
+    },
+    {
+      "seq": 296,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 606
+    },
+    {
+      "seq": 297,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 611
+    },
+    {
+      "seq": 298,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 743
+    },
+    {
+      "seq": 299,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1088
+    },
+    {
+      "seq": 300,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 630
+    },
+    {
+      "seq": 301,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 579
+    },
+    {
+      "seq": 302,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 578
+    },
+    {
+      "seq": 303,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 683
+    },
+    {
+      "seq": 304,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 618
+    },
+    {
+      "seq": 305,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 589
+    },
+    {
+      "seq": 306,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1068
+    },
+    {
+      "seq": 307,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 642
+    },
+    {
+      "seq": 308,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 671
+    },
+    {
+      "seq": 309,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 569
+    },
+    {
+      "seq": 310,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 583
+    },
+    {
+      "seq": 311,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 633
+    },
+    {
+      "seq": 312,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1047
+    },
+    {
+      "seq": 313,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 598
+    },
+    {
+      "seq": 314,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 567
+    },
+    {
+      "seq": 315,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 646
+    },
+    {
+      "seq": 316,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 737
+    },
+    {
+      "seq": 317,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 617
+    },
+    {
+      "seq": 318,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 599
+    },
+    {
+      "seq": 319,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 762
+    },
+    {
+      "seq": 320,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1059
+    },
+    {
+      "seq": 321,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 621
+    },
+    {
+      "seq": 322,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 512
+    },
+    {
+      "seq": 323,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 951
+    },
+    {
+      "seq": 324,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1056
+    },
+    {
+      "seq": 325,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 674
+    },
+    {
+      "seq": 326,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 651
+    },
+    {
+      "seq": 327,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 565
+    },
+    {
+      "seq": 328,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 609
+    },
+    {
+      "seq": 329,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 629
+    },
+    {
+      "seq": 330,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 540
+    },
+    {
+      "seq": 331,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 661
+    },
+    {
+      "seq": 332,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 570
+    },
+    {
+      "seq": 333,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 570
+    },
+    {
+      "seq": 334,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 613
+    },
+    {
+      "seq": 335,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 533
+    },
+    {
+      "seq": 336,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 547
+    },
+    {
+      "seq": 337,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1092
+    },
+    {
+      "seq": 338,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 685
+    },
+    {
+      "seq": 339,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 631
+    },
+    {
+      "seq": 340,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 569
+    },
+    {
+      "seq": 341,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 646
+    },
+    {
+      "seq": 342,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 648
+    },
+    {
+      "seq": 343,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 614
+    },
+    {
+      "seq": 344,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 609
+    },
+    {
+      "seq": 345,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 622
+    },
+    {
+      "seq": 346,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 971
+    },
+    {
+      "seq": 347,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 601
+    },
+    {
+      "seq": 348,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 563
+    },
+    {
+      "seq": 349,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 619
+    },
+    {
+      "seq": 350,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1074
+    },
+    {
+      "seq": 351,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 535
+    },
+    {
+      "seq": 352,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 676
+    },
+    {
+      "seq": 353,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 455
+    },
+    {
+      "seq": 354,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 764
+    },
+    {
+      "seq": 355,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 650
+    },
+    {
+      "seq": 356,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 652
+    },
+    {
+      "seq": 357,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1134
+    },
+    {
+      "seq": 358,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 583
+    },
+    {
+      "seq": 359,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 682
+    },
+    {
+      "seq": 360,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1433
+    },
+    {
+      "seq": 361,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 598
+    },
+    {
+      "seq": 362,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1098
+    },
+    {
+      "seq": 363,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 669
+    },
+    {
+      "seq": 364,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 578
+    },
+    {
+      "seq": 365,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1013
+    },
+    {
+      "seq": 366,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 591
+    },
+    {
+      "seq": 367,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 669
+    },
+    {
+      "seq": 368,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 567
+    },
+    {
+      "seq": 369,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 592
+    },
+    {
+      "seq": 370,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1386
+    },
+    {
+      "seq": 371,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1035
+    },
+    {
+      "seq": 372,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 620
+    },
+    {
+      "seq": 373,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 682
+    },
+    {
+      "seq": 374,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 518
+    },
+    {
+      "seq": 375,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1067
+    },
+    {
+      "seq": 376,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 632
+    },
+    {
+      "seq": 377,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 520
+    },
+    {
+      "seq": 378,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 687
+    },
+    {
+      "seq": 379,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 661
+    },
+    {
+      "seq": 380,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1412
+    },
+    {
+      "seq": 381,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 994
+    },
+    {
+      "seq": 382,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 640
+    },
+    {
+      "seq": 383,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 580
+    },
+    {
+      "seq": 384,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 999
+    },
+    {
+      "seq": 385,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 669
+    },
+    {
+      "seq": 386,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 634
+    },
+    {
+      "seq": 387,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1023
+    },
+    {
+      "seq": 388,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 502
+    },
+    {
+      "seq": 389,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 526
+    },
+    {
+      "seq": 390,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 627
+    },
+    {
+      "seq": 391,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1003
+    },
+    {
+      "seq": 392,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 692
+    },
+    {
+      "seq": 393,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 553
+    },
+    {
+      "seq": 394,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 598
+    },
+    {
+      "seq": 395,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 644
+    },
+    {
+      "seq": 396,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 626
+    },
+    {
+      "seq": 397,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 636
+    },
+    {
+      "seq": 398,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1496
+    },
+    {
+      "seq": 399,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 644
+    },
+    {
+      "seq": 400,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 612
+    },
+    {
+      "seq": 401,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1160
+    },
+    {
+      "seq": 402,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 686
+    },
+    {
+      "seq": 403,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 632
+    },
+    {
+      "seq": 404,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 656
+    },
+    {
+      "seq": 405,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 686
+    },
+    {
+      "seq": 406,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 593
+    },
+    {
+      "seq": 407,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 729
+    },
+    {
+      "seq": 408,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 614
+    },
+    {
+      "seq": 409,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 583
+    },
+    {
+      "seq": 410,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1084
+    },
+    {
+      "seq": 411,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1051
+    },
+    {
+      "seq": 412,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 974
+    },
+    {
+      "seq": 413,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 606
+    },
+    {
+      "seq": 414,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1076
+    },
+    {
+      "seq": 415,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 994
+    },
+    {
+      "seq": 416,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 727
+    },
+    {
+      "seq": 417,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 603
+    },
+    {
+      "seq": 418,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 605
+    },
+    {
+      "seq": 419,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1465
+    },
+    {
+      "seq": 420,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 633
+    },
+    {
+      "seq": 421,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 660
+    },
+    {
+      "seq": 422,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1038
+    },
+    {
+      "seq": 423,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 621
+    },
+    {
+      "seq": 424,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 644
+    },
+    {
+      "seq": 425,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 551
+    },
+    {
+      "seq": 426,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1536
+    },
+    {
+      "seq": 427,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 653
+    },
+    {
+      "seq": 428,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 657
+    },
+    {
+      "seq": 429,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 575
+    },
+    {
+      "seq": 430,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1051
+    },
+    {
+      "seq": 431,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 665
+    },
+    {
+      "seq": 432,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 553
+    },
+    {
+      "seq": 433,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 690
+    },
+    {
+      "seq": 434,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 604
+    },
+    {
+      "seq": 435,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1167
+    },
+    {
+      "seq": 436,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1047
+    },
+    {
+      "seq": 437,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 610
+    },
+    {
+      "seq": 438,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 655
+    },
+    {
+      "seq": 439,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 584
+    },
+    {
+      "seq": 440,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 570
+    },
+    {
+      "seq": 441,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 582
+    },
+    {
+      "seq": 442,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 692
+    },
+    {
+      "seq": 443,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 609
+    },
+    {
+      "seq": 444,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 563
+    },
+    {
+      "seq": 445,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 695
+    },
+    {
+      "seq": 446,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1510
+    },
+    {
+      "seq": 447,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 541
+    },
+    {
+      "seq": 448,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 602
+    },
+    {
+      "seq": 449,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 559
+    },
+    {
+      "seq": 450,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 479
+    },
+    {
+      "seq": 451,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 649
+    },
+    {
+      "seq": 452,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 745
+    },
+    {
+      "seq": 453,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 655
+    },
+    {
+      "seq": 454,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1035
+    },
+    {
+      "seq": 455,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 656
+    },
+    {
+      "seq": 456,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 560
+    },
+    {
+      "seq": 457,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1124
+    },
+    {
+      "seq": 458,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 558
+    },
+    {
+      "seq": 459,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 658
+    },
+    {
+      "seq": 460,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 628
+    },
+    {
+      "seq": 461,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 611
+    },
+    {
+      "seq": 462,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 713
+    },
+    {
+      "seq": 463,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 596
+    },
+    {
+      "seq": 464,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 730
+    },
+    {
+      "seq": 465,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 630
+    },
+    {
+      "seq": 466,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 571
+    },
+    {
+      "seq": 467,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1740
+    },
+    {
+      "seq": 468,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 612
+    },
+    {
+      "seq": 469,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 581
+    },
+    {
+      "seq": 470,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 598
+    },
+    {
+      "seq": 471,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 702
+    },
+    {
+      "seq": 472,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 655
+    },
+    {
+      "seq": 473,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1082
+    },
+    {
+      "seq": 474,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 664
+    },
+    {
+      "seq": 475,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 657
+    },
+    {
+      "seq": 476,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1038
+    },
+    {
+      "seq": 477,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1042
+    },
+    {
+      "seq": 478,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 566
+    },
+    {
+      "seq": 479,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1041
+    },
+    {
+      "seq": 480,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 728
+    },
+    {
+      "seq": 481,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1464
+    },
+    {
+      "seq": 482,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 694
+    },
+    {
+      "seq": 483,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 987
+    },
+    {
+      "seq": 484,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1043
+    },
+    {
+      "seq": 485,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 686
+    },
+    {
+      "seq": 486,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 581
+    },
+    {
+      "seq": 487,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 716
+    },
+    {
+      "seq": 488,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 631
+    },
+    {
+      "seq": 489,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 738
+    },
+    {
+      "seq": 490,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 993
+    },
+    {
+      "seq": 491,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1169
+    },
+    {
+      "seq": 492,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1147
+    },
+    {
+      "seq": 493,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 549
+    },
+    {
+      "seq": 494,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1077
+    },
+    {
+      "seq": 495,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 647
+    },
+    {
+      "seq": 496,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1081
+    },
+    {
+      "seq": 497,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 569
+    },
+    {
+      "seq": 498,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 580
+    },
+    {
+      "seq": 499,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 567
+    },
+    {
+      "seq": 500,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 626
+    },
+    {
+      "seq": 501,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 611
+    },
+    {
+      "seq": 502,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 482
+    },
+    {
+      "seq": 503,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1214
+    },
+    {
+      "seq": 504,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1109
+    },
+    {
+      "seq": 505,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 660
+    },
+    {
+      "seq": 506,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 622
+    },
+    {
+      "seq": 507,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 453
+    },
+    {
+      "seq": 508,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 635
+    },
+    {
+      "seq": 509,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 981
+    },
+    {
+      "seq": 510,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 682
+    },
+    {
+      "seq": 511,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 520
+    },
+    {
+      "seq": 512,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 608
+    },
+    {
+      "seq": 513,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1492
+    },
+    {
+      "seq": 514,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1021
+    },
+    {
+      "seq": 515,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1394
+    },
+    {
+      "seq": 516,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 721
+    },
+    {
+      "seq": 517,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1032
+    },
+    {
+      "seq": 518,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 729
+    },
+    {
+      "seq": 519,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1095
+    },
+    {
+      "seq": 520,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 686
+    },
+    {
+      "seq": 521,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1048
+    },
+    {
+      "seq": 522,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 586
+    },
+    {
+      "seq": 523,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 504
+    },
+    {
+      "seq": 524,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 653
+    },
+    {
+      "seq": 525,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1052
+    },
+    {
+      "seq": 526,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 535
+    },
+    {
+      "seq": 527,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 605
+    },
+    {
+      "seq": 528,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 701
+    },
+    {
+      "seq": 529,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1121
+    },
+    {
+      "seq": 530,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 636
+    },
+    {
+      "seq": 531,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 607
+    },
+    {
+      "seq": 532,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1071
+    },
+    {
+      "seq": 533,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 615
+    },
+    {
+      "seq": 534,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 557
+    },
+    {
+      "seq": 535,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 690
+    },
+    {
+      "seq": 536,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 615
+    },
+    {
+      "seq": 537,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 533
+    },
+    {
+      "seq": 538,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 597
+    },
+    {
+      "seq": 539,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 690
+    },
+    {
+      "seq": 540,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1220
+    },
+    {
+      "seq": 541,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 596
+    },
+    {
+      "seq": 542,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 556
+    },
+    {
+      "seq": 543,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 574
+    },
+    {
+      "seq": 544,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 664
+    },
+    {
+      "seq": 545,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 669
+    },
+    {
+      "seq": 546,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 613
+    },
+    {
+      "seq": 547,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 681
+    },
+    {
+      "seq": 548,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1521
+    },
+    {
+      "seq": 549,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 600
+    },
+    {
+      "seq": 550,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 711
+    },
+    {
+      "seq": 551,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 596
+    },
+    {
+      "seq": 552,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 694
+    },
+    {
+      "seq": 553,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 659
+    },
+    {
+      "seq": 554,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 591
+    },
+    {
+      "seq": 555,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 657
+    },
+    {
+      "seq": 556,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 526
+    },
+    {
+      "seq": 557,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 565
+    },
+    {
+      "seq": 558,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 721
+    },
+    {
+      "seq": 559,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 629
+    },
+    {
+      "seq": 560,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 496
+    },
+    {
+      "seq": 561,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 637
+    },
+    {
+      "seq": 562,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 644
+    },
+    {
+      "seq": 563,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 629
+    },
+    {
+      "seq": 564,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 659
+    },
+    {
+      "seq": 565,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 532
+    },
+    {
+      "seq": 566,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 596
+    },
+    {
+      "seq": 567,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1101
+    },
+    {
+      "seq": 568,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 603
+    },
+    {
+      "seq": 569,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 576
+    },
+    {
+      "seq": 570,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1068
+    },
+    {
+      "seq": 571,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1052
+    },
+    {
+      "seq": 572,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 727
+    },
+    {
+      "seq": 573,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 622
+    },
+    {
+      "seq": 574,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 607
+    },
+    {
+      "seq": 575,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 605
+    },
+    {
+      "seq": 576,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 598
+    },
+    {
+      "seq": 577,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 651
+    },
+    {
+      "seq": 578,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 534
+    },
+    {
+      "seq": 579,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 627
+    },
+    {
+      "seq": 580,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 474
+    },
+    {
+      "seq": 581,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 541
+    },
+    {
+      "seq": 582,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 685
+    },
+    {
+      "seq": 583,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 598
+    },
+    {
+      "seq": 584,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 535
+    },
+    {
+      "seq": 585,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 986
+    },
+    {
+      "seq": 586,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 597
+    },
+    {
+      "seq": 587,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 675
+    },
+    {
+      "seq": 588,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 976
+    },
+    {
+      "seq": 589,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 678
+    },
+    {
+      "seq": 590,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 671
+    },
+    {
+      "seq": 591,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 585
+    },
+    {
+      "seq": 592,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 528
+    },
+    {
+      "seq": 593,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1083
+    },
+    {
+      "seq": 594,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1018
+    },
+    {
+      "seq": 595,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 569
+    },
+    {
+      "seq": 596,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1011
+    },
+    {
+      "seq": 597,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1439
+    },
+    {
+      "seq": 598,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 596
+    },
+    {
+      "seq": 599,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 630
+    },
+    {
+      "seq": 600,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 544
+    },
+    {
+      "seq": 601,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 637
+    },
+    {
+      "seq": 602,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1090
+    },
+    {
+      "seq": 603,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 637
+    },
+    {
+      "seq": 604,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1532
+    },
+    {
+      "seq": 605,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 667
+    },
+    {
+      "seq": 606,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 575
+    },
+    {
+      "seq": 607,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 682
+    },
+    {
+      "seq": 608,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1171
+    },
+    {
+      "seq": 609,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 665
+    },
+    {
+      "seq": 610,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 999
+    },
+    {
+      "seq": 611,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 747
+    },
+    {
+      "seq": 612,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 695
+    },
+    {
+      "seq": 613,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 573
+    },
+    {
+      "seq": 614,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 731
+    },
+    {
+      "seq": 615,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1085
+    },
+    {
+      "seq": 616,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 670
+    },
+    {
+      "seq": 617,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 613
+    },
+    {
+      "seq": 618,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 515
+    },
+    {
+      "seq": 619,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 576
+    },
+    {
+      "seq": 620,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 581
+    },
+    {
+      "seq": 621,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 668
+    },
+    {
+      "seq": 622,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 573
+    },
+    {
+      "seq": 623,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 644
+    },
+    {
+      "seq": 624,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 709
+    },
+    {
+      "seq": 625,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1481
+    },
+    {
+      "seq": 626,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 723
+    },
+    {
+      "seq": 627,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 658
+    },
+    {
+      "seq": 628,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 548
+    },
+    {
+      "seq": 629,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 549
+    },
+    {
+      "seq": 630,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 617
+    },
+    {
+      "seq": 631,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 657
+    },
+    {
+      "seq": 632,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 621
+    },
+    {
+      "seq": 633,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1109
+    },
+    {
+      "seq": 634,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1089
+    },
+    {
+      "seq": 635,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 676
+    },
+    {
+      "seq": 636,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1140
+    },
+    {
+      "seq": 637,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 486
+    },
+    {
+      "seq": 638,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 530
+    },
+    {
+      "seq": 639,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 770
+    },
+    {
+      "seq": 640,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 541
+    },
+    {
+      "seq": 641,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 929
+    },
+    {
+      "seq": 642,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 580
+    },
+    {
+      "seq": 643,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 567
+    },
+    {
+      "seq": 644,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 717
+    },
+    {
+      "seq": 645,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 731
+    },
+    {
+      "seq": 646,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1029
+    },
+    {
+      "seq": 647,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 995
+    },
+    {
+      "seq": 648,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1003
+    },
+    {
+      "seq": 649,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 561
+    },
+    {
+      "seq": 650,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 537
+    },
+    {
+      "seq": 651,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 725
+    },
+    {
+      "seq": 652,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 758
+    },
+    {
+      "seq": 653,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 685
+    },
+    {
+      "seq": 654,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1087
+    },
+    {
+      "seq": 655,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 566
+    },
+    {
+      "seq": 656,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 619
+    },
+    {
+      "seq": 657,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 585
+    },
+    {
+      "seq": 658,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 559
+    },
+    {
+      "seq": 659,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1491
+    },
+    {
+      "seq": 660,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 660
+    },
+    {
+      "seq": 661,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 625
+    },
+    {
+      "seq": 662,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 570
+    },
+    {
+      "seq": 663,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 570
+    },
+    {
+      "seq": 664,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 692
+    },
+    {
+      "seq": 665,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 620
+    },
+    {
+      "seq": 666,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 656
+    },
+    {
+      "seq": 667,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 556
+    },
+    {
+      "seq": 668,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 546
+    },
+    {
+      "seq": 669,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 995
+    },
+    {
+      "seq": 670,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 603
+    },
+    {
+      "seq": 671,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 597
+    },
+    {
+      "seq": 672,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 609
+    },
+    {
+      "seq": 673,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 671
+    },
+    {
+      "seq": 674,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 679
+    },
+    {
+      "seq": 675,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 559
+    },
+    {
+      "seq": 676,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1195
+    },
+    {
+      "seq": 677,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 685
+    },
+    {
+      "seq": 678,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 655
+    },
+    {
+      "seq": 679,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 597
+    },
+    {
+      "seq": 680,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1416
+    },
+    {
+      "seq": 681,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 613
+    },
+    {
+      "seq": 682,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1094
+    },
+    {
+      "seq": 683,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 738
+    },
+    {
+      "seq": 684,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1125
+    },
+    {
+      "seq": 685,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 617
+    },
+    {
+      "seq": 686,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 634
+    },
+    {
+      "seq": 687,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 663
+    },
+    {
+      "seq": 688,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 639
+    },
+    {
+      "seq": 689,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 664
+    },
+    {
+      "seq": 690,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 649
+    },
+    {
+      "seq": 691,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 627
+    },
+    {
+      "seq": 692,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 564
+    },
+    {
+      "seq": 693,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 707
+    },
+    {
+      "seq": 694,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 621
+    },
+    {
+      "seq": 695,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 602
+    },
+    {
+      "seq": 696,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1117
+    },
+    {
+      "seq": 697,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 554
+    },
+    {
+      "seq": 698,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 956
+    },
+    {
+      "seq": 699,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 545
+    },
+    {
+      "seq": 700,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 627
+    },
+    {
+      "seq": 701,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 850
+    },
+    {
+      "seq": 702,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 569
+    },
+    {
+      "seq": 703,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 570
+    },
+    {
+      "seq": 704,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 549
+    },
+    {
+      "seq": 705,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 570
+    },
+    {
+      "seq": 706,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 670
+    },
+    {
+      "seq": 707,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1052
+    },
+    {
+      "seq": 708,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 526
+    },
+    {
+      "seq": 709,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1044
+    },
+    {
+      "seq": 710,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 647
+    },
+    {
+      "seq": 711,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 625
+    },
+    {
+      "seq": 712,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 802
+    },
+    {
+      "seq": 713,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 725
+    },
+    {
+      "seq": 714,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 574
+    },
+    {
+      "seq": 715,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1486
+    },
+    {
+      "seq": 716,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 611
+    },
+    {
+      "seq": 717,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 611
+    },
+    {
+      "seq": 718,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 634
+    },
+    {
+      "seq": 719,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 663
+    },
+    {
+      "seq": 720,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 607
+    },
+    {
+      "seq": 721,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 581
+    },
+    {
+      "seq": 722,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 568
+    },
+    {
+      "seq": 723,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 679
+    },
+    {
+      "seq": 724,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 550
+    },
+    {
+      "seq": 725,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1124
+    },
+    {
+      "seq": 726,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1255
+    },
+    {
+      "seq": 727,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 595
+    },
+    {
+      "seq": 728,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 651
+    },
+    {
+      "seq": 729,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1050
+    },
+    {
+      "seq": 730,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 551
+    },
+    {
+      "seq": 731,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 716
+    },
+    {
+      "seq": 732,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1162
+    },
+    {
+      "seq": 733,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1034
+    },
+    {
+      "seq": 734,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 1048
+    },
+    {
+      "seq": 735,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 607
+    },
+    {
+      "seq": 736,
+      "role": "",
+      "text_type": "document",
+      "model": "text-embedding-v4",
+      "batch_size": 4,
+      "http_status": 200,
+      "total_tokens": 759
+    },
+    {
+      "seq": 737,
+      "role": "",
+      "text_type": "query",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 82
+    },
+    {
+      "seq": 738,
+      "role": "",
+      "text_type": "query",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 99
+    },
+    {
+      "seq": 739,
+      "role": "",
+      "text_type": "query",
+      "model": "text-embedding-v4",
+      "batch_size": 8,
+      "http_status": 200,
+      "total_tokens": 85
+    },
+    {
+      "seq": 740,
+      "role": "",
+      "text_type": "query",
+      "model": "text-embedding-v4",
+      "batch_size": 2,
+      "http_status": 200,
+      "total_tokens": 25
+    }
+  ],
+  "settings_masked": {
+    "providerKind": "bailian",
+    "surface": "dashscope",
+    "baseUrl": "https://dashscope.aliyuncs.com",
+    "hasKey": true,
+    "model": "text-embedding-v4",
+    "dimensions": 1024,
+    "batchSize": 8,
+    "textType": "",
+    "instruct": "",
+    "encodingFormat": "float",
+    "timeoutMs": 60000,
+    "topK": 100,
+    "lexicalWeight": 0.35,
+    "embeddingWeight": 0.65,
+    "rerankWeight": 0,
+    "maxEmbeddingRequests": 4000,
+    "maxEmbeddingChars": 5000000,
+    "maxRerankRequests": 0,
+    "rerankProvider": "",
+    "rerankModel": "",
+    "rerankBaseUrl": "",
+    "hasRerankKey": false,
+    "rerankTopN": 0,
+    "rerankInstruct": "",
+    "batchingMode": "split"
+  },
+  "spend_cap_cny": 10,
+  "total_tokens": 544390,
+  "vector_sha256": "78ce366df26f1d4324b16f62b7aed08680a5e3b936d654b0fb760386f6add2ce"
+}

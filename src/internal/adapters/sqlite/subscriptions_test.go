@@ -121,7 +121,16 @@ func TestSubscriptionsUpgradePreservesVersionThreeData(t *testing.T) {
 		t.Fatal(err)
 	}
 	library, err := store.List(ctx)
-	if err != nil || len(library) != 1 || !reflect.DeepEqual(library[0], item) {
+	if err != nil || len(library) != 1 {
+		t.Fatal("collection changed on upgrade/source removal")
+	}
+	// Migration 84 backfills server-owned version fields; every original
+	// field must remain identical.
+	if library[0].ContentRevision != 1 || library[0].ContentHash == "" {
+		t.Fatal("content version backfill missing")
+	}
+	library[0].ContentRevision, library[0].ContentHash = 0, ""
+	if !reflect.DeepEqual(library[0], item) {
 		t.Fatal("collection changed on upgrade/source removal")
 	}
 	jobs, err := store.ListDownloads(ctx)

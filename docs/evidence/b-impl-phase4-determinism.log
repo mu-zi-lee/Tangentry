@@ -1,0 +1,29 @@
+# Phase 4 gate extra: two-run determinism (normalized outcomes)
+EXIT_CODE:0 (0 = identical)
+PASS count: 26 per run
+--- PASS: TestBudgetMathWorkedExamples
+--- PASS: TestBudgetMathInvalid
+--- PASS: TestBudgetMathSweepDisabled
+--- PASS: TestBudgetMathCharPressure
+--- PASS: TestBudgetMathInvariantGrid
+--- PASS: TestBT10_InvalidAssemblyBudget
+--- PASS: TestBudgetTrackerReserve
+--- PASS: TestBudgetTrackerConcurrent
+--- PASS: TestBT30_VectorCache
+--- PASS: TestBT31_SettingsValidation
+--- PASS: TestBT32_SettingsWeights
+--- PASS: TestBT35_MaskedSettings
+--- PASS: TestBT37_LocalFirstOCR
+--- PASS: TestBT33_ModeMatrix
+--- PASS: TestBT33_InvalidAndDisabled
+--- PASS: TestBT33_CharBound
+--- PASS: TestAT04NotFoundFallbackSucceedsWithinBudget
+--- PASS: TestBT31_AdapterRoleAndSurface
+--- PASS: TestBT26_AdapterFailures
+--- PASS: TestBT24_BBudgetAndALedger
+--- PASS: TestBT37_LocalFirstEmbedding
+--- PASS: TestEmbeddingBase64Encoding
+--- PASS: TestBT36_Rerank
+--- PASS: TestBT36_ScoreClamp
+--- PASS: TestBT30_PersistentCache
+--- PASS: TestBT35_SettingsPersistence

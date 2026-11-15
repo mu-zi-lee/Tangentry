@@ -1,0 +1,17 @@
+# Phase 3 adapter tests first run (RED: implementation pending)
+$ go test ./internal/adapters/pdftext/ -count=1
+# tangentry/internal/adapters/pdftext [tangentry/internal/adapters/pdftext.test]
+internal/adapters/pdftext/cloud_ocr_test.go:80:27: undefined: CloudOCRConfig
+internal/adapters/pdftext/cloud_ocr_test.go:81:9: undefined: CloudOCRConfig
+internal/adapters/pdftext/cloud_ocr_test.go:90:34: undefined: CloudOCR
+internal/adapters/pdftext/cloud_ocr_test.go:91:10: undefined: CloudOCR
+internal/adapters/pdftext/cloud_ocr_test.go:150:11: undefined: CloudOCR
+internal/adapters/pdftext/cloud_ocr_test.go:204:10: undefined: CloudOCR
+internal/adapters/pdftext/cloud_ocr_test.go:212:16: undefined: CloudOCR
+internal/adapters/pdftext/local_ocr_test.go:43:10: undefined: LocalOCR
+internal/adapters/pdftext/local_ocr_test.go:43:24: undefined: LocalOCRConfig
+internal/adapters/pdftext/local_ocr_test.go:64:14: undefined: LocalOCR
+internal/adapters/pdftext/local_ocr_test.go:64:14: too many errors
+FAIL	tangentry/internal/adapters/pdftext [build failed]
+FAIL
+EXIT_CODE:1

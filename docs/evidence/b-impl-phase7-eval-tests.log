@@ -1,0 +1,25 @@
+=== RUN   TestBT12FrozenReplayByteIdentical
+    eval_test.go:59: B-T12 PASS: byte-identical replay, sha256=563953f9fcd374219f1b5904b29aa89625ededcf819f25c53553994bd9ea90bc
+--- PASS: TestBT12FrozenReplayByteIdentical (7.36s)
+=== RUN   TestBT13RecallThreshold
+    eval_test.go:72: baseline 6/24=0.2500 lexical 19/24=0.7917 hybrid 23/24=0.9583
+    eval_test.go:91: B-T13 PASS: model=text-embedding-v4 dims=1024 vector_sha256=78ce366df26f1d4324b16f62b7aed08680a5e3b936d654b0fb760386f6add2ce
+--- PASS: TestBT13RecallThreshold (1.39s)
+=== RUN   TestBT18Stress8k
+    eval_test.go:101: 8k: baseline 6/24=0.2500 lexical 19/24=0.7917 hybrid 23/24=0.9583
+    eval_test.go:114: B-T18 PASS: 8k not pooled with 120k; degraded_budget explicit
+--- PASS: TestBT18Stress8k (1.29s)
+=== RUN   TestNegativeSet
+    eval_test.go:126: negative set: 12/12 pass
+--- PASS: TestNegativeSet (0.24s)
+=== RUN   TestBudgetInvariants
+    eval_test.go:151: budget-starved-shared: 24 questions, invariants OK
+    eval_test.go:151: budget-starved-split: 24 questions, invariants OK
+    eval_test.go:151: budget-charbound-shared: 1 questions, invariants OK
+    eval_test.go:151: budget-charbound-split: 1 questions, invariants OK
+    eval_test.go:151: budget-high-shared: 24 questions, invariants OK
+    eval_test.go:151: budget-high-split: 24 questions, invariants OK
+--- PASS: TestBudgetInvariants (2.48s)
+PASS
+ok  	tangentry/eval-b-gen/replay	12.778s
+test exit=0

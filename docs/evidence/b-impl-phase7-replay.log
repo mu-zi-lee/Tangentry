@@ -1,0 +1,12 @@
+set: status=confirmed confirmed_by=WANG Jiaqi (B) - human sign-off in OpenCode session questions=26 primary=24 frozen_vectors=true
+B-T12 determinism: byte-identical ✓
+baseline-120000        hits= 6/24 recall=0.2500 blocked=false
+lexical-120000         hits=19/24 recall=0.7917 blocked=false
+hybrid-split-120000    hits=23/24 recall=0.9583 blocked=false
+hybrid-shared-120000   hits=23/24 recall=0.9583 blocked=false
+baseline-8000          hits= 6/24 recall=0.2500 blocked=false
+lexical-8000           hits=19/24 recall=0.7917 blocked=false
+hybrid-split-8000      hits=23/24 recall=0.9583 blocked=false
+hybrid-shared-8000     hits=23/24 recall=0.9583 blocked=false
+negatives: 12/12 pass
+replay exit=0

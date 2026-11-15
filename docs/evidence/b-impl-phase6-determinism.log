@@ -1,0 +1,4 @@
+# Phase 6 gate extra: two-run determinism (frontend retrieval tests)
+EXIT_CODE:0 (0 = identical)
+ Test Files  4 passed (4)
+      Tests  27 passed (27)

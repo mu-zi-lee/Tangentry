@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"tangentry/internal/retrieval"
 )
 
 const chatResultKind = "chat"
@@ -47,7 +49,13 @@ func (s *Service) chat(ctx context.Context, in ChatRequest, emit func(string) er
 	if !validBudgetLimit(in.MaxProviderCalls) {
 		return ChatResult{}, ErrInvalid
 	}
-	if !contentIDValid(in.ContentID) || !utf8ValidChat(in.Context, in.Messages) || len(in.Messages) > 40 {
+	// When retrieval is enabled the client-supplied context is ignored (the
+	// server reads the source by contentId); only messages are validated.
+	contextToValidate := in.Context
+	if in.Retrieval != nil && in.Retrieval.Enabled {
+		contextToValidate = ""
+	}
+	if !contentIDValid(in.ContentID) || !utf8ValidChat(contextToValidate, in.Messages) || len(in.Messages) > 40 {
 		return ChatResult{}, ErrInvalid
 	}
 	s.mu.Lock()
@@ -93,10 +101,39 @@ func (s *Service) chat(ctx context.Context, in ChatRequest, emit func(string) er
 	if len(history) == 0 || history[len(history)-1].Role != "user" {
 		return ChatResult{}, ErrInvalid
 	}
+	// Retrieval branch (B): when enabled, run the server-side pipeline BEFORE
+	// any chat POST. The assembled six-layer context becomes the provider
+	// system-message source; the client context is ignored. A rejection
+	// returns zero chat requests (INV-04).
+	source := in.Context
+	var retrievalResp *retrieval.Response
+	if in.Retrieval != nil && in.Retrieval.Enabled {
+		s.mu.Lock()
+		engine := s.retrievalEngine
+		s.mu.Unlock()
+		if engine == nil {
+			return ChatResult{}, ErrNotReady
+		}
+		turns := make([]retrieval.HistoryTurn, 0, len(history))
+		for _, m := range history {
+			turns = append(turns, retrieval.HistoryTurn{Role: m.Role, Content: m.Content})
+		}
+		runResult, rerr := engine.Run(ctx, retrieval.RunInput{
+			ContentID: in.ContentID,
+			Question:  retrieval.LastUserQuestion(turns),
+			Request:   *in.Retrieval,
+			History:   turns,
+		})
+		retrievalResp = &runResult.Response
+		if rerr != nil {
+			return ChatResult{ContentID: in.ContentID, Retrieval: retrievalResp}, rerr
+		}
+		source = runResult.Context
+	}
 	var answer string
 	if stream, ok := provider.(StreamChatter); ok && emit != nil {
 		var builder strings.Builder
-		err := stream.ChatStream(ctx, c, in.Context, history, func(chunk string) error {
+		err := stream.ChatStream(ctx, c, source, history, func(chunk string) error {
 			builder.WriteString(chunk)
 			return emit(chunk)
 		})
@@ -104,7 +141,7 @@ func (s *Service) chat(ctx context.Context, in ChatRequest, emit func(string) er
 			answer = builder.String()
 		} else if builder.Len() == 0 && fallbackAllowed(ctx, err) {
 			// A fresh reservation is taken inside the non-stream Chat call.
-			answer, err = chatter.Chat(ctx, c, in.Context, history)
+			answer, err = chatter.Chat(ctx, c, source, history)
 			if err != nil {
 				if terminal := terminalOutcome(err); terminal != OutcomeActive {
 					SetOutcome(ctx, terminal)
@@ -121,7 +158,7 @@ func (s *Service) chat(ctx context.Context, in ChatRequest, emit func(string) er
 		}
 	} else {
 		var err error
-		answer, err = chatter.Chat(ctx, c, in.Context, history)
+		answer, err = chatter.Chat(ctx, c, source, history)
 		if err != nil {
 			SetOutcome(ctx, terminalOutcome(err))
 			MarkInvocationFailed(ctx, terminalOutcome(err))
@@ -143,7 +180,7 @@ func (s *Service) chat(ctx context.Context, in ChatRequest, emit func(string) er
 		return ChatResult{}, ErrStorage
 	}
 	SetOutcome(ctx, OutcomeCompleted)
-	return ChatResult{ContentID: in.ContentID, Messages: history, UpdatedAt: time.Now().Unix(), Budget: budgetReportFor(ctx)}, nil
+	return ChatResult{ContentID: in.ContentID, Messages: history, UpdatedAt: time.Now().Unix(), Budget: budgetReportFor(ctx), Retrieval: retrievalResp}, nil
 }
 
 func containsModel(models []string, model string) bool {

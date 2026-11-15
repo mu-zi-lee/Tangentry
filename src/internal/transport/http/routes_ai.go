@@ -18,6 +18,8 @@ func (h *Handler) registerAIRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("DELETE /api/ai/summaries/{key}/titles/{nodeID}", h.ai.aiSummaryTitleDelete)
 	mux.HandleFunc("POST /api/ai/chat", h.ai.aiChat)
 	mux.HandleFunc("GET /api/ai/chat", h.ai.aiChatHistory)
+	mux.HandleFunc("GET /api/ai/retrieval/settings", h.ai.retrievalSettingsGet)
+	mux.HandleFunc("PUT /api/ai/retrieval/settings", h.ai.retrievalSettingsPut)
 	mux.HandleFunc("GET /api/transcription/models", h.transcription.modelList)
 	mux.HandleFunc("POST /api/transcription/models/{id}/download", h.transcription.modelDownload)
 	mux.HandleFunc("POST /api/transcription/model-downloads/{id}/cancel", h.transcription.modelDownloadCancel)

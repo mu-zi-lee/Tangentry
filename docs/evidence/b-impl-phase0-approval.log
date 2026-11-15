@@ -1,0 +1,63 @@
+# Phase 0 approval + precondition verification (raw output, exit codes)
+# Date: 2026-11-14T03:23:40Z  Host: Linux 6.18.33.2-microsoft-standard-WSL2 x86_64
+
+$ git log --oneline -5 main
+83c7726 Merge pull request #2: hybrid retrieval, configurable embeddings, and PDF/PaddleOCR review package
+da21804 fix: address review feedback
+e9fa41c Merge remote-tracking branch 'origin/main' into owner/b-retrieval
+ec7ab55 Merge pull request #6: per-invocation AI provider call budgets
+33016ce fix: address review feedback
+EXIT_CODE:0
+
+$ git rev-parse main origin/main
+83c7726fab2dd06006df12db4a2f8e01bae9d2cc
+83c7726fab2dd06006df12db4a2f8e01bae9d2cc
+EXIT_CODE:0
+
+$ git branch --show-current
+owner/b-implementation
+EXIT_CODE:0
+
+$ git merge-base --is-ancestor da21804bbc7154ebb60d1c1769294b2dea56da43 main
+EXIT_CODE:0
+
+$ git show -s --format=%H %P %an %s 83c7726fab2dd06006df12db4a2f8e01bae9d2cc
+83c7726fab2dd06006df12db4a2f8e01bae9d2cc ec7ab55ef701e41f61b0573d996556b4c88f622d da21804bbc7154ebb60d1c1769294b2dea56da43 JiaQi Wang Merge pull request #2: hybrid retrieval, configurable embeddings, and PDF/PaddleOCR review package
+EXIT_CODE:0
+
+$ curl -sS -o /tmp/opencode/pr2-reviews.json -w '%{http_code}' https://api.github.com/repos/orangesummertime/CS5351_SE_Group2/pulls/2/reviews
+HTTP_STATUS:200
+EXIT_CODE:0
+APPROVED review: 5897467590 orangesummertime 2026-11-13T20:19:58Z da21804bbc7154ebb60d1c1769294b2dea56da43
+approval chain assertion: PASS
+EXIT_CODE:0
+
+$ go version
+go version go1.27.1 linux/amd64
+EXIT_CODE:0
+
+$ node --version
+v26.13.0
+EXIT_CODE:0
+
+$ npm --version
+11.20.0
+EXIT_CODE:0
+
+$ ls src/internal/adapters/sqlite/migrations/ | tail -3
+079_redact_agent_operation_errors.sql
+080_selected_subtitle.sql
+081_selected_subtitle_index.sql
+EXIT_CODE:0
+
+$ test ! -e src/internal/retrieval  (greenfield check)
+EXIT_CODE:0 (0 = does not exist)
+
+$ ls src/internal/ai/budget.go src/internal/ai/ledger.go src/internal/adapters/aichat/budget.go
+src/internal/adapters/aichat/budget.go
+src/internal/ai/budget.go
+src/internal/ai/ledger.go
+EXIT_CODE:0
+
+$ git diff main --stat -- src/internal/ai/budget.go src/internal/ai/ledger.go src/internal/adapters/aichat/budget.go  (A budget read-only check)
+EXIT_CODE:0 (empty diff = untouched)

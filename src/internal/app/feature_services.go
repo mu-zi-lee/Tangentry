@@ -44,22 +44,23 @@ type apiBundle struct {
 }
 
 type apiServices struct {
-	ai             *ai.Service
-	compatibility  *playback.Compatibility
-	favorites      *favoritesync.Service
-	groupService   *subscriptions.GroupService
-	inbox          *subscriptions.InboxService
-	savedViews     *subscriptions.SavedViewService
-	notes          *notes.Service
-	noteFrames     *notes.Frames
-	noteExports    *notes.ExportService
-	playback       *playback.Service
-	progress       *readingprogress.Service
-	readState      *readstate.Service
-	history        *history.Service
-	preferences    *discovery.Preferences
-	savedSubtitles *subtitles.SavedService
-	subtitles      *subtitles.Service
+	ai                *ai.Service
+	retrievalSettings *retrievalSettingsService
+	compatibility     *playback.Compatibility
+	favorites         *favoritesync.Service
+	groupService      *subscriptions.GroupService
+	inbox             *subscriptions.InboxService
+	savedViews        *subscriptions.SavedViewService
+	notes             *notes.Service
+	noteFrames        *notes.Frames
+	noteExports       *notes.ExportService
+	playback          *playback.Service
+	progress          *readingprogress.Service
+	readState         *readstate.Service
+	history           *history.Service
+	preferences       *discovery.Preferences
+	savedSubtitles    *subtitles.SavedService
+	subtitles         *subtitles.Service
 }
 
 // wireFeatures builds domain services around the runtime capabilities. It does
@@ -135,8 +136,18 @@ func wireFeatures(dataDir string, configuration config.Config, option Options, r
 	favorites := favoritesync.New(store, favoriteRemote, processing)
 	started.add(favorites.Close)
 	noteService := notes.NewService(store)
+	// B's retrieval: the engine is wired even when language AI storage is
+	// unavailable so settings can still be saved; the saved-PDF hook
+	// populates page text through the extraction service (local-first).
+	retrievalEngine := newRetrievalEngine(store)
+	retrievalSettings := newRetrievalSettingsService(store, retrievalEngine)
+	pdfExtraction := newPDFExtraction(store)
+	contentService.SetSavedHook(func(ctx context.Context, item content.Item) {
+		extractSavedPDF(ctx, pdfExtraction, runtime.documents, item)
+	})
 	languageAI := newLanguageAI(dataDir, store, option)
 	if languageAI != nil {
+		languageAI.SetRetrievalEngine(retrievalEngine)
 		languageAI.SetSummaryNoteWriter(func(ctx context.Context, result ai.SummaryResult) error {
 			body := summaryNoteBody(result)
 			createID := summaryNoteID(result.ContentID)
@@ -182,7 +193,7 @@ func wireFeatures(dataDir string, configuration config.Config, option Options, r
 		content: contentService, articles: articles.New(store, &articleadapter.Extractor{HTTP: p.network.public}), sources: sources,
 		recommendations: recommendations, discoveryBatch: discoveryBatch, discoveryFeedback: discoveryFeedback, downloads: processing, transcription: speech, automaticSubtitles: automatic, modelDownloads: modelDownloads, modelDir: modelDir,
 		api: apiServices{
-			ai: languageAI, compatibility: compatibility, favorites: favorites,
+			ai: languageAI, retrievalSettings: retrievalSettings, compatibility: compatibility, favorites: favorites,
 			groupService: subscriptions.NewGroupService(store), inbox: inboxService, savedViews: savedViews,
 			notes: noteService, noteFrames: notes.NewFrames(store, processing.NoteFrameFile, toolkit.CaptureNoteFrame),
 			noteExports: notes.NewExporter(store), playback: playback.New(resolvePlayback, p.network.public),

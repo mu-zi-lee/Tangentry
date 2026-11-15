@@ -1,0 +1,129 @@
+== npm run build ==
+
+> tangentry-web@0.0.3.6 build
+> node scripts/prepare-pdf.mjs && tsc --noEmit && vite build
+
+vite v8.3.4 building client environment for production...
+transforming...
+✓ 2498 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                      1.70 kB │ gzip:   0.79 kB
+dist/assets/pdf.worker.min-CjEcRF4W.mjs          1,264.34 kB
+dist/assets/LocalVideoPlayer-DtFQldPs.css            1.62 kB │ gzip:   0.57 kB
+dist/assets/BilibiliPage-DHlWSci7.css                2.85 kB │ gzip:   0.91 kB
+dist/assets/sha2-DDiS2x7Z.css                        5.83 kB │ gzip:   1.59 kB
+dist/assets/MediaReader-C92CTvuD.css                 7.53 kB │ gzip:   1.92 kB
+dist/assets/DownloadsPage-BZV52MiV.css              17.19 kB │ gzip:   3.66 kB
+dist/assets/GlobalNotesPage-L7-lLsh0.css            21.36 kB │ gzip:   4.28 kB
+dist/assets/NotesPanel-j-7GvvWb.css                 38.17 kB │ gzip:   5.73 kB
+dist/assets/SubscriptionsPage-CAiGfUj3.css          42.07 kB │ gzip:   7.25 kB
+dist/assets/usePlaybackPosition-BjbD4I1a.css        65.59 kB │ gzip:  10.99 kB
+dist/assets/index-DsaDpPCP.css                     167.57 kB │ gzip:  29.07 kB
+dist/assets/captions-C9vbklDa.js                     0.45 kB │ gzip:   0.30 kB
+dist/assets/saveFile-BRzTunPE.js                     0.68 kB │ gzip:   0.46 kB
+dist/assets/MarkdownRenderer-BC5fqi9p.js             2.72 kB │ gzip:   1.22 kB
+dist/assets/textAnchors-Dzo4wajT.js                  2.95 kB │ gzip:   1.25 kB
+dist/assets/YouTubeReadingWorkspace-DCAR9Tk5.js      3.30 kB │ gzip:   1.69 kB
+dist/assets/refresh-cw-BZB7lkg7.js                   4.83 kB │ gzip:   2.22 kB
+dist/assets/ContentReadingWorkspace-DOi7GNGQ.js      5.52 kB │ gzip:   2.51 kB
+dist/assets/BilibiliPage-CdMEjCzi.js                 6.77 kB │ gzip:   2.77 kB
+dist/assets/ReadingWorkspace-BRSlx_mb.js             6.91 kB │ gzip:   3.00 kB
+dist/assets/LocalVideoPlayer-AzQlipSZ.js            14.46 kB │ gzip:   5.02 kB
+dist/assets/sha2-QKOoXVos.js                        18.50 kB │ gzip:   7.53 kB
+dist/assets/DownloadsPage-CoFeyByR.js               24.94 kB │ gzip:   7.09 kB
+dist/assets/GlobalNotesPage-CW58v_3Q.js             38.49 kB │ gzip:  11.78 kB
+dist/assets/NotesPanel-BMtQrnMT.js                  78.50 kB │ gzip:  23.81 kB
+dist/assets/SubscriptionsPage-D0CHl05U.js           90.83 kB │ gzip:  24.19 kB
+dist/assets/MediaReader-BNO9VbL0.js                 95.46 kB │ gzip:  29.71 kB
+dist/assets/usePlaybackPosition-Bg9aOQ5Q.js        139.63 kB │ gzip:  44.03 kB
+dist/assets/pdf-VzHIg0np.js                        430.24 kB │ gzip: 129.30 kB
+dist/assets/index-Cfvq8AF_.js                      786.59 kB │ gzip: 232.43 kB
+
+[plugin builtin:vite-reporter] 
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 634ms
+build exit=0
+== npm test ==
+
+> tangentry-web@0.0.3.6 test
+> vitest run --run
+
+
+ RUN  v5.0.5 /home/xenoplore/CS5351-Final/CS5351_SE_Group2/src/web
+
+(node:369844) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:370050) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ Test Files  66 passed (66)
+      Tests  278 passed (278)
+   Start at  17:51:46
+   Duration  1.55s (import 46%, transform 33%, tests 16%, worker 5%)
+
+    Isolate  66 workers spawned · ~150ms startup each (spawn + environment, per file)
+             at least ~509ms faster with isolate: false — reuses workers across files instead of one per file
+
+web test exit=0
+== go test ./... ==
+ok  	tangentry/cmd/tangentry-desktop	3.190s
+?   	tangentry/cmd/tangentry-mcp	[no test files]
+?   	tangentry/cmd/tangentry-server	[no test files]
+ok  	tangentry/internal/adapters/aichat	3.697s
+ok  	tangentry/internal/adapters/articles	1.195s
+ok  	tangentry/internal/adapters/feeds	0.846s
+ok  	tangentry/internal/adapters/filesystem	0.353s
+?   	tangentry/internal/adapters/htmlimage	[no test files]
+?   	tangentry/internal/adapters/papers	[no test files]
+ok  	tangentry/internal/adapters/pdftext	1.666s
+ok  	tangentry/internal/adapters/platforms/bilibili	1.842s
+ok  	tangentry/internal/adapters/platforms/discourse	0.806s
+ok  	tangentry/internal/adapters/platforms/douyin	0.016s
+ok  	tangentry/internal/adapters/platforms/xiaohongshu	0.234s
+ok  	tangentry/internal/adapters/platforms/xiaoyuzhou	0.115s
+ok  	tangentry/internal/adapters/platforms/youtube	0.145s
+ok  	tangentry/internal/adapters/sqlite	5.542s
+ok  	tangentry/internal/adapters/storage/local	0.014s
+ok  	tangentry/internal/adapters/storage/webdav	0.405s
+ok  	tangentry/internal/adapters/tools	5.636s
+ok  	tangentry/internal/agent	0.012s
+ok  	tangentry/internal/agent/gateway	0.309s
+ok  	tangentry/internal/agent/mcp	0.366s
+ok  	tangentry/internal/ai	0.631s
+ok  	tangentry/internal/app	0.633s
+ok  	tangentry/internal/articles	0.010s
+ok  	tangentry/internal/automaticsubtitles	0.015s
+ok  	tangentry/internal/automaticsubtitles/worker	0.011s
+ok  	tangentry/internal/backup	2.467s
+?   	tangentry/internal/config	[no test files]
+ok  	tangentry/internal/content	0.006s
+ok  	tangentry/internal/credentials	0.038s
+ok  	tangentry/internal/desktop	0.008s
+ok  	tangentry/internal/discovery	0.093s
+?   	tangentry/internal/documents	[no test files]
+ok  	tangentry/internal/downloads	1.607s
+ok  	tangentry/internal/favoritesync	0.474s
+?   	tangentry/internal/history	[no test files]
+?   	tangentry/internal/jobs	[no test files]
+ok  	tangentry/internal/layering	0.078s
+ok  	tangentry/internal/netpolicy	0.011s
+ok  	tangentry/internal/notes	2.095s
+ok  	tangentry/internal/papers	0.013s
+ok  	tangentry/internal/platformfetch	0.006s
+ok  	tangentry/internal/playback	3.041s
+?   	tangentry/internal/preferences	[no test files]
+ok  	tangentry/internal/readingprogress	0.583s
+ok  	tangentry/internal/readstate	0.009s
+ok  	tangentry/internal/retrieval	9.279s
+ok  	tangentry/internal/server	2.117s
+ok  	tangentry/internal/subscriptions	2.242s
+ok  	tangentry/internal/subtitles	0.009s
+ok  	tangentry/internal/transcription	0.903s
+ok  	tangentry/internal/transport/http	3.528s
+?   	tangentry/web	[no test files]
+?   	tangentry/web/tests/server	[no test files]
+go exit=0
