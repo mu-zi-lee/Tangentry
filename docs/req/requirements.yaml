@@ -4,14 +4,14 @@ scope: group
 baseline_commit: 45611ad0e214a2d9de6f0ec5a5aa84fc493d76f2
 note: >-
   Group registry of candidate requirements. A owns FR-01, NFR-01, INV-01,
-  INV-02 and INV-03 (provider call budget); B owns FR-02, NFR-02, INV-04 and
-  INV-05 (question-relevant retrieval). Both sets are still pre-implementation
-  proposals awaiting independent review. ID spaces are disjoint by prefix
-  (A-Txx, B-Txx) so entries are appended per owner, never renumbered or
-  replaced. Scope, ownership and task assignment for C/D/E remain open.
-  A-only requirements: the group confirmed implementation under the existing
-  A plan on 2026-11-13. This does not approve final implementation acceptance
-  or the other owners' requirements.
+  INV-02 and INV-03 (provider call budget). B owns FR-02, NFR-02, INV-04 and
+  INV-05 (question-relevant retrieval). D owns FR-04 and NFR-04 (multi-content
+  comparison). B and D entries are pending independent review. Test IDs use
+  owner prefixes (A-Txx, B-Txx, D-Txx). Append entries per owner and retain
+  existing requirement and test IDs. C and E remain candidate areas in README.
+  The group confirmed implementation under A's existing plan on 2026-11-13.
+  This does not approve final implementation acceptance or the other owners'
+  requirements.
 requirements:
   - id: FR-01
     type: functional
@@ -604,3 +604,125 @@ requirements:
       `content_hash` columns for C's long-lived citations; subtitles use their
       saved revision and PDF uses the document hash plus extractor version. A
       text hash remains only as a legacy/OCR fallback.
+
+  - id: FR-04
+    type: functional
+    owner: "Wenlong Lu (D)"
+    approval: pending
+    priority: Must
+    source:
+      - "../../README.md#L38"
+      - "../../README.md#L83-L88"
+      - "../plans/d-comparison-plan.md"
+      - "../../src/internal/ai/translation_types.go"
+    related: ["FR-01", "FR-02"]
+    statement: >-
+      A reader can select two or three distinct, accessible saved articles
+      or original subtitle sources, ask a comparison question, and see an
+      overall relationship with a result for each selected source.
+      The relationships are same, conflict, not_mentioned, and
+      insufficient_evidence. The result links to verified source passages
+      and discloses partial source failures and task-stop states.
+    fit:
+      - id: AC-FR-04-1
+        scenario: "The reader submits a question with two or three eligible selected sources, or sends invalid input."
+        expected: >-
+          Valid requests use the authorized source snapshots. A blank question,
+          fewer than two or more than three IDs, duplicate IDs, malformed IDs,
+          or unavailable or unauthorized IDs are rejected before a provider
+          request starts. Unauthorized and nonexistent IDs share a generic
+          public error.
+        test: D-T01
+      - id: AC-FR-04-2
+        scenario: "Readable sources support matching facts, incompatible facts, or a field absence in completely inspected records."
+        expected: >-
+          The comparison classifies the relationship and includes one result
+          per selected source in input order. Supported facts link to the
+          corresponding verified original passages. A not_mentioned result
+          carries a versioned coverage reference for a complete field scope.
+        test: D-T02
+      - id: AC-FR-04-3
+        scenario: "A selected and authorized source fails to read, has no usable text, changes version before final verification, or only has limited coverage."
+        expected: >-
+          The affected source has an explicit evidence insufficiency status and
+          a specific reason. Valid remaining facts are shown as partial evidence
+          and the overall relationship is insufficient_evidence. A request
+          with all source reads failed starts zero generation requests.
+        test: D-T03
+      - id: AC-FR-04-4
+        scenario: "The model returns a cross-source, altered, stale, forged or out-of-range citation, or malformed output."
+        expected: >-
+          The service rejects invalid references and prevents them from
+          receiving a verified status or an enabled source jump. Output that
+          cannot be decoded becomes an explicit failure.
+        test: D-T04
+      - id: AC-FR-04-5
+        scenario: "A comparison uses an explicit completion limit or encounters a retrieval context limit."
+        expected: >-
+          Completion starts, retries and fallback share one A invocation ledger.
+          Its configured limit and terminal states apply. B retrieval counts
+          are tracked separately. Context fits both character and UTF-8 byte
+          limits, and a source with an unusable context share is identified.
+        test: D-T05
+      - id: AC-FR-04-6
+        scenario: "A reader opens existing single-content chat and then uses the comparison workflow."
+        expected: >-
+          Single-content chat, history and clear keep their existing behavior.
+          In the comparison workflow a verified citation opens the selected
+          passage, and a partial source failure is shown on that source.
+        test: D-T07
+    tradeoff: >-
+      v1 focuses on single-turn comparisons of stored articles and original
+      subtitle text. Confirmed absence is limited to a complete field scope.
+      Partial coverage is surfaced as insufficient evidence. PDF and
+      persisted multi-turn comparisons can be reviewed after v1.
+
+  - id: NFR-04
+    type: nonfunctional
+    owner: "Wenlong Lu (D)"
+    approval: pending
+    priority: Must
+    source:
+      - "../../README.md#L38"
+      - "../plans/d-comparison-plan.md"
+      - "../evidence/d-comparison-fixtures.json"
+    related: ["FR-04"]
+    statement: >-
+      On the frozen 20-case evaluation set, the complete comparison flow
+      reaches at least 80 percent relationship classification accuracy and
+      at least 80 percent case-level source attribution accuracy. Every
+      injected source failure is explicitly represented for the affected
+      source and the comparison reports insufficient evidence overall.
+    metric: "min(relation_classification_accuracy, case_level_source_attribution_accuracy)"
+    threshold: 0.80
+    method: >-
+      Freeze 20 pre-annotated synthetic cases, then run and independently
+      score the pinned upstream single-chat baseline and the integrated D
+      workflow on identical source snapshots, questions and fault schedules.
+      Publish separate numerators and a denominator of 20 for each metric.
+      Missing or unclassifiable outputs count as incorrect. Attribution
+      requires all selected sources in the case to have correct identity,
+      status, fact and verified evidence or justified coverage or failure.
+      Record model and prompt configuration, call counts, first scores,
+      adjudications and per-run outcomes. Both integrated runs must pass.
+    fit:
+      - id: AC-NFR-04-1
+        scenario: "The frozen evaluation set is scored on the initial integrated run and its repeat."
+        expected: >-
+          Each run scores at least 16 out of 20 for overall relationship
+          classification and at least 16 out of 20 for case-level source
+          attribution. Baseline scores, each run's scores, and all misses
+          are reported separately.
+        test: D-T06
+      - id: AC-NFR-04-2
+        scenario: "The fixed corpus injects a source read failure, missing original text, or a stale source."
+        expected: >-
+          Every injection appears under the correct source with the expected
+          failure reason, and zero injected partial source failures are
+          returned as a successful same relationship.
+        test: D-T06
+    tradeoff: >-
+      The 20-case suite measures a fixed course evaluation, including explicit
+      source failures. Case-level attribution makes one wrong source fail the
+      case. Per-source diagnostics expose partial correctness and the repeated
+      run records real-provider variation.
