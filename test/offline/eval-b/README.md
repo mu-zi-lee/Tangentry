@@ -17,10 +17,13 @@
 1. ✅ Every question/gold label confirmed by the human owner (26 records,
    `annotator: WANG Jiaqi`, `annotated_at: 2026-11-14`).
 2. ✅ Set frozen before running the new paths (freeze hashes below).
-3. ⏳ OCR subset (BQ-025/BQ-026): local PaddleOCR runtime is **not installed**
-   in the evaluation environment; the subset stays **out** of the primary
-   denominator (`primary_denominator: false`) and is reported as
-   `pdf_ocr_unavailable` until a verified OCR run exists.
+3. ✅ OCR runtime **verified end-to-end 2026-11-15** (real local PaddleOCR,
+   PP-OCRv5_mobile, no token/upload; see `docs/evidence/b-ocr-runtime-verification.md`).
+   BQ-025/026 labels remain **provisional**: actual OCR text differs from the
+   expected text by wrap-spacing artifacts, so the labels must be re-annotated
+   against the frozen actual snapshot (`fixtures/ocr-actual-snapshot.json`)
+   and human-confirmed before any OCR-subset recall claim. Still out of the
+   primary denominator.
 4. ⏳ Embedding source approval for the frozen run: see `eval-configs.yaml`
    and the Phase-7 report (provider authorization recorded separately).
 
@@ -43,6 +46,8 @@ Freeze hashes (sha256, computed at confirmation):
 | `replay/` | Phase-7 replay harness: baseline/lexical/hybrid × 120k/8k, budget-invariant runs, negative set, B-T12 double-run; tests B-T12/B-T13/B-T18 + negatives + budget invariants (`go test ./replay -count=1`). |
 | `vectorgen/` | The ONE live embedding pass (protocol §9 gate: refuses to run without `-authorize`). Real `aichat.EmbeddingClient` adapter; per-request role/text_type/usage ledger; key never written to disk. |
 | `report/` | Generates `docs/evidence/b-eval-report.md` (protocol §6) + `b-eval-per-question.json` from the frozen results. |
+| `ocrtest/` | Real local-PaddleOCR end-to-end test (native extractor → OCR fallback → store → retrieval); `-reuse-snapshot` re-checks retrieval on the frozen actual OCR snapshot. |
+| `fixtures/ocr-actual-snapshot.json` | Frozen ACTUAL OCR output (30 pages, `local-paddleocr / PP-OCRv5_mobile`); target for OCR-subset label re-annotation. |
 | `vectors/` | `frozen-vectors.json` (payload hash recorded) + `generation-log.json` (redacted live-pass ledger). |
 | `runs/` | Replay outputs: per-question results, aggregates, determinism proof, budget invariants, negative results. |
 | `verify_eval_set.py` | Independent Python cross-validation (second implementation; 696 checks). |
@@ -134,9 +139,11 @@ frozen vectors (protocol §5).
   with the query terms (≥ the protocol's 20, and enough to fill the top-100
   lexical shortlist); filler and gold share no query term with the question.
 - **OCR subset is provisional:** the fixture stores the *expected* page text.
-  Scanned-page rendering + a real local PaddleOCR run + text verification are
-  pending human-owned steps; the subset is reported independently and never
-  pooled with native text-layer pages.
+  The real local PaddleOCR run is DONE (2026-11-15, see
+  `docs/evidence/b-ocr-runtime-verification.md`); actual OCR text differs by
+  wrap-spacing artifacts, so the two labels await re-annotation against
+  `fixtures/ocr-actual-snapshot.json` + human confirmation. The subset is
+  reported independently and never pooled with native text-layer pages.
 
 ## Regenerate and verify
 
