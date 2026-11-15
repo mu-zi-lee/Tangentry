@@ -4,6 +4,8 @@ github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSs
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
 github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
+github.com/ledongthuc/pdf v0.0.0-20261020125853-5e46805f718e h1:U2Z+V2xqvjJg0azbxHnhOmz2DrpYq0WKpItMPKR6FhY=
+github.com/ledongthuc/pdf v0.0.0-20261020125853-5e46805f718e/go.mod h1:1fEHWurg7pvf5SG6XNE5Q8UZmOwex51Mkx3SLhrW5B4=
 github.com/liuzl/cedar-go v0.0.0-20170805034717-80a9c64b256d h1:qSmEGTgjkESUX5kPMSGJ4pcBUtYVDdkNzMrjQyvRvp0=
 github.com/liuzl/cedar-go v0.0.0-20170805034717-80a9c64b256d/go.mod h1:x7SghIWwLVcJObXbjK7S2ENsT1cAcdJcPl7dRaSFog0=
 github.com/liuzl/da v0.0.0-20180704015230-14771aad5b1d h1:hTRDIpJ1FjS9ULJuEzu69n3qTgc18eI+ztw/pJv47hs=
