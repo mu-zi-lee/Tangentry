@@ -1,0 +1,252 @@
+{
+  "document_sha256": "5b29600473a8037f446e4ff48c129922d4043fcad1bf3868f0486df4ffc27720",
+  "elapsed_seconds": 0,
+  "exact_match_pages": 0,
+  "extraction_mode": "reused-frozen-snapshot",
+  "note": "lexical-only retrieval on OCR text; hybrid would require new authorized embeddings for OCR'd text; OCR-subset labels remain subject to human confirmation",
+  "ocr_extractor": "local-paddleocr",
+  "ocr_model_id": "PP-OCRv5_mobile",
+  "ocr_used": true,
+  "page_count": 30,
+  "pages": [
+    {
+      "page": 1,
+      "exact_normalized_match": false,
+      "char_bigram_similarity": 0.9602649006622517,
+      "ocr_chars": 766,
+      "expected_chars": 746
+    },
+    {
+      "page": 2,
+      "exact_normalized_match": false,
+      "char_bigram_similarity": 0.9598930481283422,
+      "ocr_chars": 759,
+      "expected_chars": 739
+    },
+    {
+      "page": 3,
+      "exact_normalized_match": false,
+      "char_bigram_similarity": 0.9601063829787234,
+      "ocr_chars": 763,
+      "expected_chars": 743
+    },
+    {
+      "page": 4,
+      "exact_normalized_match": false,
+      "char_bigram_similarity": 0.9601593625498008,
+      "ocr_chars": 764,
+      "expected_chars": 744
+    },
+    {
+      "page": 5,
+      "exact_normalized_match": false,
+      "char_bigram_similarity": 0.9596774193548387,
+      "ocr_chars": 755,
+      "expected_chars": 735
+    },
+    {
+      "page": 6,
+      "exact_normalized_match": false,
+      "char_bigram_similarity": 0.9601593625498008,
+      "ocr_chars": 764,
+      "expected_chars": 744
+    },
+    {
+      "page": 7,
+      "exact_normalized_match": false,
+      "char_bigram_similarity": 0.9600532623169108,
+      "ocr_chars": 762,
+      "expected_chars": 742
+    },
+    {
+      "page": 8,
+      "exact_normalized_match": false,
+      "char_bigram_similarity": 0.9597855227882037,
+      "ocr_chars": 757,
+      "expected_chars": 737
+    },
+    {
+      "page": 9,
+      "exact_normalized_match": false,
+      "char_bigram_similarity": 0.9602649006622517,
+      "ocr_chars": 766,
+      "expected_chars": 746
+    },
+    {
+      "page": 10,
+      "exact_normalized_match": false,
+      "char_bigram_similarity": 0.9599465954606141,
+      "ocr_chars": 760,
+      "expected_chars": 740
+    },
+    {
+      "page": 11,
+      "exact_normalized_match": false,
+      "char_bigram_similarity": 0.9601593625498008,
+      "ocr_chars": 764,
+      "expected_chars": 744
+    },
+    {
+      "page": 12,
+      "exact_normalized_match": false,
+      "char_bigram_similarity": 0.9602122015915119,
+      "ocr_chars": 765,
+      "expected_chars": 745
+    },
+    {
+      "page": 13,
+      "exact_normalized_match": false,
+      "char_bigram_similarity": 0.959731543624161,
+      "ocr_chars": 756,
+      "expected_chars": 736
+    },
+    {
+      "page": 14,
+      "exact_normalized_match": false,
+      "char_bigram_similarity": 0.9602122015915119,
+      "ocr_chars": 765,
+      "expected_chars": 745
+    },
+    {
+      "page": 15,
+      "exact_normalized_match": false,
+      "char_bigram_similarity": 0.9583858764186634,
+      "ocr_chars": 805,
+      "expected_chars": 783
+    },
+    {
+      "page": 16,
+      "exact_normalized_match": false,
+      "char_bigram_similarity": 0.9598393574297188,
+      "ocr_chars": 758,
+      "expected_chars": 738
+    },
+    {
+      "page": 17,
+      "exact_normalized_match": false,
+      "char_bigram_similarity": 0.96045197740113,
+      "ocr_chars": 808,
+      "expected_chars": 787
+    },
+    {
+      "page": 18,
+      "exact_normalized_match": false,
+      "char_bigram_similarity": 0.9599465954606141,
+      "ocr_chars": 760,
+      "expected_chars": 740
+    },
+    {
+      "page": 19,
+      "exact_normalized_match": false,
+      "char_bigram_similarity": 0.9601593625498008,
+      "ocr_chars": 764,
+      "expected_chars": 744
+    },
+    {
+      "page": 20,
+      "exact_normalized_match": false,
+      "char_bigram_similarity": 0.9602122015915119,
+      "ocr_chars": 765,
+      "expected_chars": 745
+    },
+    {
+      "page": 21,
+      "exact_normalized_match": false,
+      "char_bigram_similarity": 0.959731543624161,
+      "ocr_chars": 756,
+      "expected_chars": 736
+    },
+    {
+      "page": 22,
+      "exact_normalized_match": false,
+      "char_bigram_similarity": 0.9602122015915119,
+      "ocr_chars": 765,
+      "expected_chars": 745
+    },
+    {
+      "page": 23,
+      "exact_normalized_match": false,
+      "char_bigram_similarity": 0.9601063829787234,
+      "ocr_chars": 763,
+      "expected_chars": 743
+    },
+    {
+      "page": 24,
+      "exact_normalized_match": false,
+      "char_bigram_similarity": 0.9598393574297188,
+      "ocr_chars": 758,
+      "expected_chars": 738
+    },
+    {
+      "page": 25,
+      "exact_normalized_match": false,
+      "char_bigram_similarity": 0.9603174603174603,
+      "ocr_chars": 767,
+      "expected_chars": 747
+    },
+    {
+      "page": 26,
+      "exact_normalized_match": false,
+      "char_bigram_similarity": 0.9599465954606141,
+      "ocr_chars": 760,
+      "expected_chars": 740
+    },
+    {
+      "page": 27,
+      "exact_normalized_match": false,
+      "char_bigram_similarity": 0.9581950895819509,
+      "ocr_chars": 765,
+      "expected_chars": 744
+    },
+    {
+      "page": 28,
+      "exact_normalized_match": false,
+      "char_bigram_similarity": 0.9602122015915119,
+      "ocr_chars": 765,
+      "expected_chars": 745
+    },
+    {
+      "page": 29,
+      "exact_normalized_match": false,
+      "char_bigram_similarity": 0.959731543624161,
+      "ocr_chars": 756,
+      "expected_chars": 736
+    },
+    {
+      "page": 30,
+      "exact_normalized_match": false,
+      "char_bigram_similarity": 0.9602122015915119,
+      "ocr_chars": 765,
+      "expected_chars": 745
+    }
+  ],
+  "pdf": "",
+  "questions": [
+    {
+      "question_id": "BQ-025",
+      "question": "扫描件中提到的设备巡检周期是多少天？",
+      "answer_sentence": "设备巡检周期为14天，特殊天气后需加巡。",
+      "answer_in_ocr_exact_normalized": false,
+      "answer_in_ocr_whitespace_stripped_diagnostic": true,
+      "lexical_selection_contains_answer_exact_normalized": false,
+      "lexical_selection_contains_answer_stripped_diagnostic": true,
+      "exact_gold_segment_hit": false,
+      "selected_count": 100,
+      "status": "lexical_only"
+    },
+    {
+      "question_id": "BQ-026",
+      "question": "扫描件里备用电源的切换时间要求是多少？",
+      "answer_sentence": "备用电源切换时间不得超过50毫秒。",
+      "answer_in_ocr_exact_normalized": false,
+      "answer_in_ocr_whitespace_stripped_diagnostic": true,
+      "lexical_selection_contains_answer_exact_normalized": false,
+      "lexical_selection_contains_answer_stripped_diagnostic": true,
+      "exact_gold_segment_hit": false,
+      "selected_count": 1,
+      "status": "lexical_only"
+    }
+  ],
+  "runtime_path": "/home/xenoplore/ocr-runtime/ocr-runtime",
+  "status": "ready"
+}

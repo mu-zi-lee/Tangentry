@@ -1,0 +1,6 @@
+extraction: status=ready pages=30 ocrUsed=true elapsed=9m49s
+pages exact-normalized-match: 0/30
+BQ-025: answerInOCR=true lexicalHit=true exactGoldHit=false (status=lexical_only, selected=100)
+BQ-026: answerInOCR=true lexicalHit=true exactGoldHit=false (status=lexical_only, selected=1)
+results written: runs/ocr-subset-results.json
+exit=0
