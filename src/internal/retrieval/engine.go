@@ -17,6 +17,7 @@ type Engine struct {
 	Assembler ContextAssembler
 	Settings  *EmbeddingSettings // saved operational settings; nil → built-in defaults
 	mu        sync.Mutex         // guards Embedder/Settings swaps (settings save)
+
 }
 
 // SetEmbedder replaces the embedding adapter at runtime (saved settings take
@@ -101,6 +102,7 @@ type RunInput struct {
 type RunResult struct {
 	Response Response
 	Context  string
+	Passages []Passage
 }
 
 // budgetedEmbedder counts requests and enforces B's budget around an inner
@@ -232,7 +234,10 @@ func (e *Engine) Run(ctx context.Context, in RunInput) (RunResult, error) {
 	if assembly.Status == AssemblyDegradedBudget && resp.Status == string(SelectionOK) {
 		resp.Status = AssemblyDegradedBudget
 	}
-	return RunResult{Response: resp, Context: assembly.Context}, nil
+	return RunResult{Response: resp,
+		Context:  assembly.Context,
+		Passages: assembly.Passages,
+	}, nil
 }
 
 func embeddingSummary(emb Embedder, tracker *BudgetTracker) EmbeddingSummary {
