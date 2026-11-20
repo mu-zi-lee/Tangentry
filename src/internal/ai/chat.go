@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"tangentry/internal/citation"
 	"tangentry/internal/retrieval"
 )
 
@@ -97,6 +98,12 @@ func (s *Service) chat(ctx context.Context, in ChatRequest, emit func(string) er
 	}
 	if len(in.Messages) > 0 {
 		history = append([]ChatMessage(nil), in.Messages...)
+
+		// Client-supplied citations are untrusted.
+		// Only citations generated and validated by the server may be retained.
+		for i := range history {
+			history[i].Citations = nil
+		}
 	}
 	if len(history) == 0 || history[len(history)-1].Role != "user" {
 		return ChatResult{}, ErrInvalid
@@ -107,6 +114,7 @@ func (s *Service) chat(ctx context.Context, in ChatRequest, emit func(string) er
 	// returns zero chat requests (INV-04).
 	source := in.Context
 	var retrievalResp *retrieval.Response
+	var citationPassages []retrieval.Passage
 	if in.Retrieval != nil && in.Retrieval.Enabled {
 		s.mu.Lock()
 		engine := s.retrievalEngine
@@ -129,56 +137,180 @@ func (s *Service) chat(ctx context.Context, in ChatRequest, emit func(string) er
 			return ChatResult{ContentID: in.ContentID, Retrieval: retrievalResp}, rerr
 		}
 		source = runResult.Context
+		citationPassages = runResult.Passages
 	}
+
 	var answer string
+	streamCompleted := false
+
 	if stream, ok := provider.(StreamChatter); ok && emit != nil {
 		var builder strings.Builder
-		err := stream.ChatStream(ctx, c, source, history, func(chunk string) error {
-			builder.WriteString(chunk)
-			return emit(chunk)
-		})
-		if err == nil {
-			answer = builder.String()
-		} else if builder.Len() == 0 && fallbackAllowed(ctx, err) {
-			// A fresh reservation is taken inside the non-stream Chat call.
-			answer, err = chatter.Chat(ctx, c, source, history)
-			if err != nil {
-				if terminal := terminalOutcome(err); terminal != OutcomeActive {
-					SetOutcome(ctx, terminal)
-					MarkInvocationFailed(ctx, terminal)
-					return ChatResult{Budget: budgetReportFor(ctx)}, err
+		var downstreamErr error
+		filter := citation.NewStreamFilter()
+
+		streamErr := stream.ChatStream(
+			ctx,
+			c,
+			source,
+			history,
+			func(chunk string) error {
+				// 保存未经处理的原始答案，供后续 Parse 和 Validate 使用。
+				builder.WriteString(chunk)
+
+				// 过滤引用标记，只输出可以安全展示的文本。
+				visible := filter.Push(chunk)
+
+				// 请求取消时，立即停止向下游输出。
+				if ctx.Err() != nil {
+					downstreamErr = ctx.Err()
+					return downstreamErr
 				}
-			} else if emitErr := emit(answer); emitErr != nil {
-				return ChatResult{}, emitErr
+
+				if visible != "" {
+					if emitErr := emit(visible); emitErr != nil {
+						downstreamErr = emitErr
+						return emitErr
+					}
+				}
+
+				return nil
+			},
+		)
+
+		if streamErr != nil {
+			// 客户端断开或下游输出失败：不允许 fallback，也不保存历史。
+			if downstreamErr != nil || ctx.Err() != nil {
+				failure := downstreamErr
+				if failure == nil {
+					failure = ctx.Err()
+				}
+
+				SetOutcome(ctx, terminalOutcome(failure))
+				MarkInvocationFailed(ctx, terminalOutcome(failure))
+
+				return ChatResult{
+					Budget: budgetReportFor(ctx),
+				}, failure
+			}
+
+			// 只有没有生成任何内容，并且错误允许 fallback 时才尝试非流式请求。
+			if builder.Len() == 0 && fallbackAllowed(ctx, streamErr) {
+				answer, err = chatter.Chat(ctx, c, source, history)
+				if err != nil {
+					if terminal := terminalOutcome(err); terminal != OutcomeActive {
+						SetOutcome(ctx, terminal)
+						MarkInvocationFailed(ctx, terminal)
+					}
+
+					return ChatResult{
+						Budget: budgetReportFor(ctx),
+					}, err
+				}
+			} else {
+				SetOutcome(ctx, terminalOutcome(streamErr))
+				MarkInvocationFailed(ctx, terminalOutcome(streamErr))
+
+				return ChatResult{
+					Budget: budgetReportFor(ctx),
+				}, streamErr
 			}
 		} else {
-			SetOutcome(ctx, terminalOutcome(err))
-			MarkInvocationFailed(ctx, terminalOutcome(err))
-			return ChatResult{Budget: budgetReportFor(ctx)}, err
+			// Provider 正常结束后，才输出过滤器中剩余的文本。
+			tail := filter.Flush()
+
+			if tail != "" {
+				if ctx.Err() != nil {
+					failure := ctx.Err()
+					SetOutcome(ctx, terminalOutcome(failure))
+					MarkInvocationFailed(ctx, terminalOutcome(failure))
+
+					return ChatResult{
+						Budget: budgetReportFor(ctx),
+					}, failure
+				}
+
+				if emitErr := emit(tail); emitErr != nil {
+					SetOutcome(ctx, terminalOutcome(emitErr))
+					MarkInvocationFailed(ctx, terminalOutcome(emitErr))
+
+					return ChatResult{
+						Budget: budgetReportFor(ctx),
+					}, emitErr
+				}
+			}
+
+			answer = builder.String()
+			streamCompleted = true
 		}
 	} else {
-		var err error
 		answer, err = chatter.Chat(ctx, c, source, history)
 		if err != nil {
-			SetOutcome(ctx, terminalOutcome(err))
-			MarkInvocationFailed(ctx, terminalOutcome(err))
-			return ChatResult{Budget: budgetReportFor(ctx)}, err
-		}
-		if emit != nil {
-			if err := emit(answer); err != nil {
-				return ChatResult{}, err
+			if terminal := terminalOutcome(err); terminal != OutcomeActive {
+				SetOutcome(ctx, terminal)
+				MarkInvocationFailed(ctx, terminal)
 			}
+
+			return ChatResult{
+				Budget: budgetReportFor(ctx),
+			}, err
 		}
 	}
+
 	if strings.TrimSpace(answer) == "" {
 		SetOutcome(ctx, OutcomeProviderError)
 		return ChatResult{Budget: budgetReportFor(ctx)}, ErrProvider
 	}
-	history = append(history, ChatMessage{Role: "assistant", Content: strings.TrimSpace(answer), Model: c.Model})
+	var citations []citation.Citation
+
+	cleanAnswer, rawCitations := citation.Parse(answer)
+
+	if strings.TrimSpace(cleanAnswer) == "" {
+		SetOutcome(ctx, OutcomeProviderError)
+		MarkInvocationFailed(ctx, OutcomeProviderError)
+
+		return ChatResult{
+			Budget: budgetReportFor(ctx),
+		}, ErrProvider
+	}
+	citations = citation.Validate(
+		in.ContentID,
+		rawCitations,
+		citationPassages,
+	)
+
+	if err := ctx.Err(); err != nil {
+		return ChatResult{
+			Budget: budgetReportFor(ctx),
+		}, err
+	}
+
+	// 非流式请求或 fallback 请求：在保存历史之前发送完整答案。
+	// 正常流式请求已经逐 chunk 发送，不得再次发送整段答案。
+	if emit != nil && !streamCompleted {
+		if err := ctx.Err(); err != nil {
+			return ChatResult{
+				Budget: budgetReportFor(ctx),
+			}, err
+		}
+
+		if cleanAnswer != "" {
+			if emitErr := emit(cleanAnswer); emitErr != nil {
+				SetOutcome(ctx, terminalOutcome(emitErr))
+				MarkInvocationFailed(ctx, terminalOutcome(emitErr))
+
+				return ChatResult{
+					Budget: budgetReportFor(ctx),
+				}, emitErr
+			}
+		}
+	}
+
+	history = append(history, ChatMessage{Role: "assistant", Content: strings.TrimSpace(cleanAnswer), Model: c.Model, Citations: citations})
 	value, _ := json.Marshal(history)
 	if err := s.results.PutAIResult(ctx, StoredResult{Kind: chatResultKind, SourceHash: key, Value: string(value), Target: "", Model: c.Model, CreatedAt: time.Now().Unix()}); err != nil {
 		return ChatResult{}, ErrStorage
 	}
+
 	SetOutcome(ctx, OutcomeCompleted)
 	return ChatResult{ContentID: in.ContentID, Messages: history, UpdatedAt: time.Now().Unix(), Budget: budgetReportFor(ctx), Retrieval: retrievalResp}, nil
 }

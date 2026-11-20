@@ -1,7 +1,7 @@
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
-import { RetrievalSettingsPanel } from './RetrievalSettings'
+import { RetrievalSettingsPanel } from './RetrievalSettingsPanel'
 import { defaultRetrievalSettings } from './retrievalSettings'
 
 describe('RetrievalSettingsPanel', () => {

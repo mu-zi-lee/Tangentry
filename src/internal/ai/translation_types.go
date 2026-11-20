@@ -4,6 +4,7 @@ import (
 	"context"
 	"sync"
 
+	"tangentry/internal/citation"
 	"tangentry/internal/retrieval"
 	"tangentry/internal/subtitles"
 )
@@ -26,10 +27,12 @@ type Translator interface {
 }
 
 type ChatMessage struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
-	Model   string `json:"model,omitempty"`
+	Role      string              `json:"role"`
+	Content   string              `json:"content"`
+	Model     string              `json:"model,omitempty"`
+	Citations []citation.Citation `json:"citations,omitempty"`
 }
+
 type ChatRequest struct {
 	ContentID string        `json:"contentId"`
 	Context   string        `json:"context"`

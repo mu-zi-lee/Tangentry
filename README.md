@@ -16,13 +16,13 @@
 
 ## 小组分工与任务清单
 
-以下按五个职责分配，成员姓名由小组认领；B 已由 WANG Jiaqi 认领，D 已由 Wenlong Lu 认领，其余待认领。每人负责自己的需求、设计、实现、测试、原始 AI 会话和报告部分。候选功能是否足以满足课程“每人新增需求”的数量与复杂度，须在需求评审时确认。勾选只依据仓库中的实际证据，不能把计划当作完成。任务之间不设时间表。
+以下按五个职责分配，成员姓名由小组认领；B 已由 WANG Jiaqi 认领，D 已由 Wenlong Lu 认领，C 已由 CHEN Yuyan 认领，其余待认领。每人负责自己的需求、设计、实现、测试、原始 AI 会话和报告部分。候选功能是否足以满足课程“每人新增需求”的数量与复杂度，须在需求评审时确认。勾选只依据仓库中的实际证据，不能把计划当作完成。任务之间不设时间表。
 
 | 职责 | 成员 | 负责范围 | 主要接口／目录 |
 | --- | --- | --- | --- |
 | A：基线、集成与预算 | Kefan CHEN | 原版复现、共享 AI 用量预算、模块接口和整体集成 | `src/internal/ai/`、`src/internal/adapters/aichat/`、`src/internal/app/` |
 | B：问题相关检索 | WANG Jiaqi | 为长内容问答选择相关原文片段，记录检索依据 | `src/internal/ai/`、`src/internal/retrieval/`、`src/web/src/features/ai/chatContext.ts` |
-| C：问答引用核验 | 待认领 | 结构化引用、服务端核验、前端来源展示与跳转 | `src/internal/ai/chat.go`、`src/internal/transport/http/`、`src/web/src/features/ai/` |
+| C：问答引用核验 | CHEN Yuyan(Github@:892290356)| 结构化引用、服务端核验、前端来源展示与跳转 | `src/internal/ai/chat.go`、`src/internal/transport/http/`、`src/web/src/features/ai/` |
 | D：多内容比较 | Wenlong Lu | 用户选定内容的比较问答、逐来源证据和冲突／不足提示 | `src/internal/content/`、`src/internal/ai/`、`src/web/src/features/ai/` |
 | E：版本状态与验证治理 | 待认领 | 内容变更后的引用失效／过期状态、CI 门槛和交付核对 | `src/internal/ai/`、`src/internal/adapters/sqlite/`、`.github/workflows/` |
 
