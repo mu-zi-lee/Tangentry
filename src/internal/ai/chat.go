@@ -98,6 +98,12 @@ func (s *Service) chat(ctx context.Context, in ChatRequest, emit func(string) er
 	}
 	if len(in.Messages) > 0 {
 		history = append([]ChatMessage(nil), in.Messages...)
+
+		// Client-supplied citations are untrusted.
+		// Only citations generated and validated by the server may be retained.
+		for i := range history {
+			history[i].Citations = nil
+		}
 	}
 	if len(history) == 0 || history[len(history)-1].Role != "user" {
 		return ChatResult{}, ErrInvalid
@@ -258,6 +264,14 @@ func (s *Service) chat(ctx context.Context, in ChatRequest, emit func(string) er
 
 	cleanAnswer, rawCitations := citation.Parse(answer)
 
+	if strings.TrimSpace(cleanAnswer) == "" {
+		SetOutcome(ctx, OutcomeProviderError)
+		MarkInvocationFailed(ctx, OutcomeProviderError)
+
+		return ChatResult{
+			Budget: budgetReportFor(ctx),
+		}, ErrProvider
+	}
 	citations = citation.Validate(
 		in.ContentID,
 		rawCitations,

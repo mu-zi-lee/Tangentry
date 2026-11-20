@@ -1,6 +1,9 @@
 package citation
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestParseValidCitation(t *testing.T) {
 	answer := "QUIC improves latency. [[cite:p1|QUIC improves latency.]]"
@@ -68,5 +71,42 @@ func TestParseMultipleCitations(t *testing.T) {
 
 	if clean != "First claim . Second claim ." {
 		t.Fatalf("unexpected clean answer: %q", clean)
+	}
+}
+
+func TestParseMalformedBeforeValidCitationPreservesText(t *testing.T) {
+	const input = "A [[cite:x]] middle [[cite:p|q]] B"
+	const want = "A [[cite:x]] middle  B"
+
+	clean, citations := Parse(input)
+
+	if clean != want {
+		t.Fatalf("Parse() = %q, want %q", clean, want)
+	}
+
+	if len(citations) != 1 {
+		t.Fatalf("expected 1 valid citation, got %d", len(citations))
+	}
+
+	if citations[0].PassageID != "p" || citations[0].Quote != "q" {
+		t.Fatalf("unexpected citation: %+v", citations[0])
+	}
+
+	for split := 0; split <= len(input); split++ {
+		filter := NewStreamFilter()
+
+		var streamed strings.Builder
+		streamed.WriteString(filter.Push(input[:split]))
+		streamed.WriteString(filter.Push(input[split:]))
+		streamed.WriteString(filter.Flush())
+
+		if streamed.String() != clean {
+			t.Fatalf(
+				"split at %d: StreamFilter() = %q, Parse() = %q",
+				split,
+				streamed.String(),
+				clean,
+			)
+		}
 	}
 }

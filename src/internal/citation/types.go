@@ -30,8 +30,3 @@ type RawCitation struct {
 	PassageID string
 	Quote     string
 }
-
-type ValidationResult struct {
-	CleanAnswer string
-	Citations   []Citation
-}

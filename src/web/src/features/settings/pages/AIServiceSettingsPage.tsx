@@ -1,5 +1,5 @@
 import { AISettings } from '../../ai/AISettings'
-import { RetrievalSettingsSection } from '../../ai/RetrievalSettings'
+import { RetrievalSettingsSection } from '../../ai/RetrievalSettingsPanel'
 import { TranscriptionSettings } from '../TranscriptionSettings'
 import { SettingsActionPage } from '../ui/SettingsActionPage'
 import { SettingsTaskSwitcher } from '../ui/SettingsTaskSwitcher'

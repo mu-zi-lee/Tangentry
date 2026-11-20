@@ -6,7 +6,7 @@ import (
 )
 
 var citationPattern = regexp.MustCompile(
-	`\[\[cite:([^|]+)\|([^\]]+)\]\]`,
+	`\[\[cite:([^|\]]+)\|([^\]]+)\]\]`,
 )
 
 func Parse(answer string) (string, []RawCitation) {
