@@ -30,6 +30,16 @@ type SelectorConfig struct {
 	AssemblyBudgetRunes int
 	MaxBytes            int
 	Mode                string // hybrid (default), embedding, lexical
+	// Cache is optional. When set, a candidate whose vector is already stored
+	// under the same (content, version, passage, model, dimensions) key is not
+	// sent to the provider; nil keeps the uncached behaviour exactly.
+	Cache VectorCache
+	// Reranker is optional. When set and the run used embeddings, the top
+	// RerankDocs passages are reranked and the hybrid score includes the rerank
+	// component. nil disables reranking entirely.
+	Reranker Reranker
+	// RerankDocs caps how many passages are sent to the reranker (default 100).
+	RerankDocs int
 }
 
 func (c SelectorConfig) withDefaults() SelectorConfig {
@@ -38,6 +48,9 @@ func (c SelectorConfig) withDefaults() SelectorConfig {
 	}
 	if c.MaxPassageRunes <= 0 {
 		c.MaxPassageRunes = DefaultMaxSegmentRunes
+	}
+	if c.RerankDocs <= 0 {
+		c.RerankDocs = 100
 	}
 	// AssemblyBudgetRunes is NOT defaulted here: an explicit 0/negative is
 	// invalid_budget (B-T10). Omission is a labelled default applied by the
@@ -64,6 +77,9 @@ type selector struct {
 	src PassageSource
 	emb Embedder
 	cfg SelectorConfig
+	// Per-run cache accounting (observability only; never affects scoring).
+	cacheHits   int
+	cacheMisses int
 }
 
 // NewSelector builds the domain PassageSelector. emb may be nil (lexical-only
@@ -218,7 +234,8 @@ func (s *selector) Select(ctx context.Context, contentID, question string, maxCa
 	// 7. Embedding (B budget; zero capacity → lexical_only, no query call).
 	var passages []Passage
 	if embeddingPossible {
-		qvec, ok := s.embedUnion(ctx, question, union, cfg.Budget.BatchSize)
+		qvec, ok := s.embedUnion(ctx, contentID, question, union, cfg.Budget.BatchSize)
+		sel.CacheHits, sel.CacheMisses = s.cacheHits, s.cacheMisses
 		if ok {
 			sel.EmbeddingModel = s.emb.ModelID()
 			for _, c := range union {
@@ -262,9 +279,13 @@ func (s *selector) Select(ctx context.Context, contentID, question string, maxCa
 		}
 	}
 
-	// 8. Dedupe → stable sort → INV-05 re-read verification.
+	// 8. Dedupe → rerank (hybrid only) → stable sort → INV-05 verification.
 	kept, dupDropped := Dedupe(passages)
 	SortPassages(kept, nil)
+	if len(kept) > 0 && sel.Mode == ModeHybrid && s.cfg.Reranker != nil {
+		s.applyRerank(ctx, question, kept, weights, &sel)
+		SortPassages(kept, nil)
+	}
 	// No evidence at all (zero lexical and zero semantic similarity) is an
 	// explicit no_match, never a head/tail fallback presented as evidence.
 	if len(kept) > 0 && kept[0].Score <= 0 {
@@ -309,41 +330,147 @@ func allStale(dropped []DroppedPassage) bool {
 	return true
 }
 
+// applyRerank scores the top candidates with the reranker and folds the score
+// into the hybrid ranking. A provider failure is a labelled degradation: the
+// embedding/lexical ranking stands and the reason is reported, never an empty
+// result and never a silent claim that rerank ran.
+func (s *selector) applyRerank(ctx context.Context, question string, kept []Passage, weights Weights, sel *Selection) {
+	limit := s.cfg.RerankDocs
+	if limit <= 0 || limit > len(kept) {
+		limit = len(kept)
+	}
+	docs := make([]string, 0, limit)
+	ids := make([]string, 0, limit)
+	for _, p := range kept[:limit] {
+		docs = append(docs, p.Text)
+		ids = append(ids, p.ID)
+	}
+	sel.RerankUsed = true
+	sel.RerankModel = s.cfg.Reranker.ModelID()
+	results, err := s.cfg.Reranker.Rerank(ctx, question, docs, limit)
+	if err != nil {
+		sel.RerankUsed = false
+		sel.RerankReason = RerankReasonUnavailable
+		sel.RerankRequests = 1
+		return
+	}
+	sel.RerankRequests = 1
+	scores := make(map[string]float64, len(results))
+	byID := make(map[string]int, len(ids))
+	for i, id := range ids {
+		byID[id] = i
+	}
+	for _, r := range results {
+		if r.Index < 0 || r.Index >= len(ids) {
+			sel.RerankUsed = false
+			sel.RerankReason = RerankReasonInvalid
+			return
+		}
+		score := r.RelevanceScore
+		if score < 0 {
+			score = 0
+		}
+		if score > 1 {
+			score = 1
+		}
+		scores[ids[r.Index]] = score
+	}
+	applied := 0
+	for i := range kept {
+		score, ok := scores[kept[i].ID]
+		if !ok {
+			continue
+		}
+		kept[i].RerankScore = score
+		kept[i].Score = HybridScore(weights, kept[i].LexicalNorm, kept[i].CosineScore, score)
+		applied++
+	}
+	if applied == 0 {
+		sel.RerankUsed = false
+		sel.RerankReason = RerankReasonInvalid
+	}
+}
+
 // embedUnion embeds the question and candidate texts with mode-aware
 // batching and sets each candidate's vector. Split mode reserves one query
 // request (text_type=query) and never mixes roles; shared mode batches the
 // question with the documents (identical request-level config, no text_type)
-// so the cold-cache request count is ceil((1+C)/B). Returns the question
-// vector and ok=false on any embedder failure (caller falls back to lexical).
-func (s *selector) embedUnion(ctx context.Context, question string, union []*candidate, batch int) ([]float32, bool) {
+// so the cold-cache request count is ceil((1+C)/B).
+//
+// When a vector cache is configured, a candidate already stored under the same
+// content/version/passage/model/dimensions key is never sent to the provider,
+// which cuts latency and budget usage; a model or dimension change is a miss by
+// construction. The question vector is never cached because it changes per
+// query. Returns the question vector and ok=false on any embedder failure (the
+// caller falls back to lexical).
+func (s *selector) embedUnion(ctx context.Context, contentID, question string, union []*candidate, batch int) ([]float32, bool) {
 	if batch <= 0 {
 		batch = 8
 	}
-	if s.emb.BatchingMode() == BatchingSplit {
+	cache := s.cfg.Cache
+	modelID, dims := s.emb.ModelID(), s.emb.Dimensions()
+
+	pending := union
+	if cache != nil {
+		pending = make([]*candidate, 0, len(union))
+		for _, c := range union {
+			if vec, ok := cache.Get(c.cacheKey(contentID, modelID, dims)); ok {
+				c.vector = vec
+				s.cacheHits++
+				continue
+			}
+			pending = append(pending, c)
+			s.cacheMisses++
+		}
+	}
+
+	store := func(c *candidate, vec []float32) {
+		c.vector = vec
+		if cache != nil && len(vec) > 0 {
+			cache.Put(c.cacheKey(contentID, modelID, dims), vec)
+		}
+	}
+
+	split := s.emb.BatchingMode() == BatchingSplit
+	queryRole := EmbedDocument
+	if split {
+		queryRole = EmbedQuery
+	}
+
+	// Everything came from the cache: the question still needs one request.
+	if len(pending) == 0 {
+		qvecs, err := s.emb.Embed(ctx, []string{question}, queryRole)
+		if err != nil || len(qvecs) != 1 {
+			return nil, false
+		}
+		return qvecs[0], true
+	}
+
+	if split {
 		qvecs, err := s.emb.Embed(ctx, []string{question}, EmbedQuery)
 		if err != nil || len(qvecs) != 1 {
 			return nil, false
 		}
-		for start := 0; start < len(union); start += batch {
-			end := minInt(start+batch, len(union))
+		for start := 0; start < len(pending); start += batch {
+			end := minInt(start+batch, len(pending))
 			texts := make([]string, 0, end-start)
-			for _, c := range union[start:end] {
+			for _, c := range pending[start:end] {
 				texts = append(texts, c.text())
 			}
 			vecs, err := s.emb.Embed(ctx, texts, EmbedDocument)
 			if err != nil || len(vecs) != len(texts) {
 				return nil, false
 			}
-			for i, c := range union[start:end] {
-				c.vector = vecs[i]
+			for i, c := range pending[start:end] {
+				store(c, vecs[i])
 			}
 		}
 		return qvecs[0], true
 	}
-	// Shared: question is texts[0]; question + documents share each batch.
-	all := make([]string, 0, len(union)+1)
+	// Shared: question is texts[0]; question + misses share each batch.
+	all := make([]string, 0, len(pending)+1)
 	all = append(all, question)
-	for _, c := range union {
+	for _, c := range pending {
 		all = append(all, c.text())
 	}
 	var qvec []float32
@@ -358,7 +485,7 @@ func (s *selector) embedUnion(ctx context.Context, question string, union []*can
 				qvec = vecs[0]
 				continue
 			}
-			union[i-1].vector = vecs[i-start]
+			store(pending[i-1], vecs[i-start])
 		}
 	}
 	return qvec, true
@@ -406,27 +533,46 @@ func (s *selector) sweep(sel *Selection, cands []candidate, inUnion map[*candida
 	}
 }
 
+// identity returns the locator and rune range that identify this candidate.
+// It is the single source for both the passage ID and the vector-cache key, so
+// a cached vector is always keyed by exactly what the passage claims.
+func (c *candidate) identity() (loc string, start, end int) {
+	if c.cue != nil {
+		return SubtitleLocator(c.language, c.cue.CueStart, c.cue.CueEnd), c.cue.StartRune, c.cue.EndRune
+	}
+	switch c.kind {
+	case SourceArticle:
+		loc = ArticleLocator(c.unitIndex, c.seg.SentenceStart, c.seg.SentenceEnd)
+	case SourceDiscussion:
+		loc = DiscussionLocator(c.postIndex, c.unitIndex, c.seg.SentenceStart, c.seg.SentenceEnd)
+	case SourcePDF:
+		loc = PDFLocator(c.docHash, c.unitIndex, c.seg.SentenceStart, c.seg.SentenceEnd)
+	}
+	return loc, c.seg.StartRune, c.seg.EndRune
+}
+
+// cacheKey builds the vector-cache identity for this candidate.
+func (c *candidate) cacheKey(contentID, modelID string, dimensions int) VectorCacheKey {
+	loc, start, end := c.identity()
+	return VectorCacheKey{
+		ContentID:     contentID,
+		SourceVersion: c.version,
+		PassageID:     PassageID(contentID, c.kind, loc, start, end),
+		ModelID:       modelID,
+		Dimensions:    dimensions,
+	}
+}
+
 func (c *candidate) passage(contentID string, w Weights, lexNorm float64) Passage {
-	var loc string
-	var start, end, ss, se int
+	var ss, se int
 	var cueIDs []string
 	if c.cue != nil {
-		loc = SubtitleLocator(c.language, c.cue.CueStart, c.cue.CueEnd)
-		start, end = c.cue.StartRune, c.cue.EndRune
 		ss, se = c.cue.CueStart, c.cue.CueEnd+1
 		cueIDs = c.cue.CueIDs
 	} else {
-		switch c.kind {
-		case SourceArticle:
-			loc = ArticleLocator(c.unitIndex, c.seg.SentenceStart, c.seg.SentenceEnd)
-		case SourceDiscussion:
-			loc = DiscussionLocator(c.postIndex, c.unitIndex, c.seg.SentenceStart, c.seg.SentenceEnd)
-		case SourcePDF:
-			loc = PDFLocator(c.docHash, c.unitIndex, c.seg.SentenceStart, c.seg.SentenceEnd)
-		}
-		start, end = c.seg.StartRune, c.seg.EndRune
 		ss, se = c.seg.SentenceStart, c.seg.SentenceEnd
 	}
+	loc, start, end := c.identity()
 	text := c.text()
 	score := HybridScore(w, lexNorm, c.cosine, 0)
 	if c.vector == nil {
@@ -443,6 +589,7 @@ func (c *candidate) passage(contentID string, w Weights, lexNorm float64) Passag
 		EndRune:       end,
 		Text:          text,
 		Score:         score,
+		LexicalNorm:   lexNorm,
 		LexicalScore:  c.lexical.Score,
 		CosineScore:   c.cosine,
 		SourceVersion: c.version,

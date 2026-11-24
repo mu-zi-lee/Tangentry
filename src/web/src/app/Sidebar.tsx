@@ -1,5 +1,5 @@
 import { Button } from '../components/ui'
-import { Compass, Rss, Bookmark, Clock3, StickyNote, Download, Settings, PanelLeftClose, PanelLeftOpen, ChevronUp, ChevronDown, FileText, Play, Headphones, Image, Filter, Newspaper, Circle } from 'lucide-react'
+import { Compass, Rss, Bookmark, Clock3, StickyNote, Download, Settings, PanelLeftClose, PanelLeftOpen, ChevronUp, ChevronDown, FileText, Play, Headphones, Image, Filter, Newspaper, Circle, TextSearch } from 'lucide-react'
 import { useRef, type PointerEvent as ReactPointerEvent } from 'react'
 import type { SavedView } from '../shared/api/types'
 import type { View } from './navigation'
@@ -14,6 +14,7 @@ const groups = [
     { view: 'library', label: '收藏', Icon: Bookmark },
     { view: 'history', label: '历史', Icon: Clock3 },
     { view: 'notes', label: '笔记', Icon: StickyNote },
+    { view: 'retrieval', label: '原文检索', Icon: TextSearch },
     { view: 'downloads', label: '下载', Icon: Download },
   ] },
 ] as const

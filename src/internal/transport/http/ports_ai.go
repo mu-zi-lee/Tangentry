@@ -18,6 +18,13 @@ type RetrievalSettingsService interface {
 	Save(ctx context.Context, input retrieval.EmbeddingSettings) (retrieval.MaskedSettings, error)
 }
 
+// RetrievalSearchService runs B's retrieval pipeline on its own, without a
+// chat call. *retrieval.Engine satisfies it directly, so the standalone
+// workbench shares the exact selection/assembly path used by chat.
+type RetrievalSearchService interface {
+	Run(ctx context.Context, in retrieval.RunInput) (retrieval.RunResult, error)
+}
+
 type AIService interface {
 	Status() ai.Status
 	Configure(ai.ConfigureInput) (ai.Status, error)

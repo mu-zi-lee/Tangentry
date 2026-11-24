@@ -16,7 +16,14 @@ type Engine struct {
 	Embedder  Embedder // nil → lexical-only
 	Assembler ContextAssembler
 	Settings  *EmbeddingSettings // saved operational settings; nil → built-in defaults
-	mu        sync.Mutex         // guards Embedder/Settings swaps (settings save)
+	// VectorCache is optional: candidate vectors already stored locally are not
+	// re-embedded (a model or dimension change misses by construction). nil keeps
+	// the uncached behaviour.
+	VectorCache VectorCache
+	// Reranker is optional: when set and the run used embeddings, the top
+	// candidates are reranked and the hybrid score includes the rerank weight.
+	Reranker Reranker
+	mu       sync.Mutex // guards Embedder/Settings swaps (settings save)
 
 }
 
@@ -29,15 +36,17 @@ func (e *Engine) SetEmbedder(emb Embedder) {
 	e.mu.Unlock()
 }
 
-// ApplySettings atomically replaces the saved operational settings and the
-// embedding adapter so a settings save takes effect without a restart and no
-// run observes a half-applied save. A nil settings pointer restores the
-// built-in defaults; a nil embedder falls back to lexical-only. Each Run
-// snapshots both, so an in-flight run keeps its configuration.
-func (e *Engine) ApplySettings(settings *EmbeddingSettings, emb Embedder) {
+// ApplySettings atomically replaces the saved operational settings, the
+// embedding adapter and the reranker so a settings save takes effect without a
+// restart and no run observes a half-applied save. Nil pointers restore the
+// built-in defaults; a nil embedder falls back to lexical-only and a nil
+// reranker disables reranking. Each Run snapshots them, so an in-flight run
+// keeps its configuration.
+func (e *Engine) ApplySettings(settings *EmbeddingSettings, emb Embedder, reranker Reranker) {
 	e.mu.Lock()
 	e.Settings = settings
 	e.Embedder = emb
+	e.Reranker = reranker
 	e.mu.Unlock()
 }
 
@@ -139,6 +148,8 @@ func (b *budgetedEmbedder) Embed(ctx context.Context, texts []string, role Embed
 func (e *Engine) Run(ctx context.Context, in RunInput) (RunResult, error) {
 	e.mu.Lock()
 	embedder := e.Embedder
+	reranker := e.Reranker
+	cache := e.VectorCache
 	saved := e.Settings
 	e.mu.Unlock()
 	asm := e.Assembler
@@ -191,6 +202,9 @@ func (e *Engine) Run(ctx context.Context, in RunInput) (RunResult, error) {
 		AssemblyBudgetRunes: maxChars,
 		MaxBytes:            DefaultMaxBytes,
 		Mode:                mode,
+		Cache:               cache,
+		Reranker:            reranker,
+		RerankDocs:          budget.topK,
 	}
 	sel := NewSelector(e.Source, emb, cfg)
 	selection, serr := sel.Select(ctx, in.ContentID, in.Question, 0)
@@ -200,7 +214,9 @@ func (e *Engine) Run(ctx context.Context, in RunInput) (RunResult, error) {
 
 	resp := Response{SchemaVersion: WireSchemaVersion, Status: string(selection.Status), Mode: selection.Mode}
 	resp.Embedding = embeddingSummary(embedder, tracker)
-	resp.Rerank = RerankSummary{Enabled: false, BudgetStatus: BudgetDisabled}
+	resp.Embedding.CacheHits = selection.CacheHits
+	resp.Embedding.CacheMisses = selection.CacheMisses
+	resp.Rerank = rerankSummary(reranker, selection)
 
 	// Terminal selection statuses start zero chat requests.
 	switch selection.Status {
@@ -238,6 +254,28 @@ func (e *Engine) Run(ctx context.Context, in RunInput) (RunResult, error) {
 		Context:  assembly.Context,
 		Passages: assembly.Passages,
 	}, nil
+}
+
+// rerankSummary reports whether rerank actually changed the ranking, so the UI
+// never claims a reranked answer when the provider failed or was disabled.
+func rerankSummary(reranker Reranker, selection Selection) RerankSummary {
+	summary := RerankSummary{Enabled: false, BudgetStatus: BudgetDisabled}
+	if reranker == nil {
+		return summary
+	}
+	summary.Model = reranker.ModelID()
+	if selection.RerankUsed {
+		summary.Enabled = true
+		summary.BudgetStatus = BudgetCompleted
+		summary.Requests = selection.RerankRequests
+		return summary
+	}
+	if selection.RerankReason != "" {
+		summary.Enabled = true
+		summary.BudgetStatus = selection.RerankReason
+		summary.Requests = selection.RerankRequests
+	}
+	return summary
 }
 
 func embeddingSummary(emb Embedder, tracker *BudgetTracker) EmbeddingSummary {

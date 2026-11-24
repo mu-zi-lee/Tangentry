@@ -10,6 +10,7 @@ const (
 	AutomaticSubtitlesKey = "automatic_subtitles"
 	CardAppearanceKey     = "card_appearance"
 	FontSettingsKey       = "font_settings"
+	SamplesKey            = "sample_library"
 	MaxKeyLength          = 64
 	MaxValueSize          = 256
 )
@@ -22,7 +23,7 @@ type Store interface {
 }
 
 func ValidateKey(key string) error {
-	if (key != ThemeKey && key != AutomaticSubtitlesKey && key != CardAppearanceKey && key != FontSettingsKey) || len(key) > MaxKeyLength {
+	if (key != ThemeKey && key != AutomaticSubtitlesKey && key != CardAppearanceKey && key != FontSettingsKey && key != SamplesKey) || len(key) > MaxKeyLength {
 		return fmt.Errorf("unsupported preference key %q", key)
 	}
 	return nil

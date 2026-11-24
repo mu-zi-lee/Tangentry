@@ -90,6 +90,7 @@ type Dependencies struct {
 	Notes       NoteDependencies
 	Feeds       SubscriptionDependencies
 	Backup      BackupService
+	Samples     SamplesService
 }
 
 type AccountDependencies struct {
@@ -131,6 +132,7 @@ type LibraryDependencies struct {
 type AIDependencies struct {
 	AI                AIService
 	RetrievalSettings RetrievalSettingsService
+	Retrieval         RetrievalSearchService
 	Transcription     TranscriptionService
 	ModelDownloads    ModelDownloadService
 	Automatic         AutomaticSubtitleService

@@ -92,7 +92,15 @@ func newRetrievalEngine(store *sqlite.Store) *retrieval.Engine {
 	if err != nil {
 		settings = retrieval.DefaultEmbeddingSettings()
 	}
-	engine := &retrieval.Engine{Source: source, Embedder: newEmbeddingAdapter(settings), Assembler: retrieval.NewContextAssembler()}
+	// The persistent cache keeps passage vectors in SQLite (migration 083), so a
+	// repeated question — or a restart — does not re-embed unchanged passages.
+	engine := &retrieval.Engine{
+		Source:      source,
+		Embedder:    newEmbeddingAdapter(settings),
+		Assembler:   retrieval.NewContextAssembler(),
+		VectorCache: sqlite.NewPersistentVectorCache(store),
+		Reranker:    newRerankAdapter(settings),
+	}
 	// Invalid stored settings stay lexical-only (nil adapter), never a
 	// half-configured budget.
 	if retrieval.ValidateEmbeddingSettings(settings) == nil {
@@ -106,6 +114,23 @@ func newRetrievalEngine(store *sqlite.Store) *retrieval.Engine {
 // constructed with a nil budget; usage validity flows back through the
 // engine's tracker (retrieval.UsageReportingEmbedder). Invalid settings yield
 // a nil adapter (lexical-only), never a half-configured client.
+// newRerankAdapter builds the rerank adapter when the saved settings enable it.
+// A disabled, invalid or unbudgeted configuration yields nil, which the engine
+// treats as "rerank off" rather than a failing call.
+func newRerankAdapter(settings retrieval.EmbeddingSettings) retrieval.Reranker {
+	if settings.RerankProvider == "" || settings.RerankProvider == "off" || settings.MaxRerankRequests <= 0 {
+		return nil
+	}
+	if retrieval.ValidateEmbeddingSettings(settings) != nil {
+		return nil
+	}
+	client := aichat.NewRerankClient(settings, nil)
+	if !client.Enabled() {
+		return nil
+	}
+	return client
+}
+
 func newEmbeddingAdapter(settings retrieval.EmbeddingSettings) retrieval.Embedder {
 	if retrieval.ValidateEmbeddingSettings(settings) != nil {
 		return nil

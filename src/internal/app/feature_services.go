@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strings"
 	articleadapter "tangentry/internal/adapters/articles"
+	samplesadapter "tangentry/internal/adapters/samples"
 	"tangentry/internal/ai"
 	"tangentry/internal/articles"
 	"tangentry/internal/automaticsubtitles"
@@ -22,6 +23,7 @@ import (
 	"tangentry/internal/playback"
 	"tangentry/internal/readingprogress"
 	"tangentry/internal/readstate"
+	"tangentry/internal/retrieval"
 	"tangentry/internal/subscriptions"
 	"tangentry/internal/subtitles"
 	"tangentry/internal/transcription"
@@ -46,6 +48,8 @@ type apiBundle struct {
 type apiServices struct {
 	ai                *ai.Service
 	retrievalSettings *retrievalSettingsService
+	retrievalEngine   *retrieval.Engine
+	samples           *samplesService
 	compatibility     *playback.Compatibility
 	favorites         *favoritesync.Service
 	groupService      *subscriptions.GroupService
@@ -141,6 +145,7 @@ func wireFeatures(dataDir string, configuration config.Config, option Options, r
 	// populates page text through the extraction service (local-first).
 	retrievalEngine := newRetrievalEngine(store)
 	retrievalSettings := newRetrievalSettingsService(store, retrievalEngine)
+	samplesService := newSamplesService(samplesadapter.Bundle{}, store, runtime.documents, runtime.preferences)
 	pdfExtraction := newPDFExtraction(store)
 	contentService.SetSavedHook(func(ctx context.Context, item content.Item) {
 		extractSavedPDF(ctx, pdfExtraction, runtime.documents, item)
@@ -193,7 +198,7 @@ func wireFeatures(dataDir string, configuration config.Config, option Options, r
 		content: contentService, articles: articles.New(store, &articleadapter.Extractor{HTTP: p.network.public}), sources: sources,
 		recommendations: recommendations, discoveryBatch: discoveryBatch, discoveryFeedback: discoveryFeedback, downloads: processing, transcription: speech, automaticSubtitles: automatic, modelDownloads: modelDownloads, modelDir: modelDir,
 		api: apiServices{
-			ai: languageAI, retrievalSettings: retrievalSettings, compatibility: compatibility, favorites: favorites,
+			ai: languageAI, retrievalSettings: retrievalSettings, retrievalEngine: retrievalEngine, samples: samplesService, compatibility: compatibility, favorites: favorites,
 			groupService: subscriptions.NewGroupService(store), inbox: inboxService, savedViews: savedViews,
 			notes: noteService, noteFrames: notes.NewFrames(store, processing.NoteFrameFile, toolkit.CaptureNoteFrame),
 			noteExports: notes.NewExporter(store), playback: playback.New(resolvePlayback, p.network.public),

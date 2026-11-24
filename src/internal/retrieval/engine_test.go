@@ -392,7 +392,7 @@ func TestEngineApplySettingsRuntimeSwap(t *testing.T) {
 	second.model = "replacement-model"
 	saved := DefaultEmbeddingSettings()
 	saved.MaxEmbeddingRequests = 0
-	engine.ApplySettings(&saved, second)
+	engine.ApplySettings(&saved, second, nil)
 	result, err := engine.Run(context.Background(), RunInput{ContentID: "fixture:engine", Question: "答案证据", Request: req})
 	if err != nil {
 		t.Fatal(err)

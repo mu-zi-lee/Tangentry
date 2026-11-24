@@ -1,0 +1,25 @@
+/* Bundled starter library settings (设置 · 数据 · 示例资料). */
+
+.samples-settings { display: flex; flex-direction: column; gap: 12px; padding: 16px; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius-lg); }
+
+.samples-head { display: flex; align-items: flex-start; gap: 10px; }
+.samples-icon { display: grid; place-items: center; flex: none; width: 34px; height: 34px; border-radius: var(--radius-md); background: var(--accent-soft); border: 1px solid var(--accent-line); color: var(--accent-ink); }
+.samples-head h2 { margin: 0 0 3px; font-size: 15px; font-family: var(--font-display); color: var(--ink); }
+.samples-head p { margin: 0; font-size: 12.5px; line-height: 1.65; color: var(--muted); }
+
+.samples-hint { margin: 0; font-size: 12px; line-height: 1.65; color: var(--muted); }
+
+.samples-list { display: flex; flex-direction: column; gap: 8px; list-style: none; margin: 0; padding: 0; }
+.samples-item { display: flex; align-items: flex-start; gap: 9px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface); }
+.samples-item.is-present { border-color: #16a34a44; background: #16a34a0a; }
+.samples-mark { flex: none; margin-top: 1px; color: var(--faint); }
+.samples-item.is-present .samples-mark { color: #16a34a; }
+.samples-item-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.samples-item-title { font-size: 13px; font-weight: 600; color: var(--ink); line-height: 1.5; }
+.samples-item-meta { font-size: 11.5px; color: var(--muted); line-height: 1.55; }
+
+.samples-error { margin: 0; padding: 9px 12px; font-size: 12.5px; color: var(--danger); background: var(--danger-soft); border: 1px solid var(--danger); border-radius: var(--radius-md); }
+.samples-notice { margin: 0; padding: 9px 12px; font-size: 12.5px; color: var(--ink); background: var(--accent-soft); border: 1px solid var(--accent-line); border-radius: var(--radius-md); }
+
+.samples-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.samples-foot { margin: 0; font-size: 11.5px; line-height: 1.6; color: var(--faint); }

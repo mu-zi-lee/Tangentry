@@ -58,6 +58,9 @@ func run() error {
 	if err != nil {
 		return err
 	}
+	// A fresh install gets the bundled starter library, so reading and retrieval
+	// work before the user has saved anything. Removal is remembered.
+	application.SeedSamples()
 	backend := server.New(application.RuntimePort(), application.ShellStatePort(), server.ShellOptions{Capabilities: server.Capabilities{Server: true}})
 	defer func() {
 		if err := backend.Close(); err != nil {

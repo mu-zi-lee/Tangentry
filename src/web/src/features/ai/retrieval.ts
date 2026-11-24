@@ -41,6 +41,8 @@ export interface RetrievalPassageRef {
   textSha256: string
   sourceVersion: string
   cueIds: string[]
+  // Present when rerank ran: request-relative relevance in [0,1].
+  rerankScore?: number
 }
 
 export interface RetrievalEmbeddingSummary {
@@ -48,6 +50,10 @@ export interface RetrievalEmbeddingSummary {
   dimensions: number
   budgetStatus: string
   requests: number
+  // Additive: how many candidate vectors came from the local cache versus were
+  // embedded in this run. Older servers omit both.
+  cacheHits?: number
+  cacheMisses?: number
 }
 
 export interface RetrievalRerankSummary {

@@ -64,7 +64,8 @@ export const settingsRegistry: readonly SettingsRegistryItem[] = [
     render: () => <AgentSettingsPage active />,
   },
   {
-    id: 'data', group: '系统', label: '数据与备份', icon: <Database size={16} aria-hidden="true" />, keywords: ['下载', '存储', '目录', '缓存', '快照', '恢复', 'webdav'],
+    id: 'data', group: '系统', label: '数据与备份', icon: <Database size={16} aria-hidden="true" />, keywords: ['下载', '存储', '目录', '缓存', '快照', '恢复', 'webdav', '示例', '样例', '内置资料'],
+    tabs: [{ id: 'storage', label: '存储' }, { id: 'backup', label: '备份' }, { id: 'samples', label: '示例资料' }],
     render: ({ downloads, route }) => <DataSettingsPage active value={(route.tab as DataTab) || 'storage'} downloads={downloads} />,
   },
   {

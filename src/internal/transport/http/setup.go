@@ -70,6 +70,7 @@ func NewWithDependencies(deps Dependencies, assets fs.FS) http.Handler {
 		notes:         &notesHandler{notes: deps.Notes},
 		feeds:         &feedsHandler{feeds: deps.Feeds},
 		backup:        &backupHandler{service: deps.Backup},
+		samples:       &samplesHandler{service: deps.Samples},
 		preferences:   deps.Preferences,
 		assets:        assets,
 	}

@@ -59,6 +59,7 @@ func run() (runErr error) {
 	if err != nil {
 		return err
 	}
+	application.SeedSamples()
 	platformLogin := newPlatformLoginBridge(application.PlatformCredentialsPort())
 	mygo.BindAs("PlatformLogin", platformLoginService{bridge: platformLogin})
 	updater := newUpdaterService(dataDir)
@@ -102,6 +103,7 @@ func runBindingGeneration() error {
 	if err != nil {
 		return err
 	}
+	application.SeedSamples()
 	defer application.Close()
 	platformLogin := newPlatformLoginBridge(application.PlatformCredentialsPort())
 	mygo.BindAs("PlatformLogin", platformLoginService{bridge: platformLogin})

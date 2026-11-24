@@ -16,4 +16,5 @@ func (h *Handler) registerRoutes(mux *http.ServeMux) {
 	h.registerNotesRoutes(mux)
 	h.registerSubscriptionRoutes(mux)
 	h.registerBackupRoutes(mux)
+	h.registerSamplesRoutes(mux)
 }

@@ -30,9 +30,15 @@ type Passage struct {
 	StartRune     int    // zero-based, half-open
 	EndRune       int
 	Text          string  // exact source text at the range
-	Score         float64 // hybrid score
+	Score         float64 // hybrid score (includes rerank when it ran)
 	LexicalScore  float64
 	CosineScore   float64
+	// LexicalNorm is the max-normalized lexical component used to recompute the
+	// hybrid score after reranking. It is not a user-facing score.
+	LexicalNorm float64
+	// RerankScore is the request-relative rerank relevance in [0,1]; it is never
+	// compared across requests.
+	RerankScore   float64
 	SourceVersion string // content revision or text hash; subtitle revision; PDF doc hash+extractor
 	TextSHA256    string
 	CueIDs        []string // subtitle only
@@ -132,6 +138,17 @@ type Selection struct {
 	SlotBudget      int // embeddingSlotBudget used for this run
 	CharBudget      int // embeddingCharBudget used for this run
 	LexicalCoverage int // distinct query terms matched by the best candidate
+	// CacheHits/CacheMisses report how many candidate vectors were served from
+	// the local vector cache versus embedded in this run (observability only).
+	CacheHits   int
+	CacheMisses int
+	// RerankUsed reports whether rerank scores changed the ranking. RerankModel
+	// and RerankRequests describe the call; RerankReason names a degradation
+	// (rerank_unavailable / rerank_invalid) when it did not take effect.
+	RerankUsed     bool
+	RerankModel    string
+	RerankRequests int
+	RerankReason   string
 }
 
 // PassageSelector selects question-relevant passages for one content item.
@@ -156,6 +173,20 @@ type HistoryTurn struct {
 type RerankResult struct {
 	Index          int
 	RelevanceScore float64
+}
+
+// Rerank degradation reasons (reported instead of silently claiming rerank ran).
+const (
+	RerankReasonUnavailable = "rerank_unavailable"
+	RerankReasonInvalid     = "rerank_invalid"
+)
+
+// Reranker scores candidate passages against the question. Implementations are
+// adapters; the domain only consumes the scores. A failure must surface as an
+// error so the caller can degrade to embedding/lexical ranking.
+type Reranker interface {
+	ModelID() string
+	Rerank(ctx context.Context, query string, documents []string, topN int) ([]RerankResult, error)
 }
 
 // AssemblyInput feeds the six-layer context assembler.

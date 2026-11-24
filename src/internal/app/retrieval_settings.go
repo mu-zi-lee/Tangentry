@@ -51,7 +51,7 @@ func (s *retrievalSettingsService) Save(ctx context.Context, input retrieval.Emb
 		return retrieval.MaskedSettings{}, err
 	}
 	if s.engine != nil {
-		s.engine.ApplySettings(&input, newEmbeddingAdapter(input))
+		s.engine.ApplySettings(&input, newEmbeddingAdapter(input), newRerankAdapter(input))
 	}
 	return input.Mask(), nil
 }

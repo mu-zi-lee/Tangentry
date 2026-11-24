@@ -36,6 +36,9 @@ func (c *RerankClient) Enabled() bool {
 // Model returns the rerank model identity.
 func (c *RerankClient) Model() string { return c.Settings.RerankModel }
 
+// ModelID satisfies retrieval.Reranker.
+func (c *RerankClient) ModelID() string { return c.Settings.RerankModel }
+
 // Rerank scores documents against the query. A failure returns an error so
 // the caller degrades to embedding/lexical ranking with rerank_unavailable;
 // scores are request-relative.

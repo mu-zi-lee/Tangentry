@@ -19,6 +19,7 @@ const initialScrollPositions = (): Record<View, number> => ({
   reader: 0,
   subscriptions: 0,
   notes: 0,
+  retrieval: 0,
 })
 
 function findSource(view: View, sourceID: string, focusID: string) {

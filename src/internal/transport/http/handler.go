@@ -17,6 +17,7 @@ type Handler struct {
 	notes         *notesHandler
 	feeds         *feedsHandler
 	backup        *backupHandler
+	samples       *samplesHandler
 	preferences   preferences.Store
 	assets        fs.FS
 }

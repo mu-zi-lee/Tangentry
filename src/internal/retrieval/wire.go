@@ -54,6 +54,8 @@ type PassageRef struct {
 	TextSHA256    string   `json:"textSha256"`
 	SourceVersion string   `json:"sourceVersion"`
 	CueIDs        []string `json:"cueIds"`
+	// RerankScore is the request-relative rerank relevance when rerank ran.
+	RerankScore float64 `json:"rerankScore,omitempty"`
 }
 
 // EmbeddingSummary reports the embedding model identity and B budget usage.
@@ -62,6 +64,10 @@ type EmbeddingSummary struct {
 	Dimensions   int    `json:"dimensions"`
 	BudgetStatus string `json:"budgetStatus"`
 	Requests     int    `json:"requests"`
+	// CacheHits/CacheMisses report how many candidate vectors came from the
+	// local vector cache versus were embedded in this run (additive field).
+	CacheHits   int `json:"cacheHits"`
+	CacheMisses int `json:"cacheMisses"`
 }
 
 // RerankSummary reports the optional rerank stage (off by default).
@@ -89,6 +95,7 @@ func RefFromPassage(p Passage) PassageRef {
 		Locator: p.Locator, SentenceStart: p.SentenceStart, SentenceEnd: p.SentenceEnd,
 		StartRune: p.StartRune, EndRune: p.EndRune, TextSHA256: p.TextSHA256,
 		SourceVersion: p.SourceVersion, CueIDs: cueIDs,
+		RerankScore: p.RerankScore,
 	}
 }
 

@@ -37,6 +37,7 @@ type Application struct {
 	option        Options
 	agent         *agent.Service
 	agentGateway  *gateway.Gateway
+	samples       *samplesService
 	mu            sync.Mutex
 	agentMu       sync.Mutex
 }
@@ -125,6 +126,7 @@ func New(dataDir string, assets fs.FS, options ...Options) (application *Applica
 		shell:         shell,
 		subscriptions: services.features.sources,
 		agent:         agent.New(newAgentProvider(services), services.runtime.store),
+		samples:       services.features.api.samples,
 		dataDir:       dataDir, assets: assets, option: option,
 	}
 	runtime.handler = agentSettingsHandler(application, runtime.handler)
