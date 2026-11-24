@@ -95,7 +95,7 @@ export function RetrievalResultView({ result, selected, onRead, question = '', h
   }
 
   return (
-    <div className="retrieval-result">
+    <div className="retrieval-result" id="retrieval-results" tabIndex={-1} aria-label="检索结果">
       <div className={`retrieval-status retrieval-status-${view.tone}`} role="status" aria-label="检索状态" data-status={result.retrieval.status}>
         <span className="retrieval-status-icon" aria-hidden="true"><ToneIcon size={16} strokeWidth={1.9}/></span>
         <span className="retrieval-status-body">

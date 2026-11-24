@@ -231,8 +231,24 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, onOpenSample
 
   const answerable = canSearch(contentId, question, pending) && !answering
 
+  // Esc clears the query and results and returns focus to the input, so a
+  // keyboard user can start over without reaching for the mouse.
+  function onKeyDown(event: React.KeyboardEvent<HTMLElement>) {
+    if (event.key !== 'Escape') return
+    if (!question && !result && !answer) return
+    event.stopPropagation()
+    running.current?.abort()
+    setQuestion('')
+    setResult(null)
+    setAnswer(null)
+    setAnswerError('')
+    setError('')
+    setPending(false)
+    questionRef.current?.focus()
+  }
+
   return (
-    <section className="retrieval-workbench" aria-label="原文检索">
+    <section className="retrieval-workbench" aria-label="原文检索" onKeyDown={onKeyDown}>
       <header className="retrieval-header">
         <span className="retrieval-header-icon" aria-hidden="true"><TextSearch size={20} strokeWidth={1.8}/></span>
         <div>
@@ -306,6 +322,8 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, onOpenSample
             ))}
           </div>
 
+          <span className="retrieval-kbd-hint" aria-hidden="true">Enter 检索 · Esc 清空</span>
+
           <div className="retrieval-presets" role="group" aria-label="上下文预算">
             <span className="retrieval-presets-label">上下文</span>
             {contextBudgetPresets.map(preset => (
@@ -326,6 +344,22 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, onOpenSample
           </div>
         </div>
       </form>
+
+      {result && (
+        <a
+          className="retrieval-skip"
+          href="#retrieval-results"
+          onClick={event => {
+            // An anchor only scrolls; move focus too so Tab continues in the results.
+            event.preventDefault()
+            const target = document.getElementById('retrieval-results')
+            target?.focus()
+            target?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+          }}
+        >
+          跳到结果（{result.passages.length} 条）
+        </a>
+      )}
 
       <RetrievalOptionsPanel
         open={prefs.advancedOpen}
