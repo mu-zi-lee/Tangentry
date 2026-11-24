@@ -10,6 +10,7 @@ import {
   highlightSegments,
   isOCRDerived,
   normalizeOptions,
+  pickInitialContent,
   ANSWER_MAX_CONTEXT_RUNES,
   answerBody,
   answerFromResponse,
@@ -329,6 +330,26 @@ describe('compactCitationIds', () => {
   it('never leaves a raw 64-character hash in the answer', () => {
     const sample = `見 passage id="${id}"，另見 pdf:${hash}:7:s2`
     expect(/[0-9a-f]{64}/.test(compactCitationIds(sample))).toBe(false)
+  })
+})
+
+describe('pickInitialContent', () => {
+  const items = [{ id: 'a' }, { id: 'b' }]
+
+  it('returns empty for an empty library', () => {
+    expect(pickInitialContent([], 'a')).toBe('')
+  })
+
+  it('restores the last used content when it is still present', () => {
+    expect(pickInitialContent(items, 'b')).toBe('b')
+  })
+
+  it('falls back to the first item when the last one is gone', () => {
+    expect(pickInitialContent(items, 'removed')).toBe('a')
+  })
+
+  it('falls back to the first item on a first visit', () => {
+    expect(pickInitialContent(items, '')).toBe('a')
   })
 })
 

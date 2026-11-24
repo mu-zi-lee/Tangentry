@@ -22,10 +22,12 @@ export interface WorkbenchPrefs {
   highlight: boolean
   /** Passage cards rendered per page; the rest are one click away. */
   pageSize: number
+  /** Last searched content, restored on entry so the task is one Enter. */
+  lastContentId: string
 }
 
 export function defaultPrefs(): WorkbenchPrefs {
-  return { options: normalizeOptions(undefined), guideOpen: true, advancedOpen: false, settingsOpen: false, highlight: true, pageSize: DEFAULT_PAGE_SIZE }
+  return { options: normalizeOptions(undefined), guideOpen: true, advancedOpen: false, settingsOpen: false, highlight: true, pageSize: DEFAULT_PAGE_SIZE, lastContentId: '' }
 }
 
 function bool(value: unknown, fallback: boolean): boolean {
@@ -53,6 +55,7 @@ export function parsePrefs(raw: string | null): WorkbenchPrefs {
     settingsOpen: bool(value.settingsOpen, base.settingsOpen),
     highlight: bool(value.highlight, base.highlight),
     pageSize,
+    lastContentId: typeof value.lastContentId === 'string' ? value.lastContentId : base.lastContentId,
   }
 }
 

@@ -17,6 +17,7 @@ import {
   contextBudgetPresets,
   isOCRDerived,
   normalizeOptions,
+  pickInitialContent,
   resultFromError,
   searchBody,
   workbenchModes,
@@ -87,6 +88,14 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings }: {
     return () => controller.abort()
   }, [])
 
+  // Entry shortcut: pick a content automatically so the core task is one Enter
+  // instead of a dropdown round-trip. The last used content wins when present.
+  useEffect(() => {
+    if (contentId !== '' || items.length === 0) return
+    const initial = pickInitialContent(items, prefs.lastContentId)
+    if (initial) setContentId(initial)
+  }, [items, contentId, prefs.lastContentId])
+
   const options = prefs.options
   const selected = items.find(item => item.id === contentId)
   const contentOptions = items.map(item => ({ value: item.id, label: item.title || item.id }))
@@ -116,6 +125,7 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings }: {
       })
       setResult(value)
       setAsked(trimmed)
+      setPrefs(current => ({ ...current, lastContentId: contentId }))
       return value
     } catch (cause) {
       if (controller.signal.aborted) return null
@@ -207,6 +217,7 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings }: {
               onChange={event => setQuestion(event.target.value)}
               placeholder="例如：这份内容中段给出的结论是什么"
               disabled={pending}
+              autoFocus
               aria-label="检索问题"
             />
           </label>

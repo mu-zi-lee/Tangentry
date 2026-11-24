@@ -376,3 +376,14 @@ export function compactCitationIds(text: string): string {
     // A citation wrapped in quotes leaves the closing quote behind.
     .replace(/(原文第[0-9]+頁|原文片段|字幕片段)"(?=\s|[，。；）)]|$)/g, '$1')
 }
+
+/**
+ * Picks the content to search on entry so the core task is one Enter, not a
+ * dropdown round-trip: the last used content when it is still in the library,
+ * otherwise the first item. Returns '' for an empty library.
+ */
+export function pickInitialContent(items: readonly { id: string }[], lastContentId: string): string {
+  if (items.length === 0) return ''
+  if (lastContentId && items.some(item => item.id === lastContentId)) return lastContentId
+  return items[0].id
+}
