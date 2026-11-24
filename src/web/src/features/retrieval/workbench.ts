@@ -414,3 +414,24 @@ export function passagePosition(passage: { source: string; locator: string; sent
   const head = passage.source === 'discussion' ? `讨论 ${unit}` : `段落 ${unit}`
   return sentences ? `${head} · ${sentences}` : head
 }
+
+/** Query state carried by the page URL (additive params: contentId, q). */
+export interface WorkbenchRoute {
+  contentId: string
+  question: string
+}
+
+/** Reads the shareable query from a location.search string. */
+export function routeFromSearch(search: string): WorkbenchRoute {
+  const params = new URLSearchParams(search)
+  return { contentId: params.get('contentId') ?? '', question: params.get('q') ?? '' }
+}
+
+/** Builds the shareable path for a completed search. */
+export function searchPath(contentId: string, question: string): string {
+  const params = new URLSearchParams()
+  if (contentId) params.set('contentId', contentId)
+  if (question) params.set('q', question)
+  const query = params.toString()
+  return query ? `/retrieval?${query}` : '/retrieval'
+}

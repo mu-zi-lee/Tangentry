@@ -19,7 +19,9 @@ import {
   normalizeOptions,
   pickInitialContent,
   resultFromError,
+  routeFromSearch,
   searchBody,
+  searchPath,
   workbenchModes,
   type WorkbenchCeilings,
   type WorkbenchOptions,
@@ -46,13 +48,17 @@ function readPrefs(): WorkbenchPrefs {
  * selection, locators and scoring; this page only sends requests and renders
  * what comes back. A locator is a position, not proof of correctness.
  */
-export function RetrievalWorkbench({ items, onRead, onOpenSettings }: {
+export function RetrievalWorkbench({ items, onRead, onOpenSettings, routeSearch = '', onRouteChange }: {
   items: ContentItem[]
   onRead: (item: ContentItem, page?: number) => void
   onOpenSettings?: () => void
+  /** location.search: restores a shared query (additive contentId / q params). */
+  routeSearch?: string
+  onRouteChange?: (path: string) => void
 }) {
-  const [contentId, setContentId] = useState('')
-  const [question, setQuestion] = useState('')
+  const initialRoute = routeFromSearch(routeSearch)
+  const [contentId, setContentId] = useState(initialRoute.contentId)
+  const [question, setQuestion] = useState(initialRoute.question)
   const [prefs, setPrefs] = useState<WorkbenchPrefs>(readPrefs)
   const [ceilings, setCeilings] = useState<WorkbenchCeilings | undefined>()
   const [pending, setPending] = useState(false)
@@ -96,6 +102,16 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings }: {
     if (initial) setContentId(initial)
   }, [items, contentId, prefs.lastContentId])
 
+  // A shared link that carries both content and question shows results at once.
+  const autoRan = useRef(false)
+  useEffect(() => {
+    if (autoRan.current) return
+    if (!initialRoute.contentId || !initialRoute.question) return
+    autoRan.current = true
+    void run()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const options = prefs.options
   const selected = items.find(item => item.id === contentId)
   const contentOptions = items.map(item => ({ value: item.id, label: item.title || item.id }))
@@ -126,6 +142,7 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings }: {
       setResult(value)
       setAsked(trimmed)
       setPrefs(current => ({ ...current, lastContentId: contentId }))
+      onRouteChange?.(searchPath(contentId, trimmed))
       return value
     } catch (cause) {
       if (controller.signal.aborted) return null

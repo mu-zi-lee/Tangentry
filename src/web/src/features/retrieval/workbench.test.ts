@@ -20,7 +20,9 @@ import {
   compactLocator,
   queryTerms,
   resultFromError,
+  routeFromSearch,
   searchBody,
+  searchPath,
   workbenchScoreLabel,
   workbenchScoreWidth,
 } from './workbench'
@@ -382,6 +384,32 @@ describe('passage position', () => {
   it('never invents a range when the server sent none', () => {
     expect(passagePosition({ source: 'pdf', locator: `pdf:${hash}:7:s2`, sentenceStart: 0, sentenceEnd: 0 }))
       .toBe('第 7 页')
+  })
+})
+
+describe('shareable query', () => {
+  it('reads content and question from the URL', () => {
+    expect(routeFromSearch('?contentId=pdf%3Aabc&q=居民%20權利')).toEqual({ contentId: 'pdf:abc', question: '居民 權利' })
+  })
+
+  it('tolerates a missing or empty search string', () => {
+    expect(routeFromSearch('')).toEqual({ contentId: '', question: '' })
+    expect(routeFromSearch('?other=1')).toEqual({ contentId: '', question: '' })
+  })
+
+  it('builds a path that round-trips', () => {
+    const path = searchPath('pdf:abc', '居民 權利')
+    expect(routeFromSearch(path.slice(path.indexOf('?')))).toEqual({ contentId: 'pdf:abc', question: '居民 權利' })
+  })
+
+  it('omits empty parts instead of writing blank params', () => {
+    expect(searchPath('', '')).toBe('/retrieval')
+    expect(searchPath('pdf:abc', '')).toBe('/retrieval?contentId=pdf%3Aabc')
+  })
+
+  it('escapes characters that would otherwise break the URL', () => {
+    const path = searchPath('pdf:a&b', 'x=y&z')
+    expect(routeFromSearch(path.slice(path.indexOf('?')))).toEqual({ contentId: 'pdf:a&b', question: 'x=y&z' })
   })
 })
 
