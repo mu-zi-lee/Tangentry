@@ -48,7 +48,7 @@ function readPrefs(): WorkbenchPrefs {
  */
 export function RetrievalWorkbench({ items, onRead, onOpenSettings }: {
   items: ContentItem[]
-  onRead: (item: ContentItem) => void
+  onRead: (item: ContentItem, page?: number) => void
   onOpenSettings?: () => void
 }) {
   const [contentId, setContentId] = useState('')

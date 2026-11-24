@@ -6,6 +6,8 @@ import { passageChipLabel, retrievalStatusView, type RetrievalTone } from '../ai
 import {
   compactLocator,
   highlightSegments,
+  passagePage,
+  passagePosition,
   queryTerms,
   workbenchScoreLabel,
   workbenchScoreWidth,
@@ -56,7 +58,7 @@ function PassageText({ text, terms, highlight }: { text: string; terms: readonly
 export function RetrievalResultView({ result, selected, onRead, question = '', highlight = true, pageSize = 10 }: {
   result: WorkbenchResult
   selected?: ContentItem
-  onRead: (item: ContentItem) => void
+  onRead: (item: ContentItem, page?: number) => void
   question?: string
   highlight?: boolean
   pageSize?: number
@@ -118,6 +120,7 @@ export function RetrievalResultView({ result, selected, onRead, question = '', h
               <div className="retrieval-passage-head">
                 <span className="retrieval-rank" aria-hidden="true">{index + 1}</span>
                 <span className="retrieval-chip">{passageChipLabel(passage)}</span>
+                <span className="retrieval-position" title={passage.locator}>{passagePosition(passage)}</span>
                 <code className="retrieval-locator" title={passage.locator}>{compactLocator(passage.locator)}</code>
                 <button
                   type="button"
@@ -146,7 +149,13 @@ export function RetrievalResultView({ result, selected, onRead, question = '', h
                 <span title="原文文本 SHA-256">校验 <code>{passage.textSha256 ? `${passage.textSha256.slice(0, 12)}…` : '—'}</code></span>
                 <span title="原文字符区间">区间 <code>{passage.startRune}–{passage.endRune}</code></span>
                 {selected && selected.id === passage.contentId && (
-                  <Button variant="quiet" type="button" onClick={() => onRead(selected)}>打开原文</Button>
+                  <Button
+                    variant="quiet"
+                    type="button"
+                    onClick={() => onRead(selected, passagePage(passage.locator) ?? undefined)}
+                  >
+                    {passagePage(passage.locator) !== null ? `跳到第 ${passagePage(passage.locator)} 页` : '打开原文'}
+                  </Button>
                 )}
               </div>
             </li>

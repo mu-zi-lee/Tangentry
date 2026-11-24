@@ -387,3 +387,30 @@ export function pickInitialContent(items: readonly { id: string }[], lastContent
   if (lastContentId && items.some(item => item.id === lastContentId)) return lastContentId
   return items[0].id
 }
+
+/** PDF page number carried by a locator, or null for other sources. */
+export function passagePage(locator: string): number | null {
+  const parts = locator.split(':')
+  if (parts[0] !== 'pdf' || parts.length < 4) return null
+  const page = Number(parts[2])
+  return Number.isInteger(page) && page > 0 ? page : null
+}
+
+/**
+ * Human-readable position of a passage inside its source, so a reader knows
+ * where to look without decoding a locator: "第 61 页 · 句 3–6".
+ */
+export function passagePosition(passage: { source: string; locator: string; sentenceStart: number; sentenceEnd: number }): string {
+  const page = passagePage(passage.locator)
+  const sentences = passage.sentenceEnd > passage.sentenceStart
+    ? `句 ${passage.sentenceStart + 1}–${passage.sentenceEnd}`
+    : ''
+  if (page !== null) return sentences ? `第 ${page} 页 · ${sentences}` : `第 ${page} 页`
+  if (passage.source === 'subtitle') {
+    const cue = passage.locator.replace(/^subtitle:/, '')
+    return cue ? `字幕 ${cue}` : '字幕'
+  }
+  const unit = passage.locator.split(':')[1] ?? ''
+  const head = passage.source === 'discussion' ? `讨论 ${unit}` : `段落 ${unit}`
+  return sentences ? `${head} · ${sentences}` : head
+}

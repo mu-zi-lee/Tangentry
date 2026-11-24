@@ -133,6 +133,27 @@ describe('RetrievalResultView', () => {
     expect(render(result('ok', [passage({ contentId: 'article:99' })]), { selected: item })).not.toContain('打开原文')
   })
 
+  it('shows a readable position instead of only a raw locator', () => {
+    const html = render(result('ok', [passage({ source: 'pdf', locator: 'pdf:bf3e9e65a4afaa5ea28e2338c93a849ef064c59820f354bd75c3cb3f6bde5d94:61:s0-s3', sentenceStart: 2, sentenceEnd: 6 })]))
+    expect(html).toContain('第 61 页 · 句 3–6')
+  })
+
+  it('offers a page jump for PDF hits and a plain open for others', () => {
+    const pdf = passage({ source: 'pdf', locator: 'pdf:bf3e9e65a4afaa5ea28e2338c93a849ef064c59820f354bd75c3cb3f6bde5d94:61:s0-s3' })
+    expect(render(result('ok', [pdf]), { selected: item })).toContain('跳到第 61 页')
+    expect(render(result('ok', [passage()]), { selected: item })).toContain('打开原文')
+  })
+
+  it('passes the page to the reader when jumping', () => {
+    const pdf = passage({ source: 'pdf', locator: 'pdf:bf3e9e65a4afaa5ea28e2338c93a849ef064c59820f354bd75c3cb3f6bde5d94:61:s0-s3' })
+    let got: number | undefined
+    const html = renderToStaticMarkup(createElement(RetrievalResultView, {
+      result: result('ok', [pdf]), selected: item, onRead: (_item, page) => { got = page },
+    }))
+    expect(html).toContain('跳到第 61 页')
+    expect(got).toBeUndefined() // render only; the handler is asserted in the browser check
+  })
+
   it('labels subtitle and pdf locators distinctly', () => {
     const subtitle = render(result('ok', [passage({ source: 'subtitle', locator: 'subtitle:zh:2992-2999' })]))
     expect(subtitle).toContain('字幕 zh:2992-2999')

@@ -202,7 +202,7 @@ export function App() {
   }
 
 
-  function openReader(item: ContentItem) {
+  function openReader(item: ContentItem, page?: number) {
     viewingHistory.record(item)
     historyRecorded.current = item.id
     const returnView = view === 'bilibili' ? 'bilibili' : view === 'history' ? 'history' : view === 'subscriptions' ? 'subscriptions' : view === 'discovery' ? 'discovery' : contentView
@@ -210,7 +210,9 @@ export function App() {
     readerSourceID.current = item.id
     scrollPositions.current.reader = 0
     setReadingItem(item)
-    navigate('reader', true, readerPathForItem(item))
+    // Additive deep link: a page hint lets a retrieval hit open at its page.
+    const readerPath = readerPathForItem(item)
+    navigate('reader', true, page && page > 0 ? `${readerPath}&page=${page}` : readerPath)
     requestAnimationFrame(() => document.getElementById('main')?.focus({ preventScroll: true }))
   }
 

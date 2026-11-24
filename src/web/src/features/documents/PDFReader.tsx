@@ -23,12 +23,20 @@ export interface PDFAnnotationProps {
 }
 interface RenderedPage { page: number; rotation: number; zoom: number; width: number; viewport: PageViewport; text: string }
 
+// Additive deep link: "?page=N" opens the document at that page (used by the
+// retrieval workbench to land on a hit). Absent or invalid keeps page 1.
+function initialPageFromURL(): number {
+  if (typeof window === 'undefined') return 1
+  const raw = Number(new URLSearchParams(window.location.search).get('page'))
+  return Number.isInteger(raw) && raw > 0 ? raw : 1
+}
+
 export function PDFReader({ id, contentId = id, paper, notes = [], focus, onQuote, onOpenNotes, onUnresolved }: { id: string; contentId?: string; paper?: PaperMetadata } & PDFAnnotationProps) {
   const notebook = useReadingNotebook()
   const navigatedFocus = useRef<{ id: string; token: number } | null>(null)
   const focusedLocation = useRef<{ id: string; token: number } | null>(null)
   const [document, setDocument] = useState<PDFDocumentProxy | null>(null)
-  const [page, setPage] = useState(1), [zoom, setZoom] = useState(1), [rotation, setRotation] = useState(0)
+  const [page, setPage] = useState(initialPageFromURL), [zoom, setZoom] = useState(1), [rotation, setRotation] = useState(0)
   const [width, setWidth] = useState(720), [busy, setBusy] = useState(true), [error, setError] = useState('')
   const [rendered, setRendered] = useState<RenderedPage | null>(null), [attempt, setAttempt] = useState(0)
   const [summaryPages, setSummaryPages] = useState<Array<{ page: number; text: string }>>([]), [textExtractionComplete, setTextExtractionComplete] = useState(false)
@@ -39,7 +47,7 @@ export function PDFReader({ id, contentId = id, paper, notes = [], focus, onQuot
   useEffect(() => {
     let active = true
     let destroy: (() => void) | undefined
-    setDocument(null); setRendered(null); setError(''); setBusy(true); setPage(1); setSelection(null); setSummaryPages([]); setTextExtractionComplete(false)
+    setDocument(null); setRendered(null); setError(''); setBusy(true); setPage(initialPageFromURL()); setSelection(null); setSummaryPages([]); setTextExtractionComplete(false)
     void import('pdfjs-dist').then(pdfjs => {
       if (!active) return
       pdfjs.GlobalWorkerOptions.workerSrc = workerURL
@@ -48,6 +56,7 @@ export function PDFReader({ id, contentId = id, paper, notes = [], focus, onQuot
       return task.promise.then(async value => {
         if (!active) return
         setDocument(value)
+        setPage(current => Math.min(current, value.numPages))
         const pages: Array<{ page: number; text: string }> = []
         for (let number = 1; number <= value.numPages; number++) {
           const sheet = await value.getPage(number)

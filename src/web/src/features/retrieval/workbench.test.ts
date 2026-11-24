@@ -10,6 +10,8 @@ import {
   highlightSegments,
   isOCRDerived,
   normalizeOptions,
+  passagePage,
+  passagePosition,
   pickInitialContent,
   ANSWER_MAX_CONTEXT_RUNES,
   answerBody,
@@ -350,6 +352,36 @@ describe('pickInitialContent', () => {
 
   it('falls back to the first item on a first visit', () => {
     expect(pickInitialContent(items, '')).toBe('a')
+  })
+})
+
+describe('passage position', () => {
+  const hash = 'bf3e9e65a4afaa5ea28e2338c93a849ef064c59820f354bd75c3cb3f6bde5d94'
+
+  it('reads the PDF page from a locator', () => {
+    expect(passagePage(`pdf:${hash}:61:s0-s3`)).toBe(61)
+    expect(passagePage('article:12:s3')).toBeNull()
+    expect(passagePage(`pdf:${hash}:0:s1`)).toBeNull()
+  })
+
+  it('labels a PDF hit with page and sentence range', () => {
+    expect(passagePosition({ source: 'pdf', locator: `pdf:${hash}:61:s0-s3`, sentenceStart: 2, sentenceEnd: 6 }))
+      .toBe('第 61 页 · 句 3–6')
+  })
+
+  it('labels an article hit with block and sentence range', () => {
+    expect(passagePosition({ source: 'article', locator: 'article:12:s3', sentenceStart: 0, sentenceEnd: 1 }))
+      .toBe('段落 12 · 句 1–1')
+  })
+
+  it('labels a subtitle hit with its cue range', () => {
+    expect(passagePosition({ source: 'subtitle', locator: 'subtitle:zh:2992-2999', sentenceStart: 0, sentenceEnd: 0 }))
+      .toBe('字幕 zh:2992-2999')
+  })
+
+  it('never invents a range when the server sent none', () => {
+    expect(passagePosition({ source: 'pdf', locator: `pdf:${hash}:7:s2`, sentenceStart: 0, sentenceEnd: 0 }))
+      .toBe('第 7 页')
   })
 })
 
