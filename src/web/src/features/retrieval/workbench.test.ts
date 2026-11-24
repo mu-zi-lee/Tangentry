@@ -7,6 +7,9 @@ import {
   canSearch,
   contextBudgetPresets,
   defaultWorkbenchOptions,
+  errorGuidance,
+  noResultGuidance,
+  normalizeResult,
   highlightSegments,
   isOCRDerived,
   normalizeOptions,
@@ -410,6 +413,77 @@ describe('shareable query', () => {
   it('escapes characters that would otherwise break the URL', () => {
     const path = searchPath('pdf:a&b', 'x=y&z')
     expect(routeFromSearch(path.slice(path.indexOf('?')))).toEqual({ contentId: 'pdf:a&b', question: 'x=y&z' })
+  })
+})
+
+describe('noResultGuidance', () => {
+  it('explains a no-match and always offers a way out', () => {
+    const g = noResultGuidance('no_match', opts())
+    expect(g.title).toBe('没有匹配的原文片段')
+    expect(g.reason).toContain('换个说法')
+    expect(g.actions).toContain('clear')
+  })
+
+  it('offers to enable the sweep when it is off', () => {
+    expect(noResultGuidance('no_match', opts({ sweepCandidates: 0 })).actions).toContain('enable-sweep')
+    expect(noResultGuidance('no_match', opts()).actions).not.toContain('enable-sweep')
+  })
+
+  it('offers a wider budget only when the current one is smaller', () => {
+    expect(noResultGuidance('no_match', opts({ maxChars: 8000 })).actions).toContain('widen-budget')
+    expect(noResultGuidance('no_match', opts({ maxChars: 120000 })).actions).not.toContain('widen-budget')
+  })
+
+  it('offers hybrid only from lexical mode', () => {
+    expect(noResultGuidance('no_match', opts({ mode: 'lexical' })).actions).toContain('try-hybrid')
+    expect(noResultGuidance('no_match', opts({ mode: 'hybrid' })).actions).not.toContain('try-hybrid')
+  })
+
+  it('gives source-specific reasons instead of one generic message', () => {
+    expect(noResultGuidance('pdf_no_text', opts()).reason).toContain('扫描件')
+    expect(noResultGuidance('stale_source', opts()).reason).toContain('重新检索')
+    expect(noResultGuidance('no_verified_passages', opts()).reason).toContain('校验')
+  })
+})
+
+describe('errorGuidance', () => {
+  it('separates a dead service from a timeout', () => {
+    expect(errorGuidance('network_error', 0).title).toBe('连不上本机服务')
+    expect(errorGuidance('ai_timeout', 504).hint).toContain('缩小上下文预算')
+  })
+
+  it('does not offer a retry when the session expired', () => {
+    expect(errorGuidance('unauthorized', 401).retry).toBe(false)
+  })
+
+  it('points at the settings for an unavailable service', () => {
+    expect(errorGuidance('x', 503).hint).toContain('检索设置')
+  })
+
+  it('always allows a retry for an unknown failure', () => {
+    expect(errorGuidance('mystery', 500).retry).toBe(true)
+  })
+})
+
+describe('normalizeResult', () => {
+  it('keeps a normal success payload', () => {
+    const raw = { retrieval: { status: 'ok', passages: [] }, passages: [{ passageId: 'p' }], contextChars: 12 }
+    expect(normalizeResult(raw)?.passages).toHaveLength(1)
+    expect(normalizeResult(raw)?.contextChars).toBe(12)
+  })
+
+  it('handles a 200 outcome envelope that has no passages field', () => {
+    const raw = { code: 'retrieval_no_match', message: '未找到', status: 'no_match', retrieval: { status: 'no_match' } }
+    const got = normalizeResult(raw)
+    expect(got?.passages).toEqual([])
+    expect(got?.contextChars).toBe(0)
+    expect(got?.retrieval.status).toBe('no_match')
+  })
+
+  it('rejects a payload without a retrieval status', () => {
+    expect(normalizeResult(null)).toBeNull()
+    expect(normalizeResult({})).toBeNull()
+    expect(normalizeResult({ retrieval: {} })).toBeNull()
   })
 })
 

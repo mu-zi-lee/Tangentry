@@ -5,9 +5,13 @@ import type { ContentItem } from '../../shared/api/types'
 import { passageChipLabel, retrievalStatusView, type RetrievalTone } from '../ai/retrievalPresentation'
 import {
   compactLocator,
+  defaultWorkbenchOptions,
   highlightSegments,
   passagePage,
+  noResultGuidance,
   passagePosition,
+  type NoResultAction,
+  type WorkbenchOptions,
   queryTerms,
   workbenchScoreLabel,
   workbenchScoreWidth,
@@ -55,13 +59,22 @@ function PassageText({ text, terms, highlight }: { text: string; terms: readonly
  * readability, and the remaining count is always shown so a short list is never
  * mistaken for the whole result.
  */
-export function RetrievalResultView({ result, selected, onRead, question = '', highlight = true, pageSize = 10 }: {
+const noResultLabels: Record<NoResultAction, string> = {
+  'enable-sweep': '开启语义扫描',
+  'widen-budget': '扩大到 120,000 字符',
+  'try-hybrid': '改用混合检索',
+  clear: '清空问题',
+}
+
+export function RetrievalResultView({ result, selected, onRead, question = '', highlight = true, pageSize = 10, options, onNoResultAction }: {
   result: WorkbenchResult
   selected?: ContentItem
   onRead: (item: ContentItem, page?: number) => void
   question?: string
   highlight?: boolean
   pageSize?: number
+  options?: WorkbenchOptions
+  onNoResultAction?: (action: NoResultAction) => void
 }) {
   const [copied, setCopied] = useState('')
   const [shown, setShown] = useState(pageSize)
@@ -162,7 +175,19 @@ export function RetrievalResultView({ result, selected, onRead, question = '', h
           ))}
         </ol>
       ) : (
-        <p className="retrieval-empty">本次没有可引用的片段。定位符是位置信息，不代表结论正确性。</p>
+        <section className="empty-state retrieval-noresult">
+          <h2>{noResultGuidance(result.retrieval.status, options ?? defaultWorkbenchOptions()).title}</h2>
+          <p>{noResultGuidance(result.retrieval.status, options ?? defaultWorkbenchOptions()).reason}</p>
+          {onNoResultAction && (
+            <div className="retrieval-noresult-actions">
+              {noResultGuidance(result.retrieval.status, options ?? defaultWorkbenchOptions()).actions.map(action => (
+                <Button key={action} variant="secondary" type="button" onClick={() => onNoResultAction(action)}>
+                  {noResultLabels[action]}
+                </Button>
+              ))}
+            </div>
+          )}
+        </section>
       )}
 
       {remaining > 0 && (

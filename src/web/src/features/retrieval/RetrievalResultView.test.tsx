@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import type { ContentItem } from '../../shared/api/types'
 import type { RetrievalResponse } from '../ai/retrieval'
 import { RetrievalResultView } from './RetrievalResultView'
-import type { WorkbenchPassage, WorkbenchResult } from './workbench'
+import { defaultWorkbenchOptions, type WorkbenchPassage, type WorkbenchResult } from './workbench'
 
 const item: ContentItem = {
   id: 'article:12', platform: 'web', platformId: '12', kind: 'article',
@@ -98,7 +98,23 @@ describe('RetrievalResultView', () => {
     const html = render(result('no_match'))
     expect(html).toContain('未找到相关原文片段')
     expect(html).not.toContain('retrieval-passage"')
-    expect(html).toContain('本次没有可引用的片段')
+    expect(html).toContain('没有匹配的原文片段')
+    expect(html).toContain('换个说法')
+  })
+
+  it('offers concrete next steps when nothing matched', () => {
+    const seen: string[] = []
+    const html = renderToStaticMarkup(createElement(RetrievalResultView, {
+      result: result('no_match'),
+      options: { ...defaultWorkbenchOptions(), mode: 'lexical', sweepCandidates: 0, maxChars: 8000 },
+      onRead: () => {},
+      onNoResultAction: action => seen.push(action),
+    }))
+    expect(html).toContain('开启语义扫描')
+    expect(html).toContain('扩大到 120,000 字符')
+    expect(html).toContain('改用混合检索')
+    expect(html).toContain('清空问题')
+    expect(seen).toEqual([])
   })
 
   it('keeps coverage-limited passages and never calls them no_match', () => {

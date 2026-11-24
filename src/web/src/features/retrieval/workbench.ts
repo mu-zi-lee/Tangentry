@@ -435,3 +435,75 @@ export function searchPath(contentId: string, question: string): string {
   const query = params.toString()
   return query ? `/retrieval?${query}` : '/retrieval'
 }
+
+/** Concrete next steps offered when a search returns nothing. */
+export type NoResultAction = 'enable-sweep' | 'widen-budget' | 'try-hybrid' | 'clear'
+
+export interface NoResultGuidance {
+  title: string
+  reason: string
+  actions: NoResultAction[]
+}
+
+/**
+ * Explains why a search produced no passages and what to change. Every action
+ * maps to a real option on this page, so the empty state is a way forward rather
+ * than a dead end.
+ */
+export function noResultGuidance(status: string, options: WorkbenchOptions): NoResultGuidance {
+  const actions: NoResultAction[] = []
+  if (options.sweepCandidates === 0) actions.push('enable-sweep')
+  if (options.maxChars < DEFAULT_CONTEXT_RUNES) actions.push('widen-budget')
+  if (options.mode === 'lexical') actions.push('try-hybrid')
+  actions.push('clear')
+
+  switch (status) {
+    case 'no_match':
+      return { title: '没有匹配的原文片段', reason: '这份内容里没有与问题重合的表述。换个说法、减少限定词，或改用混合检索试试。', actions }
+    case 'no_verified_passages':
+      return { title: '候选片段未通过原文校验', reason: '候选片段都没通过原文校验，可能内容刚被更新。重新检索一次即可。', actions }
+    case 'stale_source':
+      return { title: '原文已更新', reason: '旧引用已失效。重新检索会基于最新原文。', actions }
+    case 'pdf_no_text':
+      return { title: '这份 PDF 没有可用文本', reason: '可能是扫描件。需要本机 OCR 才能检索，或换一份带文本层的内容。', actions }
+    case 'pdf_ocr_unavailable':
+      return { title: '本机 OCR 不可用', reason: '扫描件需要 OCR。安装并配置本机 PaddleOCR 后重试，不会上传云端。', actions }
+    case 'empty':
+      return { title: '问题为空', reason: '输入要查的内容后再检索。', actions: ['clear'] }
+    default:
+      return { title: '本次没有可引用的片段', reason: '调整下面的检索条件后重试。定位符只表示位置，不代表结论正确。', actions }
+  }
+}
+
+/** Actionable copy for a failed request, with a retry when it can help. */
+export function errorGuidance(code: string, status: number): { title: string; hint: string; retry: boolean } {
+  if (code === 'network_error' || status === 0) {
+    return { title: '连不上本机服务', hint: '确认 Tangentry 仍在运行，然后重试。', retry: true }
+  }
+  if (status === 504 || code === 'ai_timeout') {
+    return { title: '检索超时', hint: '内容较长时可能超时。可缩小上下文预算后重试。', retry: true }
+  }
+  if (status === 401 || code === 'unauthorized') {
+    return { title: '登录已失效', hint: '请重新登录后再检索。', retry: false }
+  }
+  if (status === 503) {
+    return { title: '检索服务暂不可用', hint: '检查「检索设置」里的服务与密钥，然后重试。', retry: true }
+  }
+  return { title: '检索失败', hint: '可以直接重试；若持续失败，检查检索设置。', retry: true }
+}
+
+/**
+ * Normalizes a search response. A renderable outcome such as no_match is sent
+ * with HTTP 200 but carries only the status envelope (no passages/contextChars),
+ * so the UI must not assume the success shape.
+ */
+export function normalizeResult(raw: unknown): WorkbenchResult | null {
+  if (!raw || typeof raw !== 'object') return null
+  const value = raw as { retrieval?: RetrievalResponse; passages?: unknown; contextChars?: unknown }
+  if (!value.retrieval || typeof value.retrieval.status !== 'string') return null
+  return {
+    retrieval: { ...value.retrieval, passages: Array.isArray(value.retrieval.passages) ? value.retrieval.passages : [] },
+    passages: Array.isArray(value.passages) ? value.passages as WorkbenchPassage[] : [],
+    contextChars: typeof value.contextChars === 'number' ? value.contextChars : 0,
+  }
+}

@@ -267,3 +267,14 @@
 @media (max-width: 720px) {
   .retrieval-settings-summary { display: none; }
 }
+
+/* ---------- actionable states ---------- */
+.retrieval-noresult { text-align: left; }
+.retrieval-noresult-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+
+.retrieval-skeleton { display: flex; flex-direction: column; gap: 10px; padding: 16px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--card); }
+.retrieval-skeleton > span { display: block; height: 14px; border-radius: var(--radius-xs); background: var(--surface); animation: retrieval-pulse 1.2s ease-in-out infinite; }
+.retrieval-skeleton > span:nth-child(2) { width: 82%; animation-delay: .15s; }
+.retrieval-skeleton > span:nth-child(3) { width: 64%; animation-delay: .3s; }
+@keyframes retrieval-pulse { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .retrieval-skeleton > span { animation: none; } }

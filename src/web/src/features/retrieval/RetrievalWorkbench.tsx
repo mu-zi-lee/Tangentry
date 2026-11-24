@@ -15,8 +15,10 @@ import {
   answerFromResponse,
   canSearch,
   contextBudgetPresets,
+  errorGuidance,
   isOCRDerived,
   normalizeOptions,
+  normalizeResult,
   pickInitialContent,
   resultFromError,
   routeFromSearch,
@@ -24,6 +26,7 @@ import {
   searchPath,
   workbenchModes,
   type WorkbenchCeilings,
+  type NoResultAction,
   type WorkbenchOptions,
   type WorkbenchResult,
 } from './workbench'
@@ -48,10 +51,11 @@ function readPrefs(): WorkbenchPrefs {
  * selection, locators and scoring; this page only sends requests and renders
  * what comes back. A locator is a position, not proof of correctness.
  */
-export function RetrievalWorkbench({ items, onRead, onOpenSettings, routeSearch = '', onRouteChange }: {
+export function RetrievalWorkbench({ items, onRead, onOpenSettings, onOpenSamples, routeSearch = '', onRouteChange }: {
   items: ContentItem[]
   onRead: (item: ContentItem, page?: number) => void
   onOpenSettings?: () => void
+  onOpenSamples?: () => void
   /** location.search: restores a shared query (additive contentId / q params). */
   routeSearch?: string
   onRouteChange?: (path: string) => void
@@ -64,12 +68,14 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, routeSearch 
   const [pending, setPending] = useState(false)
   const [result, setResult] = useState<WorkbenchResult | null>(null)
   const [error, setError] = useState('')
+  const [errorInfo, setErrorInfo] = useState<{ code: string; status: number } | null>(null)
   const [asked, setAsked] = useState('')
   const [answer, setAnswer] = useState<string | null>(null)
   const [answerPassages, setAnswerPassages] = useState(0)
   const [answering, setAnswering] = useState(false)
   const [answerError, setAnswerError] = useState('')
   const running = useRef<AbortController | null>(null)
+  const questionRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => () => running.current?.abort(), [])
 
@@ -122,23 +128,31 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, routeSearch 
   const resetOptions = () => setPrefs(current => ({ ...current, options: normalizeOptions(undefined, ceilings) }))
   const openSettings = () => onOpenSettings?.()
 
-  async function run(): Promise<WorkbenchResult | null> {
+  async function runWith(override?: WorkbenchOptions): Promise<WorkbenchResult | null> {
+    const effective = override ?? options
     if (!canSearch(contentId, question, pending)) return null
     running.current?.abort()
     const controller = new AbortController()
     running.current = controller
     setPending(true)
     setError('')
+    setErrorInfo(null)
     setResult(null)
     setAnswer(null)
     setAnswerError('')
     const trimmed = question.trim()
     try {
-      const value = await request<WorkbenchResult>('/ai/retrieval/search', {
+      const raw = await request<unknown>('/ai/retrieval/search', {
         method: 'POST',
         signal: controller.signal,
-        body: JSON.stringify(searchBody(contentId, trimmed, options)),
+        body: JSON.stringify(searchBody(contentId, trimmed, effective)),
       })
+      const value = normalizeResult(raw)
+      if (!value) {
+        setError('检索返回了无法识别的结果，请重试。')
+        setErrorInfo({ code: 'bad_payload', status: 0 })
+        return null
+      }
       setResult(value)
       setAsked(trimmed)
       setPrefs(current => ({ ...current, lastContentId: contentId }))
@@ -154,11 +168,14 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, routeSearch 
         return recovered
       }
       setError(cause instanceof APIError ? cause.message : '检索请求失败，请重试。')
+      setErrorInfo(cause instanceof APIError ? { code: cause.code, status: cause.status } : { code: 'unknown', status: 0 })
       return null
     } finally {
       if (!controller.signal.aborted) setPending(false)
     }
   }
+
+  async function run(): Promise<WorkbenchResult | null> { return runWith() }
 
   // answer runs retrieval when it has not run yet, then asks the configured chat
   // model to answer from the same selection. The second retrieval is cheap: the
@@ -193,6 +210,23 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, routeSearch 
     } finally {
       setAnswering(false)
     }
+  }
+
+  // Every empty-state action changes a real option and re-runs, so the user is
+  // never left guessing what to try next.
+  function applyNoResultAction(action: NoResultAction) {
+    if (action === 'clear') {
+      setQuestion('')
+      setResult(null)
+      questionRef.current?.focus()
+      return
+    }
+    const patch = action === 'enable-sweep' ? { sweepCandidates: 90 }
+      : action === 'widen-budget' ? { maxChars: 120000 }
+      : { mode: 'hybrid' as const }
+    setPrefs(current => ({ ...current, options: normalizeOptions({ ...current.options, ...patch }, ceilings) }))
+    // Re-run with the patched options on the next tick.
+    setTimeout(() => { void runWith({ ...options, ...patch }) }, 0)
   }
 
   const answerable = canSearch(contentId, question, pending) && !answering
@@ -235,6 +269,7 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, routeSearch 
               placeholder="例如：这份内容中段给出的结论是什么"
               disabled={pending}
               autoFocus
+              ref={questionRef}
               aria-label="检索问题"
             />
           </label>
@@ -325,13 +360,35 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, routeSearch 
       </section>
 
       {items.length === 0 && (
-        <p className="retrieval-empty">
-          资料库还没有内容。内置的示例资料会在资料库为空时自动载入；也可以在
-          {onOpenSettings ? '「设置 → 数据 → 示例资料」' : '设置'} 里立即载入，或在「发现」保存一份内容。
-        </p>
+        <section className="empty-state">
+          <h2>资料库还没有内容</h2>
+          <p>检索只在你保存的内容里进行。可以先载入内置示例资料，或去「发现」保存一份。</p>
+          {onOpenSamples && (
+            <div className="retrieval-noresult-actions">
+              <Button variant="primary" type="button" onClick={onOpenSamples}>载入示例资料</Button>
+            </div>
+          )}
+        </section>
       )}
 
-      {error && <p className="retrieval-error" role="alert">{error}</p>}
+      {error && (
+        <div className="error-panel" role="alert">
+          <div>
+            <strong>{errorGuidance(errorInfo?.code ?? 'unknown', errorInfo?.status ?? 0).title}</strong>
+            <p>{error}</p>
+            <p className="field-hint">{errorGuidance(errorInfo?.code ?? 'unknown', errorInfo?.status ?? 0).hint}</p>
+          </div>
+          {errorGuidance(errorInfo?.code ?? 'unknown', errorInfo?.status ?? 0).retry && (
+            <Button variant="secondary" type="button" disabled={pending} onClick={() => void run()}>重试</Button>
+          )}
+        </div>
+      )}
+
+      {pending && !result && (
+        <div className="retrieval-skeleton" role="status" aria-live="polite" aria-label="正在检索">
+          <span/><span/><span/>
+        </div>
+      )}
 
       {(answering || answer || answerError) && (
         <RetrievalAnswer
@@ -354,6 +411,8 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, routeSearch 
           question={asked}
           highlight={prefs.highlight}
           pageSize={prefs.pageSize}
+          options={options}
+          onNoResultAction={applyNoResultAction}
         />
       )}
     </section>
