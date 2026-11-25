@@ -8,13 +8,17 @@ import {
   contextBudgetPresets,
   defaultWorkbenchOptions,
   errorGuidance,
+  QUESTION_MAX_LENGTH,
+  addRecentSearch,
   noResultGuidance,
+  sortPassages,
   normalizeResult,
   highlightSegments,
   isOCRDerived,
   normalizeOptions,
   passagePage,
   passagePosition,
+  passageUnit,
   pickInitialContent,
   ANSWER_MAX_CONTEXT_RUNES,
   answerBody,
@@ -484,6 +488,82 @@ describe('normalizeResult', () => {
     expect(normalizeResult(null)).toBeNull()
     expect(normalizeResult({})).toBeNull()
     expect(normalizeResult({ retrieval: {} })).toBeNull()
+  })
+})
+
+describe('addRecentSearch', () => {
+  const base = [{ contentId: 'a', question: '一' }, { contentId: 'a', question: '二' }]
+
+  it('puts the newest query first', () => {
+    expect(addRecentSearch(base, { contentId: 'a', question: '三' })[0].question).toBe('三')
+  })
+
+  it('moves a repeated query to the front instead of duplicating it', () => {
+    const got = addRecentSearch(base, { contentId: 'a', question: '二' })
+    expect(got.map(item => item.question)).toEqual(['二', '一'])
+  })
+
+  it('treats the same question on another content as distinct', () => {
+    const got = addRecentSearch(base, { contentId: 'b', question: '一' })
+    expect(got).toHaveLength(3)
+  })
+
+  it('caps the list', () => {
+    const long = Array.from({ length: 5 }, (_, i) => ({ contentId: 'a', question: `q${i}` }))
+    expect(addRecentSearch(long, { contentId: 'a', question: 'new' }, 5)).toHaveLength(5)
+  })
+
+  it('ignores a blank question or missing content', () => {
+    expect(addRecentSearch(base, { contentId: 'a', question: '   ' })).toEqual(base)
+    expect(addRecentSearch(base, { contentId: '', question: 'x' })).toEqual(base)
+  })
+
+  it('trims the stored question', () => {
+    expect(addRecentSearch([], { contentId: 'a', question: '  问题  ' })[0].question).toBe('问题')
+  })
+})
+
+describe('sortPassages', () => {
+  const list = [
+    { id: 'p2', locator: 'pdf:x:9:s6', startRune: 300, sentenceStart: 6 },
+    { id: 'p1', locator: 'pdf:x:2:s2', startRune: 100, sentenceStart: 2 },
+    { id: 'p3', locator: 'pdf:x:9:s4', startRune: 80, sentenceStart: 4 },
+  ]
+
+  it('leaves the server relevance order untouched by default', () => {
+    expect(sortPassages(list, 'relevance').map(p => p.id)).toEqual(['p2', 'p1', 'p3'])
+  })
+
+  it('orders by page first, then by position inside the page', () => {
+    expect(sortPassages(list, 'source').map(p => p.id)).toEqual(['p1', 'p3', 'p2'])
+  })
+
+  it('never puts a later page before an earlier one', () => {
+    const pages = [
+      { id: 'a', locator: 'pdf:x:44:s0', startRune: 10, sentenceStart: 0 },
+      { id: 'b', locator: 'pdf:x:1:s0', startRune: 900, sentenceStart: 0 },
+    ]
+    expect(sortPassages(pages, 'source').map(p => p.id)).toEqual(['b', 'a'])
+  })
+
+  it('understands every source kind', () => {
+    expect(passageUnit('pdf:x:7:s0')).toBe(7)
+    expect(passageUnit('article:12:s3')).toBe(12)
+    expect(passageUnit('discussion:2:3:s0')).toBe(3)
+    expect(passageUnit('subtitle:zh:2992-2999')).toBe(2992)
+    expect(passageUnit('unexpected')).toBe(0)
+  })
+
+  it('never mutates the input', () => {
+    const copy = [...list]
+    sortPassages(list, 'source')
+    expect(list).toEqual(copy)
+  })
+})
+
+describe('question limits', () => {
+  it('exposes a length cap the input can use', () => {
+    expect(QUESTION_MAX_LENGTH).toBeGreaterThan(0)
   })
 })
 

@@ -507,3 +507,63 @@ export function normalizeResult(raw: unknown): WorkbenchResult | null {
     contextChars: typeof value.contextChars === 'number' ? value.contextChars : 0,
   }
 }
+
+/** One remembered query, scoped to the content it was asked against. */
+export interface RecentSearch {
+  contentId: string
+  question: string
+}
+
+/**
+ * Adds a query to the recent list: newest first, no duplicate of the same
+ * content+question, capped. Returns a new array so callers can persist it.
+ */
+export function addRecentSearch(list: readonly RecentSearch[], entry: RecentSearch, max = 5): RecentSearch[] {
+  const question = entry.question.trim()
+  if (!entry.contentId || !question) return [...list]
+  const rest = list.filter(item => !(item.contentId === entry.contentId && item.question === question))
+  return [{ contentId: entry.contentId, question }, ...rest].slice(0, Math.max(1, max))
+}
+
+/** Display order for the result list. The server order is the relevance order. */
+export type PassageSort = 'relevance' | 'source'
+
+/**
+ * Sorts passages for display. 'relevance' keeps the server's ranking untouched;
+ * 'source' follows the document so a reader can walk the text in order. This is
+ * a view choice only: it never changes which passages were selected.
+ */
+export function sortPassages<T extends { locator: string; startRune: number; sentenceStart: number }>(list: readonly T[], mode: PassageSort): T[] {
+  if (mode === 'relevance') return [...list]
+  return [...list].sort((a, b) => {
+    const [ua, ub] = [passageUnit(a.locator), passageUnit(b.locator)]
+    return ua - ub || a.sentenceStart - b.sentenceStart || a.startRune - b.startRune
+  })
+}
+
+/**
+ * The document unit a locator points at: the PDF page, the article block, or the
+ * subtitle cue index. startRune is an offset *within* that unit, so ordering
+ * must use the unit first — a page-44 hit precedes a page-1 hit only if 44 < 1.
+ */
+export function passageUnit(locator: string): number {
+  const parts = locator.split(':')
+  switch (parts[0]) {
+    case 'pdf':
+      return Number(parts[2]) || 0
+    case 'article':
+      return Number(parts[1]) || 0
+    case 'discussion':
+      return Number(parts[2]) || 0
+    case 'subtitle': {
+      const cue = (parts[2] ?? '').split('-')[0]
+      return Number(cue) || 0
+    }
+    default:
+      return 0
+  }
+}
+
+/** Question length limit and the point where the counter appears. */
+export const QUESTION_MAX_LENGTH = 2000
+export const QUESTION_HINT_FROM = 1800

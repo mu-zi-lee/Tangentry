@@ -25,7 +25,7 @@ describe('parsePrefs', () => {
   })
 
   it('round-trips a stored value', () => {
-    const prefs = { ...defaultPrefs(), guideOpen: false, advancedOpen: true, settingsOpen: true, highlight: false, pageSize: 50 }
+    const prefs = { ...defaultPrefs(), guideOpen: false, advancedOpen: true, settingsOpen: true, highlight: false, pageSize: 50, recent: [{ contentId: 'a', question: 'q' }], sort: 'source' as const }
     expect(parsePrefs(serializePrefs(prefs))).toEqual(prefs)
   })
 
@@ -58,6 +58,23 @@ describe('parsePrefs', () => {
     const prefs = parsePrefs(JSON.stringify({ highlight: false }))
     expect(prefs.highlight).toBe(false)
     expect(prefs.options).toEqual(defaultWorkbenchOptions())
+  })
+})
+
+describe('recent searches and sort preference', () => {
+  it('drops malformed recent entries instead of trusting storage', () => {
+    const prefs = parsePrefs(JSON.stringify({ recent: [{ contentId: 'a', question: 'ok' }, { contentId: 1 }, null, 'x'] }))
+    expect(prefs.recent).toEqual([{ contentId: 'a', question: 'ok' }])
+  })
+
+  it('caps the stored list at five', () => {
+    const many = Array.from({ length: 9 }, (_, i) => ({ contentId: 'a', question: `q${i}` }))
+    expect(parsePrefs(JSON.stringify({ recent: many })).recent).toHaveLength(5)
+  })
+
+  it('falls back to relevance order for an unknown sort', () => {
+    expect(parsePrefs(JSON.stringify({ sort: 'weird' })).sort).toBe('relevance')
+    expect(parsePrefs(JSON.stringify({ sort: 'source' })).sort).toBe('source')
   })
 })
 

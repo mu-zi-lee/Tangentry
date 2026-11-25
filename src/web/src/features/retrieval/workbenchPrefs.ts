@@ -2,7 +2,7 @@
 // partial localStorage value falls back to the labelled defaults instead of
 // throwing or silently producing an invalid request.
 
-import { normalizeOptions, type WorkbenchOptions } from './workbench'
+import { normalizeOptions, type PassageSort, type RecentSearch, type WorkbenchOptions } from './workbench'
 
 export const PREFS_KEY = 'tangentry-retrieval-workbench'
 
@@ -24,10 +24,28 @@ export interface WorkbenchPrefs {
   pageSize: number
   /** Last searched content, restored on entry so the task is one Enter. */
   lastContentId: string
+  /** Newest-first queries for one-click reuse. */
+  recent: RecentSearch[]
+  /** Display order of the result list. */
+  sort: PassageSort
 }
 
 export function defaultPrefs(): WorkbenchPrefs {
-  return { options: normalizeOptions(undefined), guideOpen: true, advancedOpen: false, settingsOpen: false, highlight: true, pageSize: DEFAULT_PAGE_SIZE, lastContentId: '' }
+  return { options: normalizeOptions(undefined), guideOpen: true, advancedOpen: false, settingsOpen: false, highlight: true, pageSize: DEFAULT_PAGE_SIZE, lastContentId: '', recent: [], sort: 'relevance' }
+}
+
+/** Keeps only well-formed recent entries; a corrupt list degrades to empty. */
+function parseRecent(value: unknown): RecentSearch[] {
+  if (!Array.isArray(value)) return []
+  const out: RecentSearch[] = []
+  for (const item of value) {
+    if (!item || typeof item !== 'object') continue
+    const { contentId, question } = item as { contentId?: unknown; question?: unknown }
+    if (typeof contentId !== 'string' || typeof question !== 'string' || !contentId || !question.trim()) continue
+    out.push({ contentId, question })
+    if (out.length === 5) break
+  }
+  return out
 }
 
 function bool(value: unknown, fallback: boolean): boolean {
@@ -56,6 +74,8 @@ export function parsePrefs(raw: string | null): WorkbenchPrefs {
     highlight: bool(value.highlight, base.highlight),
     pageSize,
     lastContentId: typeof value.lastContentId === 'string' ? value.lastContentId : base.lastContentId,
+    recent: parseRecent(value.recent),
+    sort: value.sort === 'source' ? 'source' : 'relevance',
   }
 }
 

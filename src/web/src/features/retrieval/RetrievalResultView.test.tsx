@@ -53,7 +53,7 @@ describe('RetrievalResultView', () => {
     expect(html).toContain('语义余弦 90%')
     expect(html).toContain('版本 <code>2</code>')
     expect(html).toContain('0123456789ab')
-    expect(html).toContain('4,200')
+    expect(html).toContain('命中片段')
   })
 
   it('draws score bars whose width matches the score', () => {
@@ -77,16 +77,34 @@ describe('RetrievalResultView', () => {
     expect(render(result('ok', [passage()]))).toContain('复制定位符 article:12:s3')
   })
 
-  it('reports the embedding budget usage', () => {
-    const html = render(result('ok', [passage()]))
-    expect(html).toContain('bge-m3')
-    expect(html).toContain('completed')
+  it('keeps the primary metrics on screen and the rest one click away', () => {
+    const html = render(result('ok', [passage()]), { elapsedMs: 236 })
+    expect(html).toContain('命中片段')
+    expect(html).toContain('检索方式')
+    expect(html).toContain('重排')
+    expect(html).toContain('本次耗时')
+    expect(html).toContain('236 ms')
+    // Secondary detail is collapsed until asked for.
+    expect(html).not.toContain('bge-m3')
+    expect(html).toContain('更多指标')
   })
 
-  it('reports cache hits and the rerank model', () => {
-    const html = render(result('ok', [passage()]))
-    expect(html).toContain('缓存命中')
-    expect(html).toContain('qwen3.7-text-rerank')
+  it('shows the rerank model as a primary metric', () => {
+    expect(render(result('ok', [passage()]))).toContain('qwen3.7-text-rerank')
+  })
+
+  it('offers a display sort without changing the selection', () => {
+    const html = render(result('ok', [passage()]), { sort: 'source', onSortChange: () => {} })
+    expect(html).toContain('按相关度')
+    expect(html).toContain('按原文顺序')
+    expect(html).toContain('aria-pressed="true"')
+  })
+
+  it('orders by document position when source order is chosen', () => {
+    const first = passage({ passageId: 'a', locator: 'pdf:x:9:s0', text: '后出现的片段', startRune: 900, sentenceStart: 9 })
+    const second = passage({ passageId: 'b', locator: 'pdf:x:2:s0', text: '先出现的片段', startRune: 100, sentenceStart: 2 })
+    const html = render(result('ok', [first, second]), { sort: 'source' })
+    expect(html.indexOf('先出现的片段')).toBeLessThan(html.indexOf('后出现的片段'))
   })
 
   it('shows a rerank bar only when the passage has a rerank score', () => {

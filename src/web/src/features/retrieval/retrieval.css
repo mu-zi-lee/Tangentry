@@ -295,3 +295,17 @@
 .retrieval-skip:focus-visible,
 .retrieval-answer-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 @media (max-width: 720px) { .retrieval-kbd-hint { display: none; } }
+
+/* ---------- result toolbar, recent queries ---------- */
+.retrieval-result-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.retrieval-sort { padding: 2px; }
+.retrieval-more-metrics {
+  margin-left: auto; padding: 4px 10px; border-radius: var(--radius-full);
+  border: 1px solid var(--line); background: var(--surface); color: var(--muted);
+  font: inherit; font-size: 11.5px; cursor: pointer;
+}
+.retrieval-more-metrics:hover { color: var(--ink); border-color: var(--line-strong); }
+.retrieval-more-metrics:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.retrieval-recent { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding-top: 10px; border-top: 1px dashed var(--line); }
+.retrieval-recent .retrieval-preset { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

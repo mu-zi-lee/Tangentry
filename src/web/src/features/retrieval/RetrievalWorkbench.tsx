@@ -15,6 +15,9 @@ import {
   answerFromResponse,
   canSearch,
   contextBudgetPresets,
+  QUESTION_HINT_FROM,
+  QUESTION_MAX_LENGTH,
+  addRecentSearch,
   errorGuidance,
   isOCRDerived,
   normalizeOptions,
@@ -27,6 +30,7 @@ import {
   workbenchModes,
   type WorkbenchCeilings,
   type NoResultAction,
+  type PassageSort,
   type WorkbenchOptions,
   type WorkbenchResult,
 } from './workbench'
@@ -73,6 +77,7 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, onOpenSample
   const [answer, setAnswer] = useState<string | null>(null)
   const [answerPassages, setAnswerPassages] = useState(0)
   const [answering, setAnswering] = useState(false)
+  const [elapsedMs, setElapsedMs] = useState<number | undefined>()
   const [answerError, setAnswerError] = useState('')
   const running = useRef<AbortController | null>(null)
   const questionRef = useRef<HTMLInputElement | null>(null)
@@ -141,6 +146,7 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, onOpenSample
     setAnswer(null)
     setAnswerError('')
     const trimmed = question.trim()
+    const started = performance.now()
     try {
       const raw = await request<unknown>('/ai/retrieval/search', {
         method: 'POST',
@@ -153,9 +159,10 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, onOpenSample
         setErrorInfo({ code: 'bad_payload', status: 0 })
         return null
       }
+      setElapsedMs(Math.round(performance.now() - started))
       setResult(value)
       setAsked(trimmed)
-      setPrefs(current => ({ ...current, lastContentId: contentId }))
+      setPrefs(current => ({ ...current, lastContentId: contentId, recent: addRecentSearch(current.recent, { contentId, question: trimmed }) }))
       onRouteChange?.(searchPath(contentId, trimmed))
       return value
     } catch (cause) {
@@ -285,6 +292,7 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, onOpenSample
               placeholder="例如：这份内容中段给出的结论是什么"
               disabled={pending}
               autoFocus
+              maxLength={QUESTION_MAX_LENGTH}
               ref={questionRef}
               aria-label="检索问题"
             />
@@ -304,6 +312,31 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, onOpenSample
             根据原文回答
           </Button>
         </div>
+
+        {prefs.recent.length > 0 && (
+          <div className="retrieval-recent" role="group" aria-label="最近搜索">
+            <span className="retrieval-presets-label">最近</span>
+            {prefs.recent.map(entry => (
+              <button
+                key={`${entry.contentId}:${entry.question}`}
+                type="button"
+                className="retrieval-preset"
+                title={entry.question}
+                onClick={() => {
+                  setContentId(entry.contentId)
+                  setQuestion(entry.question)
+                  questionRef.current?.focus()
+                }}
+              >
+                {entry.question.length > 18 ? `${entry.question.slice(0, 18)}…` : entry.question}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {question.length >= QUESTION_HINT_FROM && (
+          <p className="field-hint" role="status">问题较长（{question.length}/{QUESTION_MAX_LENGTH} 字符），建议精简后再检索。</p>
+        )}
 
         <div className="retrieval-quick">
           <div className="retrieval-segmented" role="group" aria-label="检索方式">
@@ -447,6 +480,9 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, onOpenSample
           pageSize={prefs.pageSize}
           options={options}
           onNoResultAction={applyNoResultAction}
+          sort={prefs.sort}
+          onSortChange={(sort: PassageSort) => patchPrefs({ sort })}
+          elapsedMs={elapsedMs}
         />
       )}
     </section>

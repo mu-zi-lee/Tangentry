@@ -9,6 +9,8 @@ import {
   highlightSegments,
   passagePage,
   noResultGuidance,
+  sortPassages,
+  type PassageSort,
   passagePosition,
   type NoResultAction,
   type WorkbenchOptions,
@@ -66,7 +68,7 @@ const noResultLabels: Record<NoResultAction, string> = {
   clear: '清空问题',
 }
 
-export function RetrievalResultView({ result, selected, onRead, question = '', highlight = true, pageSize = 10, options, onNoResultAction }: {
+export function RetrievalResultView({ result, selected, onRead, question = '', highlight = true, pageSize = 10, options, onNoResultAction, sort = 'relevance', onSortChange, elapsedMs }: {
   result: WorkbenchResult
   selected?: ContentItem
   onRead: (item: ContentItem, page?: number) => void
@@ -75,15 +77,20 @@ export function RetrievalResultView({ result, selected, onRead, question = '', h
   pageSize?: number
   options?: WorkbenchOptions
   onNoResultAction?: (action: NoResultAction) => void
+  sort?: PassageSort
+  onSortChange?: (sort: PassageSort) => void
+  elapsedMs?: number
 }) {
   const [copied, setCopied] = useState('')
+  const [moreMetrics, setMoreMetrics] = useState(false)
   const [shown, setShown] = useState(pageSize)
   // A new search or a changed page size restarts from the first page.
   useEffect(() => { setShown(pageSize) }, [result, pageSize])
   const view = retrievalStatusView(result.retrieval.status)
   const ToneIcon = toneIcon[view.tone]
   const terms = highlight ? queryTerms(question) : []
-  const { visible, remaining } = paginate(result.passages, shown)
+  const ordered = sortPassages(result.passages, sort)
+  const { visible, remaining } = paginate(ordered, shown)
 
   const copy = async (locator: string) => {
     try {
@@ -106,19 +113,30 @@ export function RetrievalResultView({ result, selected, onRead, question = '', h
 
       <dl className="retrieval-metrics">
         <div><dt>命中片段</dt><dd>{result.passages.length}</dd></div>
-        <div><dt>上下文字符</dt><dd>{result.contextChars.toLocaleString('en-US')}</dd></div>
         <div><dt>检索方式</dt><dd>{result.retrieval.mode || '—'}</dd></div>
-        <div><dt>嵌入模型</dt><dd>{result.retrieval.embedding.model || '未启用'}</dd></div>
-        <div><dt>嵌入请求</dt><dd>{result.retrieval.embedding.requests}</dd></div>
-        <div><dt>缓存命中</dt><dd>{result.retrieval.embedding.cacheHits ?? 0}</dd></div>
-        <div>
-          <dt>重排</dt>
-          <dd>{result.retrieval.rerank.enabled
-            ? (result.retrieval.rerank.model || '已启用')
-            : '未启用'}</dd>
-        </div>
-        <div><dt>预算状态</dt><dd>{result.retrieval.embedding.budgetStatus || '—'}</dd></div>
+        <div><dt>重排</dt><dd>{result.retrieval.rerank.enabled ? (result.retrieval.rerank.model || '已启用') : '未启用'}</dd></div>
+        {typeof elapsedMs === 'number' && <div><dt>本次耗时</dt><dd>{elapsedMs} ms</dd></div>}
+        {moreMetrics && (
+          <>
+            <div><dt>上下文字符</dt><dd>{result.contextChars.toLocaleString('en-US')}</dd></div>
+            <div><dt>嵌入模型</dt><dd>{result.retrieval.embedding.model || '未启用'}</dd></div>
+            <div><dt>嵌入请求</dt><dd>{result.retrieval.embedding.requests}</dd></div>
+            <div><dt>缓存命中</dt><dd>{result.retrieval.embedding.cacheHits ?? 0}</dd></div>
+            <div><dt>预算状态</dt><dd>{result.retrieval.embedding.budgetStatus || '—'}</dd></div>
+          </>
+        )}
       </dl>
+      <div className="retrieval-result-bar">
+        {onSortChange && (
+          <div className="retrieval-segmented retrieval-sort" role="group" aria-label="结果排序">
+            <button type="button" className={`retrieval-segment${sort !== 'source' ? ' is-active' : ''}`} aria-pressed={sort !== 'source'} onClick={() => onSortChange('relevance')}>按相关度</button>
+            <button type="button" className={`retrieval-segment${sort === 'source' ? ' is-active' : ''}`} aria-pressed={sort === 'source'} onClick={() => onSortChange('source')}>按原文顺序</button>
+          </div>
+        )}
+        <button type="button" className="retrieval-more-metrics" aria-expanded={moreMetrics} onClick={() => setMoreMetrics(value => !value)}>
+          {moreMetrics ? '收起指标' : '更多指标'}
+        </button>
+      </div>
 
       {result.passages.length > visible.length && (
         <p className="retrieval-hidden" role="note">
