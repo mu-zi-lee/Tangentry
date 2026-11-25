@@ -13,6 +13,7 @@ import {
   addRecentSearch,
   noResultGuidance,
   sortPassages,
+  stripModelCitations,
   normalizeResult,
   highlightSegments,
   isOCRDerived,
@@ -256,6 +257,10 @@ describe('answerBody', () => {
 
   it('carries the AI configuration revision the chat endpoint requires', () => {
     expect(answerBody('a', 'q', opts(), 5).revision).toBe(5)
+  })
+
+  it('asks for per-paragraph citations', () => {
+    expect(answerBody('a', 'q', opts(), 1).citeParagraphs).toBe(true)
   })
 
   it('caps the answer context at the provider-safe limit', () => {
@@ -616,6 +621,49 @@ describe('contextWindow', () => {
     expect(w.after).toBe('文')
     expect(w.truncatedBefore).toBe(false)
     expect(w.truncatedAfter).toBe(false)
+  })
+})
+
+describe('stripModelCitations', () => {
+  const hash = 'bf3e9e65a4afaa5ea28e2338c93a849ef064c59820f354bd75c3cb3f6bde5d94'
+
+  it('removes an English inline citation phrase', () => {
+    expect(stripModelCitations('The right to vote (refer to passage id "page 61").'))
+      .toBe('The right to vote.')
+  })
+
+  it('removes a Chinese inline citation phrase', () => {
+    expect(stripModelCitations('選舉權（見 passage id="page 61"）。')).toBe('選舉權。')
+  })
+
+  it('removes a bare passage id', () => {
+    expect(stripModelCitations('見 passage id: "page 61"')).toBe('')
+  })
+
+  it('removes a bare locator left in the prose', () => {
+    expect(stripModelCitations(`來源 pdf:${hash}:61:s0-s3。`)).toBe('來源。')
+  })
+
+  it('leaves ordinary prose untouched', () => {
+    const text = 'Residents are equal before the law.'
+    expect(stripModelCitations(text)).toBe(text)
+  })
+
+  it('removes the "see" and 參見 variants', () => {
+    expect(stripModelCitations('Voting (see passage id "page 61") is guaranteed.')).toBe('Voting is guaranteed.')
+    expect(stripModelCitations('選舉權（參見 passage id: "page 61"）。')).toBe('選舉權。')
+  })
+
+  it('removes an unparenthesised citation', () => {
+    expect(stripModelCitations('Voting is guaranteed. See passage id "page 61".')).toBe('Voting is guaranteed.')
+  })
+
+  it('does not touch a normal "Article 25" reference', () => {
+    expect(stripModelCitations('Article 25 guarantees equality.')).toBe('Article 25 guarantees equality.')
+  })
+
+  it('tidies the parentheses it empties', () => {
+    expect(stripModelCitations('Voting () is guaranteed.')).toBe('Voting is guaranteed.')
   })
 })
 

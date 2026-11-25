@@ -461,3 +461,26 @@
    together instead of pushing the controls to the far edge of the row. */
 .retrieval-settings-body .number-stepper,
 .retrieval-settings-body .number-stepper-select { max-width: 240px; }
+
+/* ---------- per-paragraph citations on the answer ---------- */
+.retrieval-answer-body { display: flex; flex-direction: column; gap: 12px; }
+.retrieval-answer-block { display: flex; flex-direction: column; gap: 6px; }
+.retrieval-answer-block > :first-child { margin-top: 0; }
+.retrieval-answer-block > :last-child { margin-bottom: 0; }
+.retrieval-answer-citation {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+  margin: 0; padding-left: 2px; font-size: 11.5px; color: var(--muted);
+}
+.retrieval-answer-citation > svg { flex: none; color: var(--faint); }
+.retrieval-answer-citation-label { color: var(--faint); }
+.retrieval-answer-citation-chip {
+  padding: 2px 9px; border-radius: var(--radius-full);
+  border: 1px solid var(--accent-line); background: var(--accent-soft);
+  color: var(--accent-ink); font: inherit; font-size: 11.5px; font-weight: 600; cursor: pointer;
+}
+.retrieval-answer-citation-chip:hover { border-color: var(--accent); }
+.retrieval-answer-citation-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* The card a citation points at flashes once, so the jump is visible. */
+.retrieval-passage.is-focused { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+@media (prefers-reduced-motion: reduce) { .retrieval-passage.is-focused { transition: none; } }

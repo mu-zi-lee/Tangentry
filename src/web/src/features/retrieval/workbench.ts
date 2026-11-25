@@ -312,6 +312,9 @@ export interface AnswerRequest {
   // The chat endpoint rejects a stale revision (optimistic concurrency), so the
   // caller must pass the current AI configuration revision.
   revision: number
+  // Asks the model to tag each paragraph with the passage ids it used. The UI
+  // validates every id against the passages it received before showing it.
+  citeParagraphs: true
 }
 
 /**
@@ -326,6 +329,7 @@ export function answerBody(contentId: string, question: string, options: Workben
     messages: [{ role: 'user', content: body.question }],
     retrieval: { ...body.retrieval, maxChars: Math.min(body.retrieval.maxChars, ANSWER_MAX_CONTEXT_RUNES) },
     revision,
+    citeParagraphs: true,
   }
 }
 
@@ -600,4 +604,24 @@ export function contextWindow(text: string, start: number, end: number, radius =
     truncatedBefore: beforeFrom > 0,
     truncatedAfter: afterTo < size,
   }
+}
+
+/**
+ * Removes the citation phrases a model writes inline. The page it names is not
+ * authoritative, and this page appends its own verified citation per paragraph,
+ * so leaving both would duplicate the source and invite trusting the wrong one.
+ */
+export function stripModelCitations(text: string): string {
+  return text
+    // "(refer to passage id "…")" / "（見 passage id="…"）" and similar.
+    .replace(/\s*[（(]\s*(?:see|refer to|參見|参见|見|见|詳見|详见)?\s*passage\s*id\s*[:=]?\s*["“][^"”]*["”]\s*[)）]/gi, '')
+    // Bare "passage id: "…"" without parentheses.
+    .replace(/\s*(?:see|refer to|參見|参见|見|见)?\s*passage\s*id\s*[:=]?\s*["“][^"”]*["”]/gi, '')
+    // A bare locator or composite id left in the prose.
+    .replace(/\s*(?:pdf|article|discussion|subtitle):[0-9a-zA-Z][0-9a-zA-Z#:_-]*/g, '')
+    // Parentheses emptied by the removals above.
+    .replace(/\s*[（(]\s*[)）]/g, '')
+    // A removal can leave two sentence marks in a row.
+    .replace(/([.!?。！？])\s*[.!?。！？]+/g, '$1')
+    .replace(/[ \t]{2,}/g, ' ')
 }

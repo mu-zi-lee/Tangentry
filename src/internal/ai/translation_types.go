@@ -46,6 +46,10 @@ type ChatRequest struct {
 	// Retrieval is B's optional namespaced retrieval object. Omitted or
 	// Enabled=false preserves the legacy path byte-identically (B-T01).
 	Retrieval *retrieval.Request `json:"retrieval,omitempty"`
+	// CiteParagraphs asks the model to end every paragraph with the passage ids
+	// it used, as [p:<id>]. It only takes effect when retrieval ran, and the
+	// caller must verify the ids against the passages it received.
+	CiteParagraphs bool `json:"citeParagraphs,omitempty"`
 }
 type ChatResult struct {
 	ContentID string        `json:"contentId"`

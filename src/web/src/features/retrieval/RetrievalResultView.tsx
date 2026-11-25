@@ -69,7 +69,7 @@ const noResultLabels: Record<NoResultAction, string> = {
   clear: 'Clear question',
 }
 
-export function RetrievalResultView({ result, selected, onRead, question = '', highlight = true, pageSize = 10, options, onNoResultAction, sort = 'relevance', onSortChange, elapsedMs }: {
+export function RetrievalResultView({ result, selected, onRead, question = '', highlight = true, pageSize = 10, options, onNoResultAction, sort = 'relevance', onSortChange, elapsedMs, focusPassage }: {
   result: WorkbenchResult
   selected?: ContentItem
   onRead: (item: ContentItem, page?: number) => void
@@ -81,6 +81,8 @@ export function RetrievalResultView({ result, selected, onRead, question = '', h
   sort?: PassageSort
   onSortChange?: (sort: PassageSort) => void
   elapsedMs?: number
+  /** A passage to reveal: expands the list to it, scrolls and flashes it. */
+  focusPassage?: { id: string; token: number } | null
 }) {
   const [copied, setCopied] = useState('')
   const [moreMetrics, setMoreMetrics] = useState(false)
@@ -93,6 +95,27 @@ export function RetrievalResultView({ result, selected, onRead, question = '', h
   const terms = highlight ? queryTerms(question) : []
   const ordered = sortPassages(result.passages, sort)
   const { visible, remaining } = paginate(ordered, shown)
+
+  // Reveal a passage cited by the answer: expand until it is rendered, then
+  // scroll to it and flash it so the reader lands on the exact card.
+  useEffect(() => {
+    if (!focusPassage) return
+    const index = ordered.findIndex(passage => passage.passageId === focusPassage.id)
+    if (index === -1) return
+    setShown(current => (index + 1 > current ? index + 1 : current))
+  }, [focusPassage, ordered])
+
+  useEffect(() => {
+    if (!focusPassage) return
+    const frame = requestAnimationFrame(() => {
+      const node = document.querySelector<HTMLElement>(`[data-passage-id="${CSS.escape(focusPassage.id)}"]`)
+      if (!node) return
+      node.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      node.classList.add('is-focused')
+      window.setTimeout(() => node.classList.remove('is-focused'), 1800)
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [focusPassage, shown])
 
   const copy = async (locator: string) => {
     try {

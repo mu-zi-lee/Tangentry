@@ -19,7 +19,6 @@ import {
   QUESTION_MAX_LENGTH,
   addRecentSearch,
   errorGuidance,
-  isOCRDerived,
   normalizeOptions,
   normalizeResult,
   pickInitialContent,
@@ -75,7 +74,7 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, onOpenSample
   const [errorInfo, setErrorInfo] = useState<{ code: string; status: number } | null>(null)
   const [asked, setAsked] = useState('')
   const [answer, setAnswer] = useState<string | null>(null)
-  const [answerPassages, setAnswerPassages] = useState(0)
+  const [focusPassage, setFocusPassage] = useState<{ id: string; token: number } | null>(null)
   const [answering, setAnswering] = useState(false)
   const [elapsedMs, setElapsedMs] = useState<number | undefined>()
   const [answerError, setAnswerError] = useState('')
@@ -208,8 +207,6 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, onOpenSample
         setAnswerError('The model returned no usable answer.')
         return
       }
-      // Report what actually grounded the answer, not what the search displayed.
-      setAnswerPassages(Array.isArray(response.retrieval?.passages) ? response.retrieval!.passages!.length : 0)
       setAnswer(text)
     } catch (cause) {
       if (cause instanceof APIError) setAnswerError(cause.message)
@@ -461,12 +458,12 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, onOpenSample
         <RetrievalAnswer
           question={asked}
           answer={answer}
-          passageCount={answerPassages || (result?.passages.length ?? 0)}
+          passages={result?.passages ?? []}
           maxContextRunes={Math.min(options.maxChars, ANSWER_MAX_CONTEXT_RUNES)}
-          ocrDerived={result ? isOCRDerived(result.passages) : false}
           pending={answering}
           error={answerError}
           onSettings={openSettings}
+          onJump={id => setFocusPassage(current => ({ id, token: (current?.token ?? 0) + 1 }))}
         />
       )}
 
@@ -498,6 +495,7 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, onOpenSample
           onNoResultAction={applyNoResultAction}
           sort={prefs.sort}
           onSortChange={(sort: PassageSort) => patchPrefs({ sort })}
+          focusPassage={focusPassage}
           elapsedMs={elapsedMs}
         />
       )}

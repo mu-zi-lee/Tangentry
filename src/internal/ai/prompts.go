@@ -146,3 +146,22 @@ func templateVariablesValid(value string) bool {
 		cursor = end + 2
 	}
 }
+
+// paragraphCitationInstruction asks for verifiable per-paragraph citations. The
+// tags are for the caller to validate against the passages it actually sent:
+// an id that is not in that set must be dropped, never trusted.
+const paragraphCitationInstruction = `
+
+Citation requirement: end EVERY paragraph of your answer with the passage ids you actually used, formatted exactly as [p:<id>]. Multiple ids are allowed and must be written as separate tags. Use only the ids listed in the source above. If a paragraph uses no listed passage, end it with [p:none]. Never write page numbers or article numbers as citations.`
+
+// withCitationInstruction appends the paragraph-citation requirement when the
+// caller asked for it and retrieval provided a source.
+func withCitationInstruction(source string, enabled bool) string {
+	if !enabled || strings.TrimSpace(source) == "" {
+		return source
+	}
+	if strings.Contains(source, paragraphCitationInstruction) {
+		return source
+	}
+	return source + paragraphCitationInstruction
+}
