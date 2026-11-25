@@ -20,6 +20,7 @@ import {
   type WorkbenchPassage,
   type WorkbenchResult,
 } from './workbench'
+import { PassageContext } from './PassageContext'
 import { paginate } from './workbenchPrefs'
 
 const toneIcon: Record<RetrievalTone, typeof Info> = {
@@ -115,7 +116,14 @@ export function RetrievalResultView({ result, selected, onRead, question = '', h
         <div><dt>命中片段</dt><dd>{result.passages.length}</dd></div>
         <div><dt>检索方式</dt><dd>{result.retrieval.mode || '—'}</dd></div>
         <div><dt>重排</dt><dd>{result.retrieval.rerank.enabled ? (result.retrieval.rerank.model || '已启用') : '未启用'}</dd></div>
-        {typeof elapsedMs === 'number' && <div><dt>本次耗时</dt><dd>{elapsedMs} ms</dd></div>}
+        {(typeof result.elapsedMs === 'number' || typeof elapsedMs === 'number') && (
+          <div>
+            <dt>检索耗时</dt>
+            <dd title={typeof result.elapsedMs === 'number' ? '服务端选取耗时' : '客户端计时（服务端未返回耗时）'}>
+              {typeof result.elapsedMs === 'number' ? result.elapsedMs : elapsedMs} ms
+            </dd>
+          </div>
+        )}
         {moreMetrics && (
           <>
             <div><dt>上下文字符</dt><dd>{result.contextChars.toLocaleString('en-US')}</dd></div>
@@ -174,6 +182,15 @@ export function RetrievalResultView({ result, selected, onRead, question = '', h
               </div>
 
               <PassageText text={passage.text} terms={terms} highlight={highlight}/>
+
+              {passage.source === 'pdf' && passagePage(passage.locator) !== null && (
+                <PassageContext
+                  contentId={passage.contentId}
+                  page={passagePage(passage.locator)!}
+                  startRune={passage.startRune}
+                  endRune={passage.endRune}
+                />
+              )}
 
               <div className="retrieval-passage-foot">
                 <span title="来源版本">版本 <code>{passage.sourceVersion || '—'}</code></span>

@@ -65,7 +65,7 @@ func (p youtubeSearchProvider) Search(ctx context.Context, query, cursor string)
 
 func httpLibraryDependencies(s *services) httptransport.LibraryDependencies {
 	return httptransport.LibraryDependencies{
-		Content: s.features.content, Documents: s.runtime.documents, Articles: s.features.articles, ArticleImageHTTP: s.adapters.network.public,
+		Content: s.features.content, Documents: s.runtime.documents, Articles: s.features.articles, ArticleImageHTTP: s.adapters.network.public, PageText: newPageTextService(s.runtime.store),
 	}
 }
 

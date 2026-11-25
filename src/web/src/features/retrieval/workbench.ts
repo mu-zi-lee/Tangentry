@@ -34,6 +34,8 @@ export interface WorkbenchResult {
   retrieval: RetrievalResponse
   passages: WorkbenchPassage[]
   contextChars: number
+  /** Server-side selection time for this search, when the server reports it. */
+  elapsedMs?: number
 }
 
 /** Every per-run knob the engine honours. */
@@ -501,10 +503,12 @@ export function normalizeResult(raw: unknown): WorkbenchResult | null {
   if (!raw || typeof raw !== 'object') return null
   const value = raw as { retrieval?: RetrievalResponse; passages?: unknown; contextChars?: unknown }
   if (!value.retrieval || typeof value.retrieval.status !== 'string') return null
+  const elapsed = (value as { elapsedMs?: unknown }).elapsedMs
   return {
     retrieval: { ...value.retrieval, passages: Array.isArray(value.retrieval.passages) ? value.retrieval.passages : [] },
     passages: Array.isArray(value.passages) ? value.passages as WorkbenchPassage[] : [],
     contextChars: typeof value.contextChars === 'number' ? value.contextChars : 0,
+    elapsedMs: typeof elapsed === 'number' && elapsed >= 0 ? elapsed : undefined,
   }
 }
 
@@ -567,3 +571,33 @@ export function passageUnit(locator: string): number {
 /** Question length limit and the point where the counter appears. */
 export const QUESTION_MAX_LENGTH = 2000
 export const QUESTION_HINT_FROM = 1800
+
+/** Text around a hit, split so the exact passage stays identifiable. */
+export interface ContextWindow {
+  before: string
+  hit: string
+  after: string
+  truncatedBefore: boolean
+  truncatedAfter: boolean
+}
+
+/**
+ * Slices the stored page text around a passage. Offsets are rune-based (the
+ * server counts runes, not UTF-16 units), so the text is split with Array.from
+ * to keep surrogate pairs intact. Out-of-range offsets clamp instead of throwing.
+ */
+export function contextWindow(text: string, start: number, end: number, radius = 400): ContextWindow {
+  const runes = Array.from(text)
+  const size = runes.length
+  const from = Math.max(0, Math.min(Number.isFinite(start) ? start : 0, size))
+  const to = Math.max(from, Math.min(Number.isFinite(end) ? end : from, size))
+  const beforeFrom = Math.max(0, from - radius)
+  const afterTo = Math.min(size, to + radius)
+  return {
+    before: runes.slice(beforeFrom, from).join(''),
+    hit: runes.slice(from, to).join(''),
+    after: runes.slice(to, afterTo).join(''),
+    truncatedBefore: beforeFrom > 0,
+    truncatedAfter: afterTo < size,
+  }
+}

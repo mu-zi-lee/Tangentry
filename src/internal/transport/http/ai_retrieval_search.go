@@ -3,6 +3,7 @@ package httptransport
 import (
 	"net/http"
 	"strings"
+	"time"
 
 	"tangentry/internal/retrieval"
 )
@@ -30,6 +31,8 @@ type retrievalSearchResponse struct {
 	Retrieval    retrieval.Response       `json:"retrieval"`
 	Passages     []retrievalSearchPassage `json:"passages"`
 	ContextChars int                      `json:"contextChars"`
+	// ElapsedMs is the server-side selection time for this search (additive).
+	ElapsedMs int64 `json:"elapsedMs"`
 }
 
 // retrievalSearchPost runs B's selection/assembly pipeline without starting a
@@ -54,6 +57,7 @@ func (h *aiHandler) retrievalSearchPost(w http.ResponseWriter, r *http.Request) 
 		request.SchemaVersion = retrieval.WireSchemaVersion
 		request.Enabled = true
 	}
+	started := time.Now()
 	result, err := h.ai.Retrieval.Run(r.Context(), retrieval.RunInput{
 		ContentID: input.ContentID,
 		Question:  input.Question,
@@ -82,5 +86,6 @@ func (h *aiHandler) retrievalSearchPost(w http.ResponseWriter, r *http.Request) 
 		Retrieval:    result.Response,
 		Passages:     passages,
 		ContextChars: len([]rune(result.Context)),
+		ElapsedMs:    time.Since(started).Milliseconds(),
 	})
 }

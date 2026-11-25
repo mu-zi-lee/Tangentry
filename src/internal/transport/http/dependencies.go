@@ -127,6 +127,7 @@ type LibraryDependencies struct {
 	Articles         ArticleService
 	ArticleImageHTTP HTTPClient
 	Documents        documents.Service
+	PageText         PageTextService
 }
 
 type AIDependencies struct {

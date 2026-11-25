@@ -12,5 +12,6 @@ func (h *Handler) registerLibraryRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/articles/image", h.library.articleImage)
 	mux.HandleFunc("POST /api/documents", h.library.documentUpload)
 	mux.HandleFunc("GET /api/documents/{id}", h.library.documentGet)
+	mux.HandleFunc("GET /api/library/{id}/page-text", h.library.pageTextGet)
 	mux.HandleFunc("GET /api/documents/{id}/file", h.library.documentFile)
 }

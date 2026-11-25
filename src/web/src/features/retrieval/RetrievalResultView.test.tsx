@@ -82,7 +82,7 @@ describe('RetrievalResultView', () => {
     expect(html).toContain('命中片段')
     expect(html).toContain('检索方式')
     expect(html).toContain('重排')
-    expect(html).toContain('本次耗时')
+    expect(html).toContain('检索耗时')
     expect(html).toContain('236 ms')
     // Secondary detail is collapsed until asked for.
     expect(html).not.toContain('bge-m3')

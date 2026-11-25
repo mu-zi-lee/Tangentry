@@ -66,6 +66,7 @@ func TestRetrievalSearchBoundary(t *testing.T) {
 	var body struct {
 		Retrieval    retrieval.Response `json:"retrieval"`
 		ContextChars int                `json:"contextChars"`
+		ElapsedMs    *int64             `json:"elapsedMs"`
 		Passages     []struct {
 			retrieval.PassageRef
 			Text         string  `json:"text"`
@@ -92,6 +93,9 @@ func TestRetrievalSearchBoundary(t *testing.T) {
 	}
 	if body.ContextChars != len([]rune("组装后的上下文")) {
 		t.Fatalf("contextChars = %d", body.ContextChars)
+	}
+	if body.ElapsedMs == nil || *body.ElapsedMs < 0 {
+		t.Fatalf("elapsedMs = %v", body.ElapsedMs)
 	}
 	if fake.gotInput.ContentID != "article:12" || fake.gotInput.Question != "中段的答案是什么" {
 		t.Fatalf("engine input = %+v", fake.gotInput)

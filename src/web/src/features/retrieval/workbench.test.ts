@@ -6,6 +6,7 @@ import {
   MAX_SWEEP_CANDIDATES,
   canSearch,
   contextBudgetPresets,
+  contextWindow,
   defaultWorkbenchOptions,
   errorGuidance,
   QUESTION_MAX_LENGTH,
@@ -564,6 +565,57 @@ describe('sortPassages', () => {
 describe('question limits', () => {
   it('exposes a length cap the input can use', () => {
     expect(QUESTION_MAX_LENGTH).toBeGreaterThan(0)
+  })
+})
+
+describe('contextWindow', () => {
+  const text = '甲乙丙丁戊己庚辛壬癸'
+
+  it('splits around the hit and keeps the exact passage', () => {
+    const w = contextWindow(text, 3, 5, 2)
+    expect(w.hit).toBe('丁戊')
+    expect(w.before).toBe('乙丙')
+    expect(w.after).toBe('己庚')
+  })
+
+  it('marks truncation on both sides', () => {
+    const w = contextWindow(text, 4, 6, 2)
+    expect(w.truncatedBefore).toBe(true)
+    expect(w.truncatedAfter).toBe(true)
+  })
+
+  it('does not claim truncation at the document edges', () => {
+    const w = contextWindow(text, 0, 2, 2)
+    expect(w.truncatedBefore).toBe(false)
+    expect(w.truncatedAfter).toBe(true)
+  })
+
+  it('counts runes, not UTF-16 units', () => {
+    const emoji = '😀abc😀def'
+    const w = contextWindow(emoji, 1, 4, 1)
+    expect(w.hit).toBe('abc')
+    expect(w.before).toBe('😀')
+    expect(w.after).toBe('😀')
+  })
+
+  it('clamps out-of-range offsets instead of throwing', () => {
+    const w = contextWindow(text, 99, 120, 2)
+    expect(w.hit).toBe('')
+    expect(w.after).toBe('')
+  })
+
+  it('tolerates negative and inverted ranges', () => {
+    const w = contextWindow(text, -5, -1, 2)
+    expect(w.hit).toBe('')
+    expect(w.before).toBe('')
+  })
+
+  it('returns the whole short text when the radius covers it', () => {
+    const w = contextWindow('短文', 0, 1, 100)
+    expect(w.hit).toBe('短')
+    expect(w.after).toBe('文')
+    expect(w.truncatedBefore).toBe(false)
+    expect(w.truncatedAfter).toBe(false)
   })
 })
 
