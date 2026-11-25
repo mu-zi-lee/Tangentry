@@ -42,7 +42,7 @@ export function RetrievalSettingsPanel({ initial, hasKey = false, onSave }: { in
   }
 
   return (
-    <div className="ai-retrieval-settings" aria-label="原文检索设置">
+    <div className="ai-retrieval-settings" aria-label="检索服务设置">
       <label>服务类型
         <select value={settings.providerKind} onChange={event => update('providerKind', event.target.value as ProviderKind)}>
           <option value="local">本地（推荐）</option>

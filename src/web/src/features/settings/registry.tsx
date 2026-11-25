@@ -56,7 +56,7 @@ export const settingsRegistry: readonly SettingsRegistryItem[] = [
   },
   {
     id: 'ai', group: '连接', label: 'AI 服务', icon: <Sparkles size={16} aria-hidden="true" />, keywords: ['服务商', '翻译', '摘要', '字幕', '转录', '模型', '密钥', '提示词', 'whisper', '检索', '嵌入', '向量', '百炼'],
-    tabs: [{ id: 'provider', label: '服务商' }, { id: 'text', label: '翻译与摘要' }, { id: 'asr', label: '字幕转录' }, { id: 'retrieval', label: '原文检索' }],
+    tabs: [{ id: 'provider', label: '服务商' }, { id: 'text', label: '翻译与摘要' }, { id: 'asr', label: '字幕转录' }, { id: 'retrieval', label: '检索服务' }],
     render: ({ route, onTabChange }) => <AIServiceSettingsPage active value={(route.tab as AIServiceTab) || 'provider'} onChange={onTabChange} />,
   },
   {

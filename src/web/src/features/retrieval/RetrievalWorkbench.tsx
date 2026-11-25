@@ -255,11 +255,11 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, onOpenSample
   }
 
   return (
-    <section className="retrieval-workbench" aria-label="原文检索" onKeyDown={onKeyDown}>
+    <section className="retrieval-workbench" aria-label="检索服务" onKeyDown={onKeyDown}>
       <header className="retrieval-header">
         <span className="retrieval-header-icon" aria-hidden="true"><TextSearch size={20} strokeWidth={1.8}/></span>
         <div>
-          <h1>原文检索</h1>
+          <h1>检索服务</h1>
           <p>按问题从本机内容中选取相关原文片段，并显示定位、得分与预算用量。检索由服务端完成，此处只展示结果。</p>
         </div>
       </header>

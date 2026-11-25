@@ -7,7 +7,7 @@ import { defaultRetrievalSettings } from './retrievalSettings'
 describe('RetrievalSettingsPanel', () => {
   it('renders the local-first defaults with a save action', () => {
     const html = renderToStaticMarkup(createElement(RetrievalSettingsPanel, {}))
-    expect(html).toContain('原文检索设置')
+    expect(html).toContain('检索服务设置')
     expect(html).toContain('保存检索设置')
     expect(html).toContain('bge-m3')
     expect(html).toContain('本地（推荐）')
