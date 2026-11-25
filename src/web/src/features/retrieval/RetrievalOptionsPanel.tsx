@@ -1,5 +1,6 @@
-import { ChevronDown, RotateCcw, SlidersHorizontal } from 'lucide-react'
-import { Button, Checkbox, Input, Select } from '../../components/ui'
+import { ChevronDown, ChevronUp, RotateCcw, SlidersHorizontal } from 'lucide-react'
+import { Button, Checkbox, Select } from '../../components/ui'
+import { NumberStepper, stepChoice } from './NumberStepper'
 import {
   MAX_CONTEXT_RUNES,
   MAX_SWEEP_CANDIDATES,
@@ -28,15 +29,13 @@ function NumberField({ label, hint, value, min, max, ceiling, disabled, onChange
         {label}
         {typeof ceiling === 'number' && <em className="retrieval-knob-ceiling">已保存上限 {ceiling}</em>}
       </span>
-      <Input
-        type="number"
-        value={String(value)}
+      <NumberStepper
+        value={value}
         min={min}
         max={max}
-        step={1}
         disabled={disabled}
-        onChange={event => onChange(Number(event.target.value))}
-        aria-label={label}
+        label={label}
+        onChange={onChange}
       />
       {hint && <span className="retrieval-knob-hint">{hint}</span>}
     </label>
@@ -166,13 +165,30 @@ export function RetrievalOptionsPanel({ open, onToggle, prefs, ceilings, pending
               />
               <label className="retrieval-knob retrieval-knob-inline">
                 <span className="retrieval-knob-label">每页显示片段</span>
-                <Select
-                  value={String(prefs.pageSize)}
-                  onChange={event => onPrefs({ pageSize: Number(event.target.value) })}
-                  options={PAGE_SIZES.map(size => ({ value: String(size), label: `${size} 条` }))}
-                  aria-label="每页显示片段"
-                  className="retrieval-page-size"
-                />
+                <span className="number-stepper number-stepper-select retrieval-page-size">
+                  <span className="number-stepper-box">
+                    <Select
+                      value={String(prefs.pageSize)}
+                      onChange={event => onPrefs({ pageSize: Number(event.target.value) })}
+                      options={PAGE_SIZES.map(size => ({ value: String(size), label: `${size} 条` }))}
+                      aria-label="每页显示片段"
+                    />
+                    <span className="number-stepper-buttons">
+                      <button type="button" className="number-stepper-button" tabIndex={-1}
+                        aria-label="增加每页显示片段" title="增加每页显示片段"
+                        disabled={prefs.pageSize >= Math.max(...PAGE_SIZES)}
+                        onClick={() => onPrefs({ pageSize: stepChoice(PAGE_SIZES, prefs.pageSize, 1) })}>
+                        <ChevronUp size={12} strokeWidth={2.4} aria-hidden="true"/>
+                      </button>
+                      <button type="button" className="number-stepper-button" tabIndex={-1}
+                        aria-label="减少每页显示片段" title="减少每页显示片段"
+                        disabled={prefs.pageSize <= Math.min(...PAGE_SIZES)}
+                        onClick={() => onPrefs({ pageSize: stepChoice(PAGE_SIZES, prefs.pageSize, -1) })}>
+                        <ChevronDown size={12} strokeWidth={2.4} aria-hidden="true"/>
+                      </button>
+                    </span>
+                  </span>
+                </span>
               </label>
               <p className="retrieval-knob-hint">
                 服务端最多可返回 topK 条片段。分页只影响一次渲染多少张卡片，其余可一键展开，不会丢弃任何结果。

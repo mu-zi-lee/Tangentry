@@ -425,3 +425,39 @@
 :root[data-theme='dark'] .retrieval-form { background: var(--raised); }
 :root[data-theme='dark'] .retrieval-form .field { background: var(--card); }
 :root[data-theme='dark'] .retrieval-form .ui-select { background: var(--card); }
+
+/* ---------- always-visible number steppers ----------
+   Chromium does not render native spinners unless hovered/focused (and not at
+   all in some builds), so every adjustable number carries its own up/down
+   controls. Native spinners are suppressed to avoid a second affordance. */
+.number-stepper { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.number-stepper-box { position: relative; display: block; min-width: 0; }
+.number-stepper-input { width: 100%; padding-right: 30px; }
+.retrieval-settings-body .number-stepper-input { padding-right: 30px; }
+.number-stepper-buttons {
+  position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+  display: flex; flex-direction: column; gap: 1px;
+}
+.number-stepper-button {
+  display: grid; place-items: center; width: 18px; height: 12px; padding: 0;
+  border: 1px solid var(--line); border-radius: 3px;
+  background: var(--surface); color: var(--muted); cursor: pointer; line-height: 0;
+}
+.number-stepper-button:hover:not(:disabled) { color: var(--ink); border-color: var(--line-strong); }
+.number-stepper-button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.number-stepper-button:disabled { opacity: .4; cursor: not-allowed; }
+.number-stepper-hint { font-size: 11.5px; line-height: 1.55; color: var(--muted); }
+.number-stepper-input::-webkit-outer-spin-button,
+.number-stepper-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.number-stepper-input { -moz-appearance: textfield; appearance: textfield; }
+
+/* Enumerated numeric setting (embedding dimension): the select keeps the
+   allowed set, the arrows step through it. */
+.number-stepper-select .number-stepper-box select { width: 100%; }
+.number-stepper-select .number-stepper-input,
+.number-stepper-select select { padding-right: 30px; }
+
+/* The settings form lays fields out full width; keep a number and its arrows
+   together instead of pushing the controls to the far edge of the row. */
+.retrieval-settings-body .number-stepper,
+.retrieval-settings-body .number-stepper-select { max-width: 240px; }
