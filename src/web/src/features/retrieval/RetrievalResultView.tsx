@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Check, CircleCheck, Copy, Info, TriangleAlert } from 'lucide-react'
+import { Check, ChevronDown, CircleCheck, Copy, Info, TriangleAlert } from 'lucide-react'
 import { Button } from '../../components/ui'
 import type { ContentItem } from '../../shared/api/types'
 import { passageChipLabel, retrievalStatusView, type RetrievalTone } from '../ai/retrievalPresentation'
@@ -84,6 +84,7 @@ export function RetrievalResultView({ result, selected, onRead, question = '', h
 }) {
   const [copied, setCopied] = useState('')
   const [moreMetrics, setMoreMetrics] = useState(false)
+  const [contextFor, setContextFor] = useState('')
   const [shown, setShown] = useState(pageSize)
   // A new search or a changed page size restarts from the first page.
   useEffect(() => { setShown(pageSize) }, [result, pageSize])
@@ -183,7 +184,7 @@ export function RetrievalResultView({ result, selected, onRead, question = '', h
 
               <PassageText text={passage.text} terms={terms} highlight={highlight}/>
 
-              {passage.source === 'pdf' && passagePage(passage.locator) !== null && (
+              {contextFor === passage.passageId && passage.source === 'pdf' && passagePage(passage.locator) !== null && (
                 <PassageContext
                   contentId={passage.contentId}
                   page={passagePage(passage.locator)!}
@@ -196,6 +197,17 @@ export function RetrievalResultView({ result, selected, onRead, question = '', h
                 <span title="来源版本">版本 <code>{passage.sourceVersion || '—'}</code></span>
                 <span title="原文文本 SHA-256">校验 <code>{passage.textSha256 ? `${passage.textSha256.slice(0, 12)}…` : '—'}</code></span>
                 <span title="原文字符区间">区间 <code>{passage.startRune}–{passage.endRune}</code></span>
+                {passage.source === 'pdf' && passagePage(passage.locator) !== null && (
+                  <button
+                    type="button"
+                    className="retrieval-context-toggle"
+                    aria-expanded={contextFor === passage.passageId}
+                    onClick={() => setContextFor(current => current === passage.passageId ? '' : passage.passageId)}
+                  >
+                    <ChevronDown size={12} strokeWidth={2} aria-hidden="true" className={contextFor === passage.passageId ? 'is-open' : undefined}/>
+                    {contextFor === passage.passageId ? '收起上下文' : '展开上下文'}
+                  </button>
+                )}
                 {selected && selected.id === passage.contentId && (
                   <Button
                     variant="quiet"

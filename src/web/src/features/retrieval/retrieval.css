@@ -311,9 +311,8 @@
 .retrieval-recent .retrieval-preset { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ---------- page context ---------- */
-.retrieval-context-wrap { display: flex; flex-direction: column; gap: 8px; }
 .retrieval-context-toggle {
-  align-self: flex-start; display: inline-flex; align-items: center; gap: 5px;
+  display: inline-flex; align-items: center; gap: 5px;
   padding: 3px 10px; border-radius: var(--radius-full);
   border: 1px solid var(--line); background: var(--surface); color: var(--muted);
   font: inherit; font-size: 11.5px; cursor: pointer;
@@ -330,3 +329,99 @@
 .retrieval-context-cut { color: var(--faint); }
 .retrieval-context-note { display: flex; align-items: center; gap: 5px; margin: 6px 0 0; font-size: 11px; color: var(--faint); }
 .retrieval-context-error { margin: 0; font-size: 11.5px; color: var(--danger); }
+
+/* ==========================================================================
+   Layout polish. The search card is the anchor of the page: it sits on the
+   raised surface and carries the only accent border, while the three utility
+   panels recede onto the quieter surface so they read as configuration, not as
+   the main action.
+   ========================================================================== */
+
+.retrieval-workbench { gap: 18px; }
+.retrieval-header { padding-bottom: 2px; }
+.retrieval-header h1 { font-size: 22px; }
+
+/* Utility panels recede. */
+.retrieval-guide,
+.retrieval-options,
+.retrieval-settings-panel { background: var(--surface); border-color: var(--line); }
+.retrieval-guide-toggle,
+.retrieval-options-toggle,
+.retrieval-settings-toggle { padding: 11px 14px; }
+.retrieval-guide-body,
+.retrieval-options-body,
+.retrieval-settings-body { padding: 12px 14px 14px; }
+
+/* Search card carries the weight. */
+.retrieval-form {
+  padding: 18px;
+  border-color: var(--accent-line);
+  box-shadow: var(--shadow-md);
+}
+.retrieval-search-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px; }
+.retrieval-search-head h2 { margin: 0; font-size: 15px; font-family: var(--font-display); color: var(--ink); }
+.retrieval-search-scope {
+  margin-left: auto; max-width: 62%; font-size: 12px; color: var(--muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.retrieval-form-row { align-items: flex-end; }
+.retrieval-form-row > .ui-button { min-width: 116px; }
+.retrieval-field > span { line-height: 18px; }
+.retrieval-field .ui-select,
+.retrieval-field .field { min-height: 38px; }
+.retrieval-field .field { padding-inline: 12px; }
+.retrieval-field-wide .field input { font-size: 15px; }
+.retrieval-form-row > .ui-button { height: 38px; }
+.retrieval-quick { padding-top: 14px; }
+
+/* Results read as one block under the card. */
+.retrieval-result { gap: 12px; }
+.retrieval-metrics > div { background: var(--card); border-color: var(--line); }
+.retrieval-passage { transition: box-shadow var(--ease-out, 160ms), border-color var(--ease-out, 160ms); }
+.retrieval-passage:hover { border-color: var(--line-strong); box-shadow: var(--shadow-md); }
+.retrieval-result-bar { padding-bottom: 2px; }
+.retrieval-skip { margin-top: -4px; }
+
+@media (max-width: 720px) {
+  .retrieval-search-scope { display: none; }
+  .retrieval-form-row > .ui-button { flex: 1 1 auto; min-width: 0; }
+}
+
+/* ---------- restore the design-system button chrome on this page ----------
+   tokens.css resets `button { background: none; border: 0 }` with an element
+   selector, which outranks the design system's :where(.ui-button-*) variants.
+   Other pages work around it by adding the legacy .button class; scoping the
+   restoration here keeps the fix local instead of changing global behaviour. */
+.retrieval-workbench .ui-button-primary {
+  background: var(--action);
+  border-color: var(--action);
+  color: var(--inverse);
+}
+.retrieval-workbench .ui-button-secondary {
+  background: var(--card);
+  border-color: var(--line-strong);
+  color: var(--ink);
+  box-shadow: var(--shadow-sm);
+}
+.retrieval-workbench .ui-button-danger {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: var(--canvas);
+}
+.retrieval-workbench .ui-button-quiet {
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+}
+.retrieval-workbench .ui-button-quiet:hover:not(:disabled) { color: var(--ink); }
+.retrieval-workbench .ui-button-primary:hover:not(:disabled) { background: color-mix(in srgb, var(--action) 88%, var(--card)); }
+.retrieval-workbench .ui-button-secondary:hover:not(:disabled) { background: var(--surface); border-color: var(--control-line); }
+.retrieval-workbench .ui-button:disabled { opacity: .45; }
+
+.retrieval-initial-hint { margin: -6px 2px 0; }
+
+/* In dark mode --card is darker than --surface, so the search card would sit
+   behind the utility panels. Lift it onto --raised to keep the same hierarchy. */
+:root[data-theme='dark'] .retrieval-form { background: var(--raised); }
+:root[data-theme='dark'] .retrieval-form .field { background: var(--card); }
+:root[data-theme='dark'] .retrieval-form .ui-select { background: var(--card); }

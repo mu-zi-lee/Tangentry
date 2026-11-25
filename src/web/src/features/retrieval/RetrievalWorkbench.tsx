@@ -270,7 +270,46 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, onOpenSample
         onOpenSettings={() => patchPrefs({ settingsOpen: true })}
       />
 
+
+      <RetrievalOptionsPanel
+        open={prefs.advancedOpen}
+        onToggle={() => patchPrefs({ advancedOpen: !prefs.advancedOpen })}
+        prefs={prefs}
+        ceilings={ceilings}
+        pending={pending}
+        onOptions={patchOptions}
+        onPrefs={patchPrefs}
+        onReset={resetOptions}
+        onOpenSettings={openSettings}
+      />
+
+      <section className={`retrieval-settings-panel${prefs.settingsOpen ? ' is-open' : ''}`} aria-label="检索设置">
+        <button
+          type="button"
+          className="retrieval-settings-toggle"
+          onClick={() => patchPrefs({ settingsOpen: !prefs.settingsOpen })}
+          aria-expanded={prefs.settingsOpen}
+          aria-controls="retrieval-settings-body"
+        >
+          <SlidersHorizontal size={15} strokeWidth={1.8} aria-hidden="true"/>
+          <span className="retrieval-settings-title">检索设置</span>
+          <span className="retrieval-settings-summary">嵌入服务、重排与权重——留在此页即可配置</span>
+          <ChevronDown size={16} strokeWidth={2} className="retrieval-settings-chevron" aria-hidden="true"/>
+        </button>
+        {prefs.settingsOpen && (
+          <div className="retrieval-settings-body" id="retrieval-settings-body">
+            <RetrievalSettingsSection active={prefs.settingsOpen}/>
+          </div>
+        )}
+      </section>
+
       <form className="retrieval-form" onSubmit={event => { event.preventDefault(); void run() }}>
+        <div className="retrieval-search-head">
+          <h2>检索</h2>
+          <span className="retrieval-search-scope" title={selected?.title ?? ''}>
+            {selected ? selected.title : '先在下方选择一份内容'}
+          </span>
+        </div>
         <div className="retrieval-form-row">
           <label className="retrieval-field">
             <span>内容</span>
@@ -286,16 +325,18 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, onOpenSample
 
           <label className="retrieval-field retrieval-field-wide">
             <span>问题</span>
-            <Input
-              value={question}
-              onChange={event => setQuestion(event.target.value)}
-              placeholder="例如：这份内容中段给出的结论是什么"
-              disabled={pending}
-              autoFocus
-              maxLength={QUESTION_MAX_LENGTH}
-              ref={questionRef}
-              aria-label="检索问题"
-            />
+            <span className="field">
+              <Input
+                value={question}
+                onChange={event => setQuestion(event.target.value)}
+                placeholder="例如：这份内容中段给出的结论是什么"
+                disabled={pending}
+                autoFocus
+                maxLength={QUESTION_MAX_LENGTH}
+                ref={questionRef}
+                aria-label="检索问题"
+              />
+            </span>
           </label>
 
           <Button variant="primary" type="submit" isLoading={pending} disabled={!canSearch(contentId, question, pending)}>
@@ -378,53 +419,12 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, onOpenSample
         </div>
       </form>
 
-      {result && (
-        <a
-          className="retrieval-skip"
-          href="#retrieval-results"
-          onClick={event => {
-            // An anchor only scrolls; move focus too so Tab continues in the results.
-            event.preventDefault()
-            const target = document.getElementById('retrieval-results')
-            target?.focus()
-            target?.scrollIntoView({ block: 'start', behavior: 'smooth' })
-          }}
-        >
-          跳到结果（{result.passages.length} 条）
-        </a>
+      {!result && !error && !pending && items.length > 0 && (
+        <p className="field-hint retrieval-initial-hint">
+          在上方输入问题并回车开始检索；展开「新手引导」可以了解检索方式与预算的含义。
+        </p>
       )}
 
-      <RetrievalOptionsPanel
-        open={prefs.advancedOpen}
-        onToggle={() => patchPrefs({ advancedOpen: !prefs.advancedOpen })}
-        prefs={prefs}
-        ceilings={ceilings}
-        pending={pending}
-        onOptions={patchOptions}
-        onPrefs={patchPrefs}
-        onReset={resetOptions}
-        onOpenSettings={openSettings}
-      />
-
-      <section className={`retrieval-settings-panel${prefs.settingsOpen ? ' is-open' : ''}`} aria-label="检索设置">
-        <button
-          type="button"
-          className="retrieval-settings-toggle"
-          onClick={() => patchPrefs({ settingsOpen: !prefs.settingsOpen })}
-          aria-expanded={prefs.settingsOpen}
-          aria-controls="retrieval-settings-body"
-        >
-          <SlidersHorizontal size={15} strokeWidth={1.8} aria-hidden="true"/>
-          <span className="retrieval-settings-title">检索设置</span>
-          <span className="retrieval-settings-summary">嵌入服务、重排与权重——留在此页即可配置</span>
-          <ChevronDown size={16} strokeWidth={2} className="retrieval-settings-chevron" aria-hidden="true"/>
-        </button>
-        {prefs.settingsOpen && (
-          <div className="retrieval-settings-body" id="retrieval-settings-body">
-            <RetrievalSettingsSection active={prefs.settingsOpen}/>
-          </div>
-        )}
-      </section>
 
       {items.length === 0 && (
         <section className="empty-state">
@@ -468,6 +468,22 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, onOpenSample
           error={answerError}
           onSettings={openSettings}
         />
+      )}
+
+      {result && (
+        <a
+          className="retrieval-skip"
+          href="#retrieval-results"
+          onClick={event => {
+            // An anchor only scrolls; move focus too so Tab continues in the results.
+            event.preventDefault()
+            const target = document.getElementById('retrieval-results')
+            target?.focus()
+            target?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+          }}
+        >
+          跳到结果（{result.passages.length} 条）
+        </a>
       )}
 
       {result && (
