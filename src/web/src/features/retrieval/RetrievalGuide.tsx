@@ -12,11 +12,11 @@ export function RetrievalGuide({ open, onToggle, onOpenSettings }: {
   onOpenSettings: () => void
 }) {
   return (
-    <section className={`retrieval-guide${open ? ' is-open' : ''}`} aria-label="新手引导">
+    <section className={`retrieval-guide${open ? ' is-open' : ''}`} aria-label="Getting started">
       <button type="button" className="retrieval-guide-toggle" onClick={onToggle} aria-expanded={open} aria-controls="retrieval-guide-body">
         <span className="retrieval-guide-icon" aria-hidden="true"><BookOpen size={16} strokeWidth={1.8}/></span>
-        <span className="retrieval-guide-title">新手引导</span>
-        <span className="retrieval-guide-teaser">{open ? '三步上手，可随时收起' : '第一次使用？点这里了解怎么用'}</span>
+        <span className="retrieval-guide-title">Getting started</span>
+        <span className="retrieval-guide-teaser">{open ? 'Three steps, collapse anytime' : 'First time here? See how it works'}</span>
         <ChevronDown size={16} strokeWidth={2} className="retrieval-guide-chevron" aria-hidden="true"/>
       </button>
 
@@ -26,22 +26,22 @@ export function RetrievalGuide({ open, onToggle, onOpenSettings }: {
             <li>
               <span className="retrieval-step-num" aria-hidden="true">1</span>
               <div>
-                <strong>选一份内容</strong>
-                <p>从资料库里选已保存的文章、字幕或 PDF。检索只在你本机保存的内容里进行。</p>
+                <strong>Pick a document</strong>
+                <p>Pick a saved article, subtitle track or PDF. Retrieval only looks at content stored on this machine.</p>
               </div>
             </li>
             <li>
               <span className="retrieval-step-num" aria-hidden="true">2</span>
               <div>
-                <strong>问一个具体问题</strong>
-                <p>问题越具体，命中的原文片段越准。答案在长文中段也能被找到，不会被头尾截断丢掉。</p>
+                <strong>Ask a specific question</strong>
+                <p>The more specific the question, the better the match. Answers in the middle of a long document are found too, instead of being lost to head/tail truncation.</p>
               </div>
             </li>
             <li>
               <span className="retrieval-step-num" aria-hidden="true">3</span>
               <div>
-                <strong>核对原文</strong>
-                <p>每条结果都带定位符、原文与得分。高亮显示的是与问题重合的词，方便你判断为什么命中。</p>
+                <strong>Check the source</strong>
+                <p>Every result carries a locator, the exact text and scores. Highlighted words overlap with your question, so you can see why it matched.</p>
               </div>
             </li>
           </ol>
@@ -49,17 +49,17 @@ export function RetrievalGuide({ open, onToggle, onOpenSettings }: {
           <div className="retrieval-guide-notes">
             <p className="retrieval-guide-note">
               <Lightbulb size={14} strokeWidth={1.8} aria-hidden="true"/>
-              <span><strong>没有嵌入服务？</strong>把「检索方式」改成<strong>仅词汇</strong>，它完全在本机运行，不需要任何模型服务。混合与仅语义需要在设置里配置嵌入服务。</span>
+              <span><strong>No embedding service?</strong> Switch <strong>Retrieval mode</strong> to <strong>Lexical only</strong>: it runs entirely on this machine and needs no model service. Hybrid and Semantic only require one under <strong>Retrieval settings</strong>.</span>
             </p>
             <p className="retrieval-guide-note">
               <Lightbulb size={14} strokeWidth={1.8} aria-hidden="true"/>
-              <span><strong>定位符不等于正确性。</strong>它只说明片段在原文的位置；结论是否成立仍需你自己核对原文。</span>
+              <span><strong>A locator is not proof.</strong> It only states where the passage sits in the source; whether a claim holds still needs your own check.</span>
             </p>
           </div>
 
           <div className="retrieval-guide-actions">
-            <Button variant="quiet" type="button" onClick={onOpenSettings}>配置嵌入服务与权重</Button>
-            <Button variant="quiet" type="button" onClick={onToggle}>收起引导</Button>
+            <Button variant="quiet" type="button" onClick={onOpenSettings}>Configure embedding and weights</Button>
+            <Button variant="quiet" type="button" onClick={onToggle}>Collapse guide</Button>
           </div>
         </div>
       )}

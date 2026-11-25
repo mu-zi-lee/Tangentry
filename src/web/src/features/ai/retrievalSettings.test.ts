@@ -75,7 +75,7 @@ describe('validateRetrievalSettings (B-T31)', () => {
     s.maxRerankRequests = 0
     const result = validateRetrievalSettings(s)
     expect(result.ok).toBe(false)
-    if (!result.ok) expect(result.message).toContain('重排')
+    if (!result.ok) expect(result.message).toContain('Rerank')
     s.maxRerankRequests = 2
     expect(validateRetrievalSettings(s).ok).toBe(true)
   })

@@ -23,12 +23,12 @@ describe('ContextBody', () => {
   })
 
   it('shows which page and how many pages exist', () => {
-    expect(render(page(), 3, 5)).toContain('第 2 / 5 页')
+    expect(render(page(), 3, 5)).toContain('Page 2 of 5')
   })
 
   it('warns when the page text came from OCR', () => {
-    expect(render(page({ extractor: 'local-paddleocr' }), 0, 1)).toContain('OCR 识别')
-    expect(render(page(), 0, 1)).not.toContain('OCR 识别')
+    expect(render(page({ extractor: 'local-paddleocr' }), 0, 1)).toContain('OCR')
+    expect(render(page(), 0, 1)).not.toContain('OCR')
   })
 
   it('marks truncation with an ellipsis on a long page', () => {
@@ -40,7 +40,7 @@ describe('ContextBody', () => {
 
   it('renders safely when the offsets exceed the page text', () => {
     const html = render(page(), 999, 1200)
-    expect(html).toContain('第 2 / 5 页')
+    expect(html).toContain('Page 2 of 5')
     expect(html).toContain('<mark class="retrieval-mark"></mark>')
   })
 })

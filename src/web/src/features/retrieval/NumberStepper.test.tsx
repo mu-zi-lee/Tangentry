@@ -5,7 +5,7 @@ import { NumberStepper, stepChoice, stepValue } from './NumberStepper'
 
 const render = (over: Partial<React.ComponentProps<typeof NumberStepper>> = {}) =>
   renderToStaticMarkup(createElement(NumberStepper, {
-    value: 24, min: 0, max: 100, label: '嵌入请求上限', onChange: () => {}, ...over,
+    value: 24, min: 0, max: 100, label: 'Embedding request limit', onChange: () => {}, ...over,
   }))
 
 describe('stepValue', () => {
@@ -58,33 +58,33 @@ describe('stepChoice', () => {
 describe('NumberStepper', () => {
   it('shows an up and a down control by default', () => {
     const html = render()
-    expect(html).toContain('aria-label="增加嵌入请求上限"')
-    expect(html).toContain('aria-label="减少嵌入请求上限"')
+    expect(html).toContain('aria-label="Increase Embedding request limit"')
+    expect(html).toContain('aria-label="Decrease Embedding request limit"')
   })
 
   it('keeps a real number input for typing and arrow keys', () => {
     const html = render()
     expect(html).toContain('type="number"')
-    expect(html).toContain('aria-label="嵌入请求上限"')
+    expect(html).toContain('aria-label="Embedding request limit"')
     expect(html).toContain('step="1"')
   })
 
   it('disables the control that would leave the range', () => {
     const atMax = render({ value: 100, max: 100 })
     const atMin = render({ value: 0, min: 0 })
-    expect(atMax).toMatch(/aria-label="增加嵌入请求上限"[^>]*disabled/)
-    expect(atMin).toMatch(/aria-label="减少嵌入请求上限"[^>]*disabled/)
+    expect(atMax).toMatch(/aria-label="Increase Embedding request limit"[^>]*disabled/)
+    expect(atMin).toMatch(/aria-label="Decrease Embedding request limit"[^>]*disabled/)
   })
 
   it('disables both controls when the field is disabled', () => {
     const html = render({ disabled: true })
-    expect(html).toMatch(/aria-label="增加嵌入请求上限"[^>]*disabled/)
-    expect(html).toMatch(/aria-label="减少嵌入请求上限"[^>]*disabled/)
+    expect(html).toMatch(/aria-label="Increase Embedding request limit"[^>]*disabled/)
+    expect(html).toMatch(/aria-label="Decrease Embedding request limit"[^>]*disabled/)
   })
 
   it('exposes the hint through aria-describedby', () => {
-    const html = render({ hint: '只能收紧，不能超过已保存上限' })
-    expect(html).toContain('只能收紧')
+    const html = render({ hint: 'Tightening only, never above the saved ceiling' })
+    expect(html).toContain('Tightening only')
     expect(html).toContain('aria-describedby=')
   })
 })

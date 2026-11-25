@@ -98,11 +98,11 @@ export function isLoopbackUrl(raw: string): boolean {
 export function validateWeights(lexical: number, embedding: number, rerank: number): { ok: true; weights: { lexical: number; embedding: number; rerank: number } } | { ok: false; message: string } {
   for (const value of [lexical, embedding, rerank]) {
     if (!Number.isFinite(value) || value < 0 || value > 1) {
-      return { ok: false, message: '权重必须是 0–1 之间的有限数值。' }
+      return { ok: false, message: 'Weights must be finite numbers between 0 and 1.' }
     }
   }
   const sum = lexical + embedding + rerank
-  if (sum <= 0) return { ok: false, message: '至少一个权重必须为正。' }
+  if (sum <= 0) return { ok: false, message: 'At least one weight must be positive.' }
   return { ok: true, weights: { lexical: lexical / sum, embedding: embedding / sum, rerank: rerank / sum } }
 }
 
@@ -111,27 +111,27 @@ export function validateWeights(lexical: number, embedding: number, rerank: numb
 // accepted; rerank enabled with a zero budget is rejected (the UI must require
 // a positive budget or keep rerank off).
 export function validateRetrievalSettings(s: RetrievalSettings): { ok: true } | { ok: false; message: string } {
-  if (!['local', 'remote', 'bailian'].includes(s.providerKind)) return { ok: false, message: '请选择有效的服务类型。' }
-  if (!s.baseUrl.trim()) return { ok: false, message: '请填写接口地址。' }
-  if (s.providerKind === 'local' && !isLoopbackUrl(s.baseUrl)) return { ok: false, message: '本地服务必须使用回环地址（如 http://127.0.0.1:11434/v1）。' }
-  if (!s.model.trim()) return { ok: false, message: '请填写模型名称。' }
-  if (!Number.isInteger(s.dimensions) || s.dimensions <= 0) return { ok: false, message: '向量维度必须是正整数。' }
-  if (!Number.isInteger(s.batchSize) || s.batchSize <= 0) return { ok: false, message: '批大小必须是正整数。' }
+  if (!['local', 'remote', 'bailian'].includes(s.providerKind)) return { ok: false, message: 'Choose a valid service type.' }
+  if (!s.baseUrl.trim()) return { ok: false, message: 'Enter an endpoint URL.' }
+  if (s.providerKind === 'local' && !isLoopbackUrl(s.baseUrl)) return { ok: false, message: 'A local service must use a loopback address (e.g. http://127.0.0.1:11434/v1).' }
+  if (!s.model.trim()) return { ok: false, message: 'Enter a model name.' }
+  if (!Number.isInteger(s.dimensions) || s.dimensions <= 0) return { ok: false, message: 'Dimensions must be a positive integer.' }
+  if (!Number.isInteger(s.batchSize) || s.batchSize <= 0) return { ok: false, message: 'Batch size must be a positive integer.' }
   if (s.providerKind === 'bailian') {
     const limit = BAILIAN_MODEL_DIMENSIONS[s.model]
     if (limit) {
-      if (limit.fixed && s.dimensions !== limit.fixed) return { ok: false, message: `模型 ${s.model} 仅支持维度 ${limit.fixed}。` }
-      if (!limit.dimensions.includes(s.dimensions)) return { ok: false, message: `模型 ${s.model} 不支持维度 ${s.dimensions}。` }
-      if (s.batchSize > limit.maxRows) return { ok: false, message: `模型 ${s.model} 的批大小不能超过 ${limit.maxRows}。` }
+      if (limit.fixed && s.dimensions !== limit.fixed) return { ok: false, message: `Model ${s.model} only supports ${limit.fixed} dimensions.` }
+      if (!limit.dimensions.includes(s.dimensions)) return { ok: false, message: `Model ${s.model} does not support ${s.dimensions} dimensions.` }
+      if (s.batchSize > limit.maxRows) return { ok: false, message: `Model ${s.model} allows at most ${limit.maxRows} rows per batch.` }
     }
   }
-  if (!Number.isInteger(s.topK) || s.topK < 20 || s.topK > 1000) return { ok: false, message: 'topK 必须在 20–1000 之间。' }
+  if (!Number.isInteger(s.topK) || s.topK < 20 || s.topK > 1000) return { ok: false, message: 'topK must be between 20 and 1000.' }
   const weights = validateWeights(s.lexicalWeight, s.embeddingWeight, s.rerankWeight)
   if (!weights.ok) return weights
-  if (!Number.isInteger(s.maxEmbeddingRequests) || s.maxEmbeddingRequests < 0) return { ok: false, message: '嵌入请求预算必须是非负整数（0 表示关闭）。' }
-  if (!Number.isInteger(s.maxRerankRequests) || s.maxRerankRequests < 0) return { ok: false, message: '重排请求预算必须是非负整数。' }
-  if (!Number.isInteger(s.maxEmbeddingChars) || s.maxEmbeddingChars <= 0) return { ok: false, message: '嵌入字符预算必须是正整数。' }
-  if (s.rerankProvider !== 'off' && s.maxRerankRequests <= 0) return { ok: false, message: '启用重排需要正的重排请求预算（建议 2），或保持重排关闭。' }
+  if (!Number.isInteger(s.maxEmbeddingRequests) || s.maxEmbeddingRequests < 0) return { ok: false, message: 'The embedding request budget must be a non-negative integer (0 turns it off).' }
+  if (!Number.isInteger(s.maxRerankRequests) || s.maxRerankRequests < 0) return { ok: false, message: 'The rerank request budget must be a non-negative integer.' }
+  if (!Number.isInteger(s.maxEmbeddingChars) || s.maxEmbeddingChars <= 0) return { ok: false, message: 'The embedding character budget must be a positive integer.' }
+  if (s.rerankProvider !== 'off' && s.maxRerankRequests <= 0) return { ok: false, message: 'Rerank requires a positive rerank request budget (2 is a good start), or keep rerank off.' }
   return { ok: true }
 }
 

@@ -27,7 +27,7 @@ function NumberField({ label, hint, value, min, max, ceiling, disabled, onChange
     <label className="retrieval-knob">
       <span className="retrieval-knob-label">
         {label}
-        {typeof ceiling === 'number' && <em className="retrieval-knob-ceiling">已保存上限 {ceiling}</em>}
+        {typeof ceiling === 'number' && <em className="retrieval-knob-ceiling">Saved ceiling {ceiling}</em>}
       </span>
       <NumberStepper
         value={value}
@@ -68,16 +68,16 @@ export function RetrievalOptionsPanel({ open, onToggle, prefs, ceilings, pending
   const isDefault = (Object.keys(defaults) as (keyof WorkbenchOptions)[]).every(key => options[key] === defaults[key])
 
   return (
-    <section className={`retrieval-options${open ? ' is-open' : ''}`} aria-label="高级选项">
+    <section className={`retrieval-options${open ? ' is-open' : ''}`} aria-label="Advanced options">
       <button type="button" className="retrieval-options-toggle" onClick={onToggle} aria-expanded={open} aria-controls="retrieval-options-body">
         <SlidersHorizontal size={15} strokeWidth={1.8} aria-hidden="true"/>
-        <span className="retrieval-options-title">高级选项</span>
+        <span className="retrieval-options-title">Advanced options</span>
         <span className="retrieval-options-summary">
           {workbenchModes.find(item => item.value === options.mode)?.label}
-          {' · '}{options.maxChars.toLocaleString('en-US')} 字符
-          {' · '}{options.batchingMode === 'split' ? '分离批' : '合并批'}
-          {sweepOff && ' · 扫描关闭'}
-          {embeddingOff && ' · 嵌入关闭'}
+          {' · '}{options.maxChars.toLocaleString('en-US')} chars
+          {' · '}{options.batchingMode === 'split' ? 'split' : 'shared'}
+          {sweepOff && ' · sweep off'}
+          {embeddingOff && ' · embedding off'}
         </span>
         <ChevronDown size={16} strokeWidth={2} className="retrieval-options-chevron" aria-hidden="true"/>
       </button>
@@ -85,11 +85,11 @@ export function RetrievalOptionsPanel({ open, onToggle, prefs, ceilings, pending
       {open && (
         <div className="retrieval-options-body" id="retrieval-options-body">
           <div className="retrieval-knob-group">
-            <h3>检索与预算</h3>
+            <h3>Retrieval and budget</h3>
             <div className="retrieval-knobs">
               <NumberField
-                label="上下文预算（字符）"
-                hint={`${MIN_CONTEXT_RUNES.toLocaleString('en-US')}–${MAX_CONTEXT_RUNES.toLocaleString('en-US')}；超出范围回到默认 120,000`}
+                label="Context budget (chars)"
+                hint={`${MIN_CONTEXT_RUNES.toLocaleString('en-US')}–${MAX_CONTEXT_RUNES.toLocaleString('en-US')}; out of range falls back to 120,000`}
                 value={options.maxChars}
                 min={MIN_CONTEXT_RUNES}
                 max={MAX_CONTEXT_RUNES}
@@ -98,20 +98,20 @@ export function RetrievalOptionsPanel({ open, onToggle, prefs, ceilings, pending
               />
 
               <label className="retrieval-knob">
-                <span className="retrieval-knob-label">批处理模式</span>
+                <span className="retrieval-knob-label">Batch mode</span>
                 <Select
                   value={options.batchingMode}
                   onChange={event => onOptions({ batchingMode: event.target.value as WorkbenchOptions['batchingMode'] })}
                   options={batchingModes.map(item => ({ value: item.value, label: item.label }))}
                   disabled={pending}
-                  aria-label="批处理模式"
+                  aria-label="Batch mode"
                 />
                 <span className="retrieval-knob-hint">{batchingModes.find(item => item.value === options.batchingMode)?.hint}</span>
               </label>
 
               <NumberField
-                label="嵌入请求上限"
-                hint="0 表示关闭嵌入；只能比已保存上限更紧"
+                label="Embedding request limit"
+                hint="0 turns embedding off; can only tighten the saved ceiling"
                 value={options.maxEmbeddingRequests}
                 min={0}
                 max={ceilings?.maxEmbeddingRequests ?? 1000}
@@ -121,8 +121,8 @@ export function RetrievalOptionsPanel({ open, onToggle, prefs, ceilings, pending
               />
 
               <NumberField
-                label="嵌入字符上限"
-                hint="送入嵌入服务的字符总量；只能收紧"
+                label="Embedding character limit"
+                hint="Total characters sent to the embedding service; tightening only"
                 value={options.maxEmbeddingChars}
                 min={0}
                 max={ceilings?.maxEmbeddingChars ?? 1000000}
@@ -132,8 +132,8 @@ export function RetrievalOptionsPanel({ open, onToggle, prefs, ceilings, pending
               />
 
               <NumberField
-                label="位置分层扫描候选数"
-                hint={`0 表示关闭扫描；上限 ${MAX_SWEEP_CANDIDATES}。扫描是零重叠改写仍能召回的关键`}
+                label="Positional sweep candidates"
+                hint={`0 disables the sweep; max ${MAX_SWEEP_CANDIDATES}. The sweep is what still recalls zero-overlap paraphrases`}
                 value={options.sweepCandidates}
                 min={0}
                 max={MAX_SWEEP_CANDIDATES}
@@ -145,43 +145,43 @@ export function RetrievalOptionsPanel({ open, onToggle, prefs, ceilings, pending
 
             {sweepOff && (
               <p className="retrieval-knob-warning" role="note">
-                已关闭位置分层扫描。此时不发送嵌入请求上限，沿用已保存设置——否则服务端会把扫描恢复为默认 90 个候选。
+                The positional sweep is off. The embedding request limit is not sent, so the saved setting applies — otherwise the server would restore the default 90 candidates.
               </p>
             )}
             {embeddingOff && (
               <p className="retrieval-knob-warning" role="note">
-                嵌入请求上限为 0，本次不会调用嵌入服务，等价于仅词汇检索。
+                The embedding request limit is 0, so this run makes no embedding calls — equivalent to Lexical only.
               </p>
             )}
           </div>
 
           <div className="retrieval-knob-group">
-            <h3>显示偏好</h3>
+            <h3>Display preferences</h3>
             <div className="retrieval-display-prefs">
               <Checkbox
-                label="高亮片段中与问题重合的词"
+                label="Highlight words that overlap with the question"
                 checked={prefs.highlight}
                 onChange={event => onPrefs({ highlight: event.target.checked })}
               />
               <label className="retrieval-knob retrieval-knob-inline">
-                <span className="retrieval-knob-label">每页显示片段</span>
+                <span className="retrieval-knob-label">Passages per page</span>
                 <span className="number-stepper number-stepper-select retrieval-page-size">
                   <span className="number-stepper-box">
                     <Select
                       value={String(prefs.pageSize)}
                       onChange={event => onPrefs({ pageSize: Number(event.target.value) })}
-                      options={PAGE_SIZES.map(size => ({ value: String(size), label: `${size} 条` }))}
-                      aria-label="每页显示片段"
+                      options={PAGE_SIZES.map(size => ({ value: String(size), label: `${size}` }))}
+                      aria-label="Passages per page"
                     />
                     <span className="number-stepper-buttons">
                       <button type="button" className="number-stepper-button" tabIndex={-1}
-                        aria-label="增加每页显示片段" title="增加每页显示片段"
+                        aria-label="Increase passages per page" title="Increase passages per page"
                         disabled={prefs.pageSize >= Math.max(...PAGE_SIZES)}
                         onClick={() => onPrefs({ pageSize: stepChoice(PAGE_SIZES, prefs.pageSize, 1) })}>
                         <ChevronUp size={12} strokeWidth={2.4} aria-hidden="true"/>
                       </button>
                       <button type="button" className="number-stepper-button" tabIndex={-1}
-                        aria-label="减少每页显示片段" title="减少每页显示片段"
+                        aria-label="Decrease passages per page" title="Decrease passages per page"
                         disabled={prefs.pageSize <= Math.min(...PAGE_SIZES)}
                         onClick={() => onPrefs({ pageSize: stepChoice(PAGE_SIZES, prefs.pageSize, -1) })}>
                         <ChevronDown size={12} strokeWidth={2.4} aria-hidden="true"/>
@@ -191,16 +191,16 @@ export function RetrievalOptionsPanel({ open, onToggle, prefs, ceilings, pending
                 </span>
               </label>
               <p className="retrieval-knob-hint">
-                服务端最多可返回 topK 条片段。分页只影响一次渲染多少张卡片，其余可一键展开，不会丢弃任何结果。
+                The server can return up to topK passages. Paging only controls how many cards render at once; the rest expand with one click and nothing is discarded.
               </p>
             </div>
           </div>
 
           <div className="retrieval-options-actions">
-            <span className="retrieval-options-note">混合权重、topK、批大小、嵌入模型与重排开关由上方的「检索设置」统一管理。</span>
-            <Button variant="quiet" type="button" onClick={onOpenSettings}>打开检索设置</Button>
+            <span className="retrieval-options-note">Hybrid weights, topK, batch size, the embedding model and the rerank switch live under Retrieval settings above.</span>
+            <Button variant="quiet" type="button" onClick={onOpenSettings}>Open retrieval settings</Button>
             <Button variant="quiet" type="button" onClick={onReset} disabled={pending || isDefault}>
-              <RotateCcw size={14} strokeWidth={1.8} aria-hidden="true"/>恢复默认
+              <RotateCcw size={14} strokeWidth={1.8} aria-hidden="true"/>Reset to defaults
             </Button>
           </div>
         </div>

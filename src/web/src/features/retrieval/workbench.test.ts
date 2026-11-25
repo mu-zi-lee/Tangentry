@@ -318,20 +318,20 @@ describe('compactCitationIds', () => {
   const id = `pdf:${hash}#pdf:${hash}:61:s0-s3:0-109`
 
   it('turns a composite PDF passage id into a page reference', () => {
-    expect(compactCitationIds(`（見 passage id="${id}"）`)).toBe('（見 原文第61頁）')
+    expect(compactCitationIds(`（見 passage id="${id}"）`)).toBe('（見 page 61）')
   })
 
   it('handles the colon form the model also uses', () => {
-    expect(compactCitationIds(`見 passage id: "${id}"`)).toBe('見 原文第61頁')
+    expect(compactCitationIds(`見 passage id: "${id}"`)).toBe('見 page 61')
   })
 
   it('labels non-PDF composite ids generically', () => {
-    expect(compactCitationIds(`見 passage id="article:12abc#article:12:s3-s4:10-40"`)).toContain('原文片段')
-    expect(compactCitationIds(`見 passage id="subtitle:zh#subtitle:zh:1-2:0-20"`)).toContain('原文片段')
+    expect(compactCitationIds(`見 passage id="article:12abc#article:12:s3-s4:10-40"`)).toContain('source passage')
+    expect(compactCitationIds(`見 passage id="subtitle:zh#subtitle:zh:1-2:0-20"`)).toContain('source passage')
   })
 
   it('shortens a bare pdf locator', () => {
-    expect(compactCitationIds(`來源 pdf:${hash}:7:s2。`)).toBe('來源 第7頁。')
+    expect(compactCitationIds(`來源 pdf:${hash}:7:s2。`)).toBe('來源 p.7。')
   })
 
   it('leaves ordinary text untouched', () => {
@@ -376,22 +376,22 @@ describe('passage position', () => {
 
   it('labels a PDF hit with page and sentence range', () => {
     expect(passagePosition({ source: 'pdf', locator: `pdf:${hash}:61:s0-s3`, sentenceStart: 2, sentenceEnd: 6 }))
-      .toBe('第 61 页 · 句 3–6')
+      .toBe('Page 61 · sentences 3–6')
   })
 
   it('labels an article hit with block and sentence range', () => {
     expect(passagePosition({ source: 'article', locator: 'article:12:s3', sentenceStart: 0, sentenceEnd: 1 }))
-      .toBe('段落 12 · 句 1–1')
+      .toBe('Paragraph 12 · sentences 1–1')
   })
 
   it('labels a subtitle hit with its cue range', () => {
     expect(passagePosition({ source: 'subtitle', locator: 'subtitle:zh:2992-2999', sentenceStart: 0, sentenceEnd: 0 }))
-      .toBe('字幕 zh:2992-2999')
+      .toBe('Subtitle zh:2992-2999')
   })
 
   it('never invents a range when the server sent none', () => {
     expect(passagePosition({ source: 'pdf', locator: `pdf:${hash}:7:s2`, sentenceStart: 0, sentenceEnd: 0 }))
-      .toBe('第 7 页')
+      .toBe('Page 7')
   })
 })
 
@@ -424,8 +424,8 @@ describe('shareable query', () => {
 describe('noResultGuidance', () => {
   it('explains a no-match and always offers a way out', () => {
     const g = noResultGuidance('no_match', opts())
-    expect(g.title).toBe('没有匹配的原文片段')
-    expect(g.reason).toContain('换个说法')
+    expect(g.title).toBe('No matching passages')
+    expect(g.reason).toContain('different wording')
     expect(g.actions).toContain('clear')
   })
 
@@ -445,16 +445,16 @@ describe('noResultGuidance', () => {
   })
 
   it('gives source-specific reasons instead of one generic message', () => {
-    expect(noResultGuidance('pdf_no_text', opts()).reason).toContain('扫描件')
-    expect(noResultGuidance('stale_source', opts()).reason).toContain('重新检索')
-    expect(noResultGuidance('no_verified_passages', opts()).reason).toContain('校验')
+    expect(noResultGuidance('pdf_no_text', opts()).reason).toContain('scan')
+    expect(noResultGuidance('stale_source', opts()).reason).toContain('Searching again')
+    expect(noResultGuidance('no_verified_passages', opts()).reason).toContain('verification')
   })
 })
 
 describe('errorGuidance', () => {
   it('separates a dead service from a timeout', () => {
-    expect(errorGuidance('network_error', 0).title).toBe('连不上本机服务')
-    expect(errorGuidance('ai_timeout', 504).hint).toContain('缩小上下文预算')
+    expect(errorGuidance('network_error', 0).title).toBe('Cannot reach the local service')
+    expect(errorGuidance('ai_timeout', 504).hint).toContain('Reduce the context budget')
   })
 
   it('does not offer a retry when the session expired', () => {
@@ -462,7 +462,7 @@ describe('errorGuidance', () => {
   })
 
   it('points at the settings for an unavailable service', () => {
-    expect(errorGuidance('x', 503).hint).toContain('检索设置')
+    expect(errorGuidance('x', 503).hint).toContain('Retrieval settings')
   })
 
   it('always allows a retry for an unknown failure', () => {

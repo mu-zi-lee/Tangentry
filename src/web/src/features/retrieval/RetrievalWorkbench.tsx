@@ -155,7 +155,7 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, onOpenSample
       })
       const value = normalizeResult(raw)
       if (!value) {
-        setError('检索返回了无法识别的结果，请重试。')
+        setError('The search returned an unreadable response. Please retry.')
         setErrorInfo({ code: 'bad_payload', status: 0 })
         return null
       }
@@ -174,7 +174,7 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, onOpenSample
         setAsked(trimmed)
         return recovered
       }
-      setError(cause instanceof APIError ? cause.message : '检索请求失败，请重试。')
+      setError(cause instanceof APIError ? cause.message : 'The search request failed. Please retry.')
       setErrorInfo(cause instanceof APIError ? { code: cause.code, status: cause.status } : { code: 'unknown', status: 0 })
       return null
     } finally {
@@ -205,7 +205,7 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, onOpenSample
       })
       const text = answerFromResponse(response)
       if (!text) {
-        setAnswerError('模型没有返回可用的回答内容。')
+        setAnswerError('The model returned no usable answer.')
         return
       }
       // Report what actually grounded the answer, not what the search displayed.
@@ -213,7 +213,7 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, onOpenSample
       setAnswer(text)
     } catch (cause) {
       if (cause instanceof APIError) setAnswerError(cause.message)
-      else setAnswerError('生成回答失败，请重试。')
+      else setAnswerError('Could not generate an answer. Please retry.')
     } finally {
       setAnswering(false)
     }
@@ -255,12 +255,12 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, onOpenSample
   }
 
   return (
-    <section className="retrieval-workbench" aria-label="检索服务" onKeyDown={onKeyDown}>
+    <section className="retrieval-workbench" aria-label="Retrieval service" onKeyDown={onKeyDown}>
       <header className="retrieval-header">
         <span className="retrieval-header-icon" aria-hidden="true"><TextSearch size={20} strokeWidth={1.8}/></span>
         <div>
-          <h1>检索服务</h1>
-          <p>按问题从本机内容中选取相关原文片段，并显示定位、得分与预算用量。检索由服务端完成，此处只展示结果。</p>
+          <h1>Retrieval service</h1>
+          <p>Picks the passages relevant to your question from local content, with their position, scores and budget usage. Retrieval runs on the server; this page only renders the result.</p>
         </div>
       </header>
 
@@ -283,7 +283,7 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, onOpenSample
         onOpenSettings={openSettings}
       />
 
-      <section className={`retrieval-settings-panel${prefs.settingsOpen ? ' is-open' : ''}`} aria-label="检索设置">
+      <section className={`retrieval-settings-panel${prefs.settingsOpen ? ' is-open' : ''}`} aria-label="Retrieval settings">
         <button
           type="button"
           className="retrieval-settings-toggle"
@@ -292,8 +292,8 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, onOpenSample
           aria-controls="retrieval-settings-body"
         >
           <SlidersHorizontal size={15} strokeWidth={1.8} aria-hidden="true"/>
-          <span className="retrieval-settings-title">检索设置</span>
-          <span className="retrieval-settings-summary">嵌入服务、重排与权重——留在此页即可配置</span>
+          <span className="retrieval-settings-title">Retrieval settings</span>
+          <span className="retrieval-settings-summary">Embedding service, rerank and weights — configurable without leaving this page</span>
           <ChevronDown size={16} strokeWidth={2} className="retrieval-settings-chevron" aria-hidden="true"/>
         </button>
         {prefs.settingsOpen && (
@@ -305,42 +305,42 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, onOpenSample
 
       <form className="retrieval-form" onSubmit={event => { event.preventDefault(); void run() }}>
         <div className="retrieval-search-head">
-          <h2>检索</h2>
+          <h2>Search</h2>
           <span className="retrieval-search-scope" title={selected?.title ?? ''}>
-            {selected ? selected.title : '先在下方选择一份内容'}
+            {selected ? selected.title : 'Pick a document above'}
           </span>
         </div>
         <div className="retrieval-form-row">
           <label className="retrieval-field">
-            <span>内容</span>
+            <span>Document</span>
             <Select
               value={contentId}
               onChange={event => setContentId(event.target.value)}
               options={contentOptions}
-              placeholder={items.length ? '选择要检索的内容' : '资料库还没有内容'}
+              placeholder={items.length ? 'Choose a document to search' : 'Your library is empty'}
               disabled={pending || items.length === 0}
-              aria-label="选择要检索的内容"
+              aria-label="Document to search"
             />
           </label>
 
           <label className="retrieval-field retrieval-field-wide">
-            <span>问题</span>
+            <span>Question</span>
             <span className="field">
               <Input
                 value={question}
                 onChange={event => setQuestion(event.target.value)}
-                placeholder="例如：这份内容中段给出的结论是什么"
+                placeholder="e.g. What conclusion does the middle of this document reach?"
                 disabled={pending}
                 autoFocus
                 maxLength={QUESTION_MAX_LENGTH}
                 ref={questionRef}
-                aria-label="检索问题"
+                aria-label="Question"
               />
             </span>
           </label>
 
           <Button variant="primary" type="submit" isLoading={pending} disabled={!canSearch(contentId, question, pending)}>
-            {pending ? '正在检索' : '开始检索'}
+            {pending ? 'Searching' : 'Search'}
           </Button>
           <Button
             variant="secondary"
@@ -350,13 +350,13 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, onOpenSample
             disabled={!answerable}
             onClick={() => void answerFromDocument()}
           >
-            根据原文回答
+            Answer from sources
           </Button>
         </div>
 
         {prefs.recent.length > 0 && (
-          <div className="retrieval-recent" role="group" aria-label="最近搜索">
-            <span className="retrieval-presets-label">最近</span>
+          <div className="retrieval-recent" role="group" aria-label="Recent searches">
+            <span className="retrieval-presets-label">Recent</span>
             {prefs.recent.map(entry => (
               <button
                 key={`${entry.contentId}:${entry.question}`}
@@ -376,11 +376,11 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, onOpenSample
         )}
 
         {question.length >= QUESTION_HINT_FROM && (
-          <p className="field-hint" role="status">问题较长（{question.length}/{QUESTION_MAX_LENGTH} 字符），建议精简后再检索。</p>
+          <p className="field-hint" role="status">The question is long ({question.length}/{QUESTION_MAX_LENGTH} characters). Consider shortening it.</p>
         )}
 
         <div className="retrieval-quick">
-          <div className="retrieval-segmented" role="group" aria-label="检索方式">
+          <div className="retrieval-segmented" role="group" aria-label="Retrieval mode">
             {workbenchModes.map(item => (
               <button
                 key={item.value}
@@ -396,10 +396,10 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, onOpenSample
             ))}
           </div>
 
-          <span className="retrieval-kbd-hint" aria-hidden="true">Enter 检索 · Esc 清空</span>
+          <span className="retrieval-kbd-hint" aria-hidden="true">Enter to search · Esc to clear</span>
 
-          <div className="retrieval-presets" role="group" aria-label="上下文预算">
-            <span className="retrieval-presets-label">上下文</span>
+          <div className="retrieval-presets" role="group" aria-label="Context budget">
+            <span className="retrieval-presets-label">Context</span>
             {contextBudgetPresets.map(preset => (
               <button
                 key={preset.value}
@@ -413,7 +413,7 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, onOpenSample
               </button>
             ))}
             {contextBudgetPresets.every(preset => preset.value !== options.maxChars) && (
-              <span className="retrieval-preset is-active is-custom">自定义 {options.maxChars.toLocaleString('en-US')}</span>
+              <span className="retrieval-preset is-active is-custom">Custom {options.maxChars.toLocaleString('en-US')}</span>
             )}
           </div>
         </div>
@@ -421,18 +421,18 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, onOpenSample
 
       {!result && !error && !pending && items.length > 0 && (
         <p className="field-hint retrieval-initial-hint">
-          在上方输入问题并回车开始检索；展开「新手引导」可以了解检索方式与预算的含义。
+          Type a question above and press Enter to search. Open Getting started to learn what the mode and budget mean.
         </p>
       )}
 
 
       {items.length === 0 && (
         <section className="empty-state">
-          <h2>资料库还没有内容</h2>
-          <p>检索只在你保存的内容里进行。可以先载入内置示例资料，或去「发现」保存一份。</p>
+          <h2>Your library is empty</h2>
+          <p>Retrieval only looks at content you saved. Load the built-in samples, or save something from Discover.</p>
           {onOpenSamples && (
             <div className="retrieval-noresult-actions">
-              <Button variant="primary" type="button" onClick={onOpenSamples}>载入示例资料</Button>
+              <Button variant="primary" type="button" onClick={onOpenSamples}>Load sample documents</Button>
             </div>
           )}
         </section>
@@ -446,13 +446,13 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, onOpenSample
             <p className="field-hint">{errorGuidance(errorInfo?.code ?? 'unknown', errorInfo?.status ?? 0).hint}</p>
           </div>
           {errorGuidance(errorInfo?.code ?? 'unknown', errorInfo?.status ?? 0).retry && (
-            <Button variant="secondary" type="button" disabled={pending} onClick={() => void run()}>重试</Button>
+            <Button variant="secondary" type="button" disabled={pending} onClick={() => void run()}>Retry</Button>
           )}
         </div>
       )}
 
       {pending && !result && (
-        <div className="retrieval-skeleton" role="status" aria-live="polite" aria-label="正在检索">
+        <div className="retrieval-skeleton" role="status" aria-live="polite" aria-label="Searching">
           <span/><span/><span/>
         </div>
       )}
@@ -482,7 +482,7 @@ export function RetrievalWorkbench({ items, onRead, onOpenSettings, onOpenSample
             target?.scrollIntoView({ block: 'start', behavior: 'smooth' })
           }}
         >
-          跳到结果（{result.passages.length} 条）
+          Skip to results ({result.passages.length})
         </a>
       )}
 

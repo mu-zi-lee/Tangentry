@@ -13,7 +13,7 @@ const groups = [
     { view: 'library', label: '收藏', Icon: Bookmark },
     { view: 'history', label: '历史', Icon: Clock3 },
     { view: 'notes', label: '笔记', Icon: StickyNote },
-    { view: 'retrieval', label: '检索服务', Icon: TextSearch },
+    { view: 'retrieval', label: 'Retrieval', Icon: TextSearch },
     { view: 'downloads', label: '下载', Icon: Download },
   ] },
 ] as const

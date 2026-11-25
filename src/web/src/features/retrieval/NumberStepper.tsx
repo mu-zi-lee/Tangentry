@@ -73,8 +73,8 @@ export function NumberStepper({ value, min, max, step = 1, disabled = false, lab
           type="button"
           className="number-stepper-button"
           tabIndex={-1}
-          aria-label={`增加${label}`}
-          title={`增加${label}`}
+          aria-label={`Increase ${label}`}
+          title={`Increase ${label}`}
           disabled={disabled || atMax}
           onClick={() => apply(step)}
         >
@@ -84,8 +84,8 @@ export function NumberStepper({ value, min, max, step = 1, disabled = false, lab
           type="button"
           className="number-stepper-button"
           tabIndex={-1}
-          aria-label={`减少${label}`}
-          title={`减少${label}`}
+          aria-label={`Decrease ${label}`}
+          title={`Decrease ${label}`}
           disabled={disabled || atMin}
           onClick={() => apply(-step)}
         >

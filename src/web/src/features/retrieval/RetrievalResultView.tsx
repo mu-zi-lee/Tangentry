@@ -32,7 +32,7 @@ const toneIcon: Record<RetrievalTone, typeof Info> = {
 
 function ScoreBar({ label, value, kind, title }: { label: string; value: number; kind: string; title?: string }) {
   return (
-    <span className={`retrieval-score retrieval-score-${kind}`} title={title ?? `${label}得分 ${workbenchScoreLabel(value)}`}>
+    <span className={`retrieval-score retrieval-score-${kind}`} title={title ?? `${label} score ${workbenchScoreLabel(value)}`}>
       <span className="retrieval-score-label">{label}</span>
       <span className="retrieval-score-track" aria-hidden="true">
         <span className="retrieval-score-fill" style={{ width: `${workbenchScoreWidth(value)}%` }}/>
@@ -63,10 +63,10 @@ function PassageText({ text, terms, highlight }: { text: string; terms: readonly
  * mistaken for the whole result.
  */
 const noResultLabels: Record<NoResultAction, string> = {
-  'enable-sweep': '开启语义扫描',
-  'widen-budget': '扩大到 120,000 字符',
-  'try-hybrid': '改用混合检索',
-  clear: '清空问题',
+  'enable-sweep': 'Enable semantic sweep',
+  'widen-budget': 'Widen budget to 120,000',
+  'try-hybrid': 'Switch to Hybrid',
+  clear: 'Clear question',
 }
 
 export function RetrievalResultView({ result, selected, onRead, question = '', highlight = true, pageSize = 10, options, onNoResultAction, sort = 'relevance', onSortChange, elapsedMs }: {
@@ -104,8 +104,8 @@ export function RetrievalResultView({ result, selected, onRead, question = '', h
   }
 
   return (
-    <div className="retrieval-result" id="retrieval-results" tabIndex={-1} aria-label="检索结果">
-      <div className={`retrieval-status retrieval-status-${view.tone}`} role="status" aria-label="检索状态" data-status={result.retrieval.status}>
+    <div className="retrieval-result" id="retrieval-results" tabIndex={-1} aria-label="Search results">
+      <div className={`retrieval-status retrieval-status-${view.tone}`} role="status" aria-label="Retrieval status" data-status={result.retrieval.status}>
         <span className="retrieval-status-icon" aria-hidden="true"><ToneIcon size={16} strokeWidth={1.9}/></span>
         <span className="retrieval-status-body">
           <span className="retrieval-status-label">{view.label}</span>
@@ -114,47 +114,47 @@ export function RetrievalResultView({ result, selected, onRead, question = '', h
       </div>
 
       <dl className="retrieval-metrics">
-        <div><dt>命中片段</dt><dd>{result.passages.length}</dd></div>
-        <div><dt>检索方式</dt><dd>{result.retrieval.mode || '—'}</dd></div>
-        <div><dt>重排</dt><dd>{result.retrieval.rerank.enabled ? (result.retrieval.rerank.model || '已启用') : '未启用'}</dd></div>
+        <div><dt>Matched passages</dt><dd>{result.passages.length}</dd></div>
+        <div><dt>Mode</dt><dd>{result.retrieval.mode || '—'}</dd></div>
+        <div><dt>Rerank</dt><dd>{result.retrieval.rerank.enabled ? (result.retrieval.rerank.model || 'Enabled') : 'Off'}</dd></div>
         {(typeof result.elapsedMs === 'number' || typeof elapsedMs === 'number') && (
           <div>
-            <dt>检索耗时</dt>
-            <dd title={typeof result.elapsedMs === 'number' ? '服务端选取耗时' : '客户端计时（服务端未返回耗时）'}>
+            <dt>Search time</dt>
+            <dd title={typeof result.elapsedMs === 'number' ? 'Server-side selection time' : 'Client timing (the server did not report a duration)'}>
               {typeof result.elapsedMs === 'number' ? result.elapsedMs : elapsedMs} ms
             </dd>
           </div>
         )}
         {moreMetrics && (
           <>
-            <div><dt>上下文字符</dt><dd>{result.contextChars.toLocaleString('en-US')}</dd></div>
-            <div><dt>嵌入模型</dt><dd>{result.retrieval.embedding.model || '未启用'}</dd></div>
-            <div><dt>嵌入请求</dt><dd>{result.retrieval.embedding.requests}</dd></div>
-            <div><dt>缓存命中</dt><dd>{result.retrieval.embedding.cacheHits ?? 0}</dd></div>
-            <div><dt>预算状态</dt><dd>{result.retrieval.embedding.budgetStatus || '—'}</dd></div>
+            <div><dt>Context chars</dt><dd>{result.contextChars.toLocaleString('en-US')}</dd></div>
+            <div><dt>Embedding model</dt><dd>{result.retrieval.embedding.model || 'Off'}</dd></div>
+            <div><dt>Embedding requests</dt><dd>{result.retrieval.embedding.requests}</dd></div>
+            <div><dt>Cache hits</dt><dd>{result.retrieval.embedding.cacheHits ?? 0}</dd></div>
+            <div><dt>Budget status</dt><dd>{result.retrieval.embedding.budgetStatus || '—'}</dd></div>
           </>
         )}
       </dl>
       <div className="retrieval-result-bar">
         {onSortChange && (
-          <div className="retrieval-segmented retrieval-sort" role="group" aria-label="结果排序">
-            <button type="button" className={`retrieval-segment${sort !== 'source' ? ' is-active' : ''}`} aria-pressed={sort !== 'source'} onClick={() => onSortChange('relevance')}>按相关度</button>
-            <button type="button" className={`retrieval-segment${sort === 'source' ? ' is-active' : ''}`} aria-pressed={sort === 'source'} onClick={() => onSortChange('source')}>按原文顺序</button>
+          <div className="retrieval-segmented retrieval-sort" role="group" aria-label="Result order">
+            <button type="button" className={`retrieval-segment${sort !== 'source' ? ' is-active' : ''}`} aria-pressed={sort !== 'source'} onClick={() => onSortChange('relevance')}>By relevance</button>
+            <button type="button" className={`retrieval-segment${sort === 'source' ? ' is-active' : ''}`} aria-pressed={sort === 'source'} onClick={() => onSortChange('source')}>Document order</button>
           </div>
         )}
         <button type="button" className="retrieval-more-metrics" aria-expanded={moreMetrics} onClick={() => setMoreMetrics(value => !value)}>
-          {moreMetrics ? '收起指标' : '更多指标'}
+          {moreMetrics ? 'Fewer metrics' : 'More metrics'}
         </button>
       </div>
 
       {result.passages.length > visible.length && (
         <p className="retrieval-hidden" role="note">
-          已显示 {visible.length} / 共 {result.passages.length} 条片段，其余 {remaining} 条尚未展开——它们同样被服务端选中。
+          Showing {visible.length} of {result.passages.length} passages; {remaining} more are not expanded yet — they were selected by the server too.
         </p>
       )}
 
       {visible.length > 0 ? (
-        <ol className="retrieval-passages" aria-label="检索到的原文片段">
+        <ol className="retrieval-passages" aria-label="Matched source passages">
           {visible.map((passage: WorkbenchPassage, index) => (
             <li key={passage.passageId} className="retrieval-passage" data-passage-id={passage.passageId}>
               <div className="retrieval-passage-head">
@@ -166,19 +166,19 @@ export function RetrievalResultView({ result, selected, onRead, question = '', h
                   type="button"
                   className="retrieval-copy"
                   onClick={() => void copy(passage.locator)}
-                  title="复制定位符"
-                  aria-label={`复制定位符 ${passage.locator}`}
+                  title="Copy locator"
+                  aria-label={`Copy locator ${passage.locator}`}
                 >
                   {copied === passage.locator ? <Check size={13} strokeWidth={2}/> : <Copy size={13} strokeWidth={1.8}/>}
                 </button>
               </div>
 
               <div className="retrieval-scores">
-                <ScoreBar label="混合" value={passage.score} kind="hybrid" title={`混合得分 ${workbenchScoreLabel(passage.score)}（相对本次最佳片段归一化）`}/>
-                <ScoreBar label="词汇" value={passage.lexicalScore} kind="lexical" title={`词汇得分 ${workbenchScoreLabel(passage.lexicalScore)}（绝对分）`}/>
-                <ScoreBar label="语义" value={passage.cosineScore} kind="semantic" title={`语义余弦 ${workbenchScoreLabel(passage.cosineScore)}`}/>
+                <ScoreBar label="Hybrid" value={passage.score} kind="hybrid" title={`Hybrid score ${workbenchScoreLabel(passage.score)} (normalised to the best passage of this run)`}/>
+                <ScoreBar label="Lexical" value={passage.lexicalScore} kind="lexical" title={`Lexical score ${workbenchScoreLabel(passage.lexicalScore)} (absolute)`}/>
+                <ScoreBar label="Semantic" value={passage.cosineScore} kind="semantic" title={`Semantic cosine ${workbenchScoreLabel(passage.cosineScore)}`}/>
                 {(passage.rerankScore ?? 0) > 0 && (
-                  <ScoreBar label="重排" value={passage.rerankScore ?? 0} kind="rerank" title={`重排得分 ${workbenchScoreLabel(passage.rerankScore ?? 0)}（相对本次请求）`}/>
+                  <ScoreBar label="Rerank" value={passage.rerankScore ?? 0} kind="rerank" title={`Rerank score ${workbenchScoreLabel(passage.rerankScore ?? 0)} (relative to this request)`}/>
                 )}
               </div>
 
@@ -194,9 +194,9 @@ export function RetrievalResultView({ result, selected, onRead, question = '', h
               )}
 
               <div className="retrieval-passage-foot">
-                <span title="来源版本">版本 <code>{passage.sourceVersion || '—'}</code></span>
-                <span title="原文文本 SHA-256">校验 <code>{passage.textSha256 ? `${passage.textSha256.slice(0, 12)}…` : '—'}</code></span>
-                <span title="原文字符区间">区间 <code>{passage.startRune}–{passage.endRune}</code></span>
+                <span title="Source version">Version <code>{passage.sourceVersion || '—'}</code></span>
+                <span title="Source text SHA-256">Checksum <code>{passage.textSha256 ? `${passage.textSha256.slice(0, 12)}…` : '—'}</code></span>
+                <span title="Source rune range">Range <code>{passage.startRune}–{passage.endRune}</code></span>
                 {passage.source === 'pdf' && passagePage(passage.locator) !== null && (
                   <button
                     type="button"
@@ -205,7 +205,7 @@ export function RetrievalResultView({ result, selected, onRead, question = '', h
                     onClick={() => setContextFor(current => current === passage.passageId ? '' : passage.passageId)}
                   >
                     <ChevronDown size={12} strokeWidth={2} aria-hidden="true" className={contextFor === passage.passageId ? 'is-open' : undefined}/>
-                    {contextFor === passage.passageId ? '收起上下文' : '展开上下文'}
+                    {contextFor === passage.passageId ? 'Hide context' : 'Show context'}
                   </button>
                 )}
                 {selected && selected.id === passage.contentId && (
@@ -214,7 +214,7 @@ export function RetrievalResultView({ result, selected, onRead, question = '', h
                     type="button"
                     onClick={() => onRead(selected, passagePage(passage.locator) ?? undefined)}
                   >
-                    {passagePage(passage.locator) !== null ? `跳到第 ${passagePage(passage.locator)} 页` : '打开原文'}
+                    {passagePage(passage.locator) !== null ? `Go to page ${passagePage(passage.locator)}` : 'Open source'}
                   </Button>
                 )}
               </div>
@@ -240,10 +240,10 @@ export function RetrievalResultView({ result, selected, onRead, question = '', h
       {remaining > 0 && (
         <div className="retrieval-more">
           <Button variant="secondary" type="button" onClick={() => setShown(current => current + pageSize)}>
-            加载更多（还有 {remaining} 条）
+            Load more ({remaining} left)
           </Button>
           <Button variant="quiet" type="button" onClick={() => setShown(result.passages.length)}>
-            全部展开
+            Expand all
           </Button>
         </div>
       )}

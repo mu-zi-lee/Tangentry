@@ -10,32 +10,32 @@ describe('RetrievalGuide', () => {
   it('is collapsed without rendering the steps', () => {
     const html = render(false)
     expect(html).toContain('aria-expanded="false"')
-    expect(html).toContain('第一次使用？')
-    expect(html).not.toContain('选一份内容')
+    expect(html).toContain('First time here?')
+    expect(html).not.toContain('Pick a document')
     expect(html).not.toContain('id="retrieval-guide-body"')
   })
 
   it('exposes the three steps when expanded', () => {
     const html = render(true)
     expect(html).toContain('aria-expanded="true"')
-    expect(html).toContain('选一份内容')
-    expect(html).toContain('问一个具体问题')
-    expect(html).toContain('核对原文')
+    expect(html).toContain('Pick a document')
+    expect(html).toContain('Ask a specific question')
+    expect(html).toContain('Check the source')
   })
 
   it('points a first-time user at the mode that needs no embedding server', () => {
     const html = render(true)
-    expect(html).toContain('没有嵌入服务？')
-    expect(html).toContain('仅词汇')
-    expect(html).toContain('完全在本机运行')
+    expect(html).toContain('No embedding service?')
+    expect(html).toContain('Lexical only')
+    expect(html).toContain('runs entirely on this machine')
   })
 
   it('states that a locator is not proof of correctness', () => {
-    expect(render(true)).toContain('定位符不等于正确性')
+    expect(render(true)).toContain('A locator is not proof')
   })
 
   it('links the expanded panel to the settings page', () => {
-    expect(render(true)).toContain('配置嵌入服务与权重')
+    expect(render(true)).toContain('Configure embedding and weights')
   })
 
   it('associates the toggle with its body for screen readers', () => {

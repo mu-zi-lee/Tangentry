@@ -15,7 +15,7 @@ interface PageText {
 export function ContextBody({ data, startRune, endRune }: { data: PageText; startRune: number; endRune: number }) {
   const window = contextWindow(data.text, startRune, endRune)
   return (
-    <div className="retrieval-context" aria-label={`第 ${data.page} 页上下文`}>
+    <div className="retrieval-context" aria-label={`Context on page ${data.page}`}>
       <p className="retrieval-context-text">
         {window.truncatedBefore && <span className="retrieval-context-cut">…</span>}
         {window.before}
@@ -24,8 +24,8 @@ export function ContextBody({ data, startRune, endRune }: { data: PageText; star
         {window.truncatedAfter && <span className="retrieval-context-cut">…</span>}
       </p>
       <p className="retrieval-context-note">
-        第 {data.page} / {data.totalPages} 页
-        {data.extractor === 'local-paddleocr' && ' · 本页文本由 OCR 识别，可能有识别错误'}
+        Page {data.page} of {data.totalPages}
+        {data.extractor === 'local-paddleocr' && ' · this page was recognised by OCR and may contain errors'}
       </p>
     </div>
   )
@@ -51,14 +51,14 @@ export function PassageContext({ contentId, page, startRune, endRune }: {
     setError('')
     void request<PageText>(`/library/${encodeURIComponent(contentId)}/page-text?page=${page}`)
       .then(value => { if (active) setData(value) })
-      .catch(cause => { if (active) setError(cause instanceof APIError ? cause.message : '这一页的原文暂时读不到。') })
+      .catch(cause => { if (active) setError(cause instanceof APIError ? cause.message : 'This page cannot be read right now.') })
     return () => { active = false }
   }, [contentId, page])
 
   if (error) return <p className="retrieval-context-error" role="alert">{error}</p>
   if (!data) {
     return <p className="retrieval-context-note" role="status">
-      <LoaderCircle size={13} strokeWidth={2} aria-hidden="true"/> 正在读取第 {page} 页…
+      <LoaderCircle size={13} strokeWidth={2} aria-hidden="true"/> Reading page {page}…
     </p>
   }
   return <ContextBody data={data} startRune={startRune} endRune={endRune}/>

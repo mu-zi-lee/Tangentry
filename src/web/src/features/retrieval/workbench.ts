@@ -89,20 +89,20 @@ export function defaultWorkbenchOptions(): WorkbenchOptions {
 }
 
 export const contextBudgetPresets = [
-  { value: 120000, label: '120,000（默认）' },
+  { value: 120000, label: '120,000 (default)' },
   { value: 32000, label: '32,000' },
-  { value: 8000, label: '8,000（降级压力）' },
+  { value: 8000, label: '8,000 (degraded)' },
 ] as const
 
 export const workbenchModes = [
-  { value: 'hybrid', label: '混合', hint: '词汇 + 语义，需要嵌入服务' },
-  { value: 'lexical', label: '仅词汇', hint: '完全本机，无需嵌入服务' },
-  { value: 'embedding', label: '仅语义', hint: '只用向量相似度' },
+  { value: 'hybrid', label: 'Hybrid', hint: 'Lexical + semantic, needs an embedding service' },
+  { value: 'lexical', label: 'Lexical only', hint: 'Fully local, no model service needed' },
+  { value: 'embedding', label: 'Semantic only', hint: 'Vector similarity alone' },
 ] as const satisfies readonly { value: RetrievalMode; label: string; hint: string }[]
 
 export const batchingModes = [
-  { value: 'shared', label: '合并批处理', hint: '问题与文档同批，请求数更少' },
-  { value: 'split', label: '分离批处理', hint: '问题单独一批，角色不混用' },
+  { value: 'shared', label: 'Shared batch', hint: 'Question and documents batched together, fewer requests' },
+  { value: 'split', label: 'Split batch', hint: 'Question in its own request, roles never mixed' },
 ] as const satisfies readonly { value: BatchingMode; label: string; hint: string }[]
 
 function clampInt(value: unknown, min: number, max: number, fallback: number): number {
@@ -368,15 +368,15 @@ export function isOCRDerived(passages: readonly { sourceVersion: string }[]): bo
 export function compactCitationIds(text: string): string {
   return text
     // Composite PDF passage id -> page reference.
-    .replace(/pdf:[0-9a-f]{64}#pdf:[0-9a-f]{64}:([0-9]+):[0-9a-zA-Z-]+:\d+-\d+/gi, '原文第$1頁')
+    .replace(/pdf:[0-9a-f]{64}#pdf:[0-9a-f]{64}:([0-9]+):[0-9a-zA-Z-]+:\d+-\d+/gi, 'page $1')
     // Any remaining composite id (other sources): a plain label.
-    .replace(/(?:pdf|article|discussion|subtitle):[^\s"'#]+#[^\s"']*/gi, '原文片段')
+    .replace(/(?:pdf|article|discussion|subtitle):[^\s"'#]+#[^\s"']*/gi, 'source passage')
     // Bare PDF locator.
-    .replace(/pdf:[0-9a-f]{64}:([0-9]+):[0-9a-zA-Z-]+/g, '第$1頁')
+    .replace(/pdf:[0-9a-f]{64}:([0-9]+):[0-9a-zA-Z-]+/g, 'p.$1')
     // Drop the "passage id: " / "passage id=" wrapper the model repeats.
     .replace(/passage\s*id\s*[:=]\s*"?/gi, '')
     // A citation wrapped in quotes leaves the closing quote behind.
-    .replace(/(原文第[0-9]+頁|原文片段|字幕片段)"(?=\s|[，。；）)]|$)/g, '$1')
+    .replace(/(page [0-9]+|source passage|subtitle passage|p\.[0-9]+)"(?=\s|[,.;:)）】」』]|$)/g, '$1')
 }
 
 /**
@@ -400,20 +400,20 @@ export function passagePage(locator: string): number | null {
 
 /**
  * Human-readable position of a passage inside its source, so a reader knows
- * where to look without decoding a locator: "第 61 页 · 句 3–6".
+ * where to look without decoding a locator: "Page 61 · sentences 3–6".
  */
 export function passagePosition(passage: { source: string; locator: string; sentenceStart: number; sentenceEnd: number }): string {
   const page = passagePage(passage.locator)
   const sentences = passage.sentenceEnd > passage.sentenceStart
-    ? `句 ${passage.sentenceStart + 1}–${passage.sentenceEnd}`
+    ? `sentences ${passage.sentenceStart + 1}–${passage.sentenceEnd}`
     : ''
-  if (page !== null) return sentences ? `第 ${page} 页 · ${sentences}` : `第 ${page} 页`
+  if (page !== null) return sentences ? `Page ${page} · ${sentences}` : `Page ${page}`
   if (passage.source === 'subtitle') {
     const cue = passage.locator.replace(/^subtitle:/, '')
-    return cue ? `字幕 ${cue}` : '字幕'
+    return cue ? `Subtitle ${cue}` : 'Subtitle'
   }
   const unit = passage.locator.split(':')[1] ?? ''
-  const head = passage.source === 'discussion' ? `讨论 ${unit}` : `段落 ${unit}`
+  const head = passage.source === 'discussion' ? `Post ${unit}` : `Paragraph ${unit}`
   return sentences ? `${head} · ${sentences}` : head
 }
 
@@ -461,37 +461,37 @@ export function noResultGuidance(status: string, options: WorkbenchOptions): NoR
 
   switch (status) {
     case 'no_match':
-      return { title: '没有匹配的原文片段', reason: '这份内容里没有与问题重合的表述。换个说法、减少限定词，或改用混合检索试试。', actions }
+      return { title: 'No matching passages', reason: 'Nothing in this document overlaps with the question. Try different wording, drop qualifiers, or switch to Hybrid.', actions }
     case 'no_verified_passages':
-      return { title: '候选片段未通过原文校验', reason: '候选片段都没通过原文校验，可能内容刚被更新。重新检索一次即可。', actions }
+      return { title: 'Passages failed verification', reason: 'The selected passages did not pass source verification, which usually means the source just changed. Run the search again.', actions }
     case 'stale_source':
-      return { title: '原文已更新', reason: '旧引用已失效。重新检索会基于最新原文。', actions }
+      return { title: 'Source updated', reason: 'The previous citations are stale. Searching again uses the latest text.', actions }
     case 'pdf_no_text':
-      return { title: '这份 PDF 没有可用文本', reason: '可能是扫描件。需要本机 OCR 才能检索，或换一份带文本层的内容。', actions }
+      return { title: 'This PDF has no extractable text', reason: 'It may be a scan. Local OCR is required to search it, or pick a document with a text layer.', actions }
     case 'pdf_ocr_unavailable':
-      return { title: '本机 OCR 不可用', reason: '扫描件需要 OCR。安装并配置本机 PaddleOCR 后重试，不会上传云端。', actions }
+      return { title: 'Local OCR unavailable', reason: 'Scanned pages need OCR. Install and configure local PaddleOCR, then retry. Nothing is uploaded.', actions }
     case 'empty':
-      return { title: '问题为空', reason: '输入要查的内容后再检索。', actions: ['clear'] }
+      return { title: 'Question is empty', reason: 'Type what you want to look up, then search.', actions: ['clear'] }
     default:
-      return { title: '本次没有可引用的片段', reason: '调整下面的检索条件后重试。定位符只表示位置，不代表结论正确。', actions }
+      return { title: 'No passages to cite', reason: 'Adjust the retrieval settings below and retry. A locator is a position, not proof of correctness.', actions }
   }
 }
 
 /** Actionable copy for a failed request, with a retry when it can help. */
 export function errorGuidance(code: string, status: number): { title: string; hint: string; retry: boolean } {
   if (code === 'network_error' || status === 0) {
-    return { title: '连不上本机服务', hint: '确认 Tangentry 仍在运行，然后重试。', retry: true }
+    return { title: 'Cannot reach the local service', hint: 'Make sure Tangentry is still running, then retry.', retry: true }
   }
   if (status === 504 || code === 'ai_timeout') {
-    return { title: '检索超时', hint: '内容较长时可能超时。可缩小上下文预算后重试。', retry: true }
+    return { title: 'Search timed out', hint: 'Long documents can time out. Reduce the context budget and retry.', retry: true }
   }
   if (status === 401 || code === 'unauthorized') {
-    return { title: '登录已失效', hint: '请重新登录后再检索。', retry: false }
+    return { title: 'Session expired', hint: 'Sign in again, then search.', retry: false }
   }
   if (status === 503) {
-    return { title: '检索服务暂不可用', hint: '检查「检索设置」里的服务与密钥，然后重试。', retry: true }
+    return { title: 'Retrieval service unavailable', hint: 'Check the service and key under Retrieval settings, then retry.', retry: true }
   }
-  return { title: '检索失败', hint: '可以直接重试；若持续失败，检查检索设置。', retry: true }
+  return { title: 'Search failed', hint: 'Retry once; if it keeps failing, check the retrieval settings.', retry: true }
 }
 
 /**

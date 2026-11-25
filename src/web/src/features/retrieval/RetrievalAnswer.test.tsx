@@ -20,24 +20,24 @@ function render(over: Partial<React.ComponentProps<typeof RetrievalAnswer>> = {}
 describe('RetrievalAnswer', () => {
   it('renders the answer with its question', () => {
     const html = render()
-    expect(html).toContain('根据原文生成的回答')
+    expect(html).toContain('Answer from the sources')
     expect(html).toContain('第二十五条如此规定')
     expect(html).toContain('香港居民在法律面前一律平等吗')
   })
 
   it('states how many passages grounded the answer', () => {
     const html = render()
-    expect(html).toContain('回答基于 12 条原文生成')
-    expect(html).toContain('60,000 字符')
+    expect(html).toContain('from 12 passages')
+    expect(html).toContain('60,000 characters')
   })
 
   it('says a locator is not proof of correctness', () => {
-    expect(render()).toContain('定位符只表示位置，不代表结论正确')
+    expect(render()).toContain('A locator only marks a position, not correctness')
   })
 
   it('warns when the source text came from OCR', () => {
-    expect(render({ ocrDerived: true })).toContain('OCR 识别文本')
-    expect(render({ ocrDerived: false })).not.toContain('OCR 识别文本')
+    expect(render({ ocrDerived: true })).toContain('came from OCR')
+    expect(render({ ocrDerived: false })).not.toContain('came from OCR')
   })
 
   it('marks the answer as AI generated', () => {
@@ -46,9 +46,9 @@ describe('RetrievalAnswer', () => {
 
   it('shows progress while the answer is being generated', () => {
     const html = render({ answer: null, pending: true })
-    expect(html).toContain('正在根据原文生成回答')
-    expect(html).toContain('12 条原文')
-    expect(html).not.toContain('根据原文生成的回答')
+    expect(html).toContain('Generating an answer from the sources')
+    expect(html).toContain('12 passages')
+    expect(html).not.toContain('Answer from the sources')
   })
 
   it('renders nothing once a pending answer is cleared', () => {
@@ -57,9 +57,9 @@ describe('RetrievalAnswer', () => {
 
   it('surfaces a failure with a route to the chat model settings', () => {
     const html = render({ answer: null, error: '尚未配置对话模型。' })
-    expect(html).toContain('未能生成回答')
+    expect(html).toContain('Could not generate an answer')
     expect(html).toContain('尚未配置对话模型。')
-    expect(html).toContain('检查对话模型设置')
+    expect(html).toContain('Check the chat model settings')
     expect(html).toContain('role="alert"')
   })
 

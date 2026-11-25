@@ -7,18 +7,18 @@ import { defaultRetrievalSettings } from './retrievalSettings'
 describe('RetrievalSettingsPanel', () => {
   it('renders the local-first defaults with a save action', () => {
     const html = renderToStaticMarkup(createElement(RetrievalSettingsPanel, {}))
-    expect(html).toContain('检索服务设置')
-    expect(html).toContain('保存检索设置')
+    expect(html).toContain('Retrieval service settings')
+    expect(html).toContain('Save retrieval settings')
     expect(html).toContain('bge-m3')
-    expect(html).toContain('本地（推荐）')
-    expect(html).toContain('阿里云百炼')
-    expect(html).toContain('API 密钥（可选）')
+    expect(html).toContain('Local (recommended)')
+    expect(html).toContain('Alibaba Cloud Bailian')
+    expect(html).toContain('API key (optional)')
   })
 
   it('shows the stored-key indicator without ever rendering a key', () => {
     const html = renderToStaticMarkup(createElement(RetrievalSettingsPanel, { hasKey: true }))
-    expect(html).toContain('API 密钥（已配置）')
-    expect(html).toContain('已保存；留空保留')
+    expect(html).toContain('API key (configured)')
+    expect(html).toContain('Saved; leave blank to keep')
   })
 
   it('renders the Bailian per-model dimension choices', () => {
@@ -36,7 +36,7 @@ describe('RetrievalSettingsPanel', () => {
     settings.dimensions = 0
     const html = renderToStaticMarkup(createElement(RetrievalSettingsPanel, { initial: settings }))
     expect(html).toContain('role="alert"')
-    expect(html).toContain('向量维度必须是正整数')
+    expect(html).toContain('Dimensions must be a positive integer')
     expect(html).toContain('disabled')
   })
 
@@ -45,6 +45,6 @@ describe('RetrievalSettingsPanel', () => {
     settings.rerankProvider = 'bailian'
     settings.maxRerankRequests = 0
     const html = renderToStaticMarkup(createElement(RetrievalSettingsPanel, { initial: settings }))
-    expect(html).toContain('启用重排需要正的重排请求预算')
+    expect(html).toContain('Rerank requires a positive rerank request budget')
   })
 })

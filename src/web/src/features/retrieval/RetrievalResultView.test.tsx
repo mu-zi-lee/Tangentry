@@ -45,15 +45,15 @@ function render(value: WorkbenchResult, extra: Record<string, unknown> = {}) {
 describe('RetrievalResultView', () => {
   it('renders the exact passage text, locator, scores and version', () => {
     const html = render(result('ok', [passage()], 4200), { selected: item })
-    expect(html).toContain('已检索到相关原文')
+    expect(html).toContain('Relevant passages found')
     expect(html).toContain('这是命中的原文片段。')
     expect(html).toContain('article:12:s3')
-    expect(html).toContain('混合得分 82%')
-    expect(html).toContain('词汇得分 60%')
-    expect(html).toContain('语义余弦 90%')
-    expect(html).toContain('版本 <code>2</code>')
+    expect(html).toContain('Hybrid score 82%')
+    expect(html).toContain('Lexical score 60%')
+    expect(html).toContain('Semantic cosine 90%')
+    expect(html).toContain('Version <code>2</code>')
     expect(html).toContain('0123456789ab')
-    expect(html).toContain('命中片段')
+    expect(html).toContain('Matched passages')
   })
 
   it('draws score bars whose width matches the score', () => {
@@ -74,19 +74,19 @@ describe('RetrievalResultView', () => {
   })
 
   it('offers copying the locator', () => {
-    expect(render(result('ok', [passage()]))).toContain('复制定位符 article:12:s3')
+    expect(render(result('ok', [passage()]))).toContain('Copy locator article:12:s3')
   })
 
   it('keeps the primary metrics on screen and the rest one click away', () => {
     const html = render(result('ok', [passage()]), { elapsedMs: 236 })
-    expect(html).toContain('命中片段')
-    expect(html).toContain('检索方式')
-    expect(html).toContain('重排')
-    expect(html).toContain('检索耗时')
+    expect(html).toContain('Matched passages')
+    expect(html).toContain('Mode')
+    expect(html).toContain('Rerank')
+    expect(html).toContain('Search time')
     expect(html).toContain('236 ms')
     // Secondary detail is collapsed until asked for.
     expect(html).not.toContain('bge-m3')
-    expect(html).toContain('更多指标')
+    expect(html).toContain('More metrics')
   })
 
   it('shows the rerank model as a primary metric', () => {
@@ -95,8 +95,8 @@ describe('RetrievalResultView', () => {
 
   it('offers a display sort without changing the selection', () => {
     const html = render(result('ok', [passage()]), { sort: 'source', onSortChange: () => {} })
-    expect(html).toContain('按相关度')
-    expect(html).toContain('按原文顺序')
+    expect(html).toContain('By relevance')
+    expect(html).toContain('Document order')
     expect(html).toContain('aria-pressed="true"')
   })
 
@@ -108,16 +108,16 @@ describe('RetrievalResultView', () => {
   })
 
   it('shows a rerank bar only when the passage has a rerank score', () => {
-    expect(render(result('ok', [passage({ rerankScore: 0.7 })]))).toContain('重排得分 70%')
-    expect(render(result('ok', [passage()]))).not.toContain('重排得分')
+    expect(render(result('ok', [passage({ rerankScore: 0.7 })]))).toContain('Rerank score 70%')
+    expect(render(result('ok', [passage()]))).not.toContain('Rerank score')
   })
 
   it('renders no_match with its own copy and no passage list', () => {
     const html = render(result('no_match'))
-    expect(html).toContain('未找到相关原文片段')
+    expect(html).toContain('No matching passages')
     expect(html).not.toContain('retrieval-passage"')
-    expect(html).toContain('没有匹配的原文片段')
-    expect(html).toContain('换个说法')
+    expect(html).toContain('No matching passages')
+    expect(html).toContain('different wording')
   })
 
   it('offers concrete next steps when nothing matched', () => {
@@ -128,30 +128,30 @@ describe('RetrievalResultView', () => {
       onRead: () => {},
       onNoResultAction: action => seen.push(action),
     }))
-    expect(html).toContain('开启语义扫描')
-    expect(html).toContain('扩大到 120,000 字符')
-    expect(html).toContain('改用混合检索')
-    expect(html).toContain('清空问题')
+    expect(html).toContain('Enable semantic sweep')
+    expect(html).toContain('Widen budget to 120,000')
+    expect(html).toContain('Switch to Hybrid')
+    expect(html).toContain('Clear question')
     expect(seen).toEqual([])
   })
 
   it('keeps coverage-limited passages and never calls them no_match', () => {
     const html = render(result('semantic_sweep_limited', [passage()]))
-    expect(html).toContain('语义扫描覆盖有限')
-    expect(html).not.toContain('未找到相关原文片段')
+    expect(html).toContain('Semantic sweep coverage is limited')
+    expect(html).not.toContain('No matching passages')
     expect(html).toContain('这是命中的原文片段。')
   })
 
   it('shows the stale-source hint so the user re-runs retrieval', () => {
     const html = render(result('stale_source'))
-    expect(html).toContain('原文已更新，引用已失效')
-    expect(html).toContain('请重新检索以获取最新原文。')
+    expect(html).toContain('Source updated; citations are stale')
+    expect(html).toContain('Search again to use the latest text.')
   })
 
   it('keeps the local-OCR hint without implying a cloud upload', () => {
     const html = render(result('pdf_ocr_unavailable'))
-    expect(html).toContain('本地 OCR 不可用')
-    expect(html).toContain('不会自动上传云端')
+    expect(html).toContain('Local OCR unavailable')
+    expect(html).toContain('nothing is uploaded')
   })
 
   it('renders only the passages the server returned', () => {
@@ -162,20 +162,20 @@ describe('RetrievalResultView', () => {
   })
 
   it('offers opening the source only when the selection matches the passage', () => {
-    expect(render(result('ok', [passage()]), { selected: item })).toContain('打开原文')
-    expect(render(result('ok', [passage()]))).not.toContain('打开原文')
-    expect(render(result('ok', [passage({ contentId: 'article:99' })]), { selected: item })).not.toContain('打开原文')
+    expect(render(result('ok', [passage()]), { selected: item })).toContain('Open source')
+    expect(render(result('ok', [passage()]))).not.toContain('Open source')
+    expect(render(result('ok', [passage({ contentId: 'article:99' })]), { selected: item })).not.toContain('Open source')
   })
 
   it('shows a readable position instead of only a raw locator', () => {
     const html = render(result('ok', [passage({ source: 'pdf', locator: 'pdf:bf3e9e65a4afaa5ea28e2338c93a849ef064c59820f354bd75c3cb3f6bde5d94:61:s0-s3', sentenceStart: 2, sentenceEnd: 6 })]))
-    expect(html).toContain('第 61 页 · 句 3–6')
+    expect(html).toContain('Page 61 · sentences 3–6')
   })
 
   it('offers a page jump for PDF hits and a plain open for others', () => {
     const pdf = passage({ source: 'pdf', locator: 'pdf:bf3e9e65a4afaa5ea28e2338c93a849ef064c59820f354bd75c3cb3f6bde5d94:61:s0-s3' })
-    expect(render(result('ok', [pdf]), { selected: item })).toContain('跳到第 61 页')
-    expect(render(result('ok', [passage()]), { selected: item })).toContain('打开原文')
+    expect(render(result('ok', [pdf]), { selected: item })).toContain('Go to page 61')
+    expect(render(result('ok', [passage()]), { selected: item })).toContain('Open source')
   })
 
   it('passes the page to the reader when jumping', () => {
@@ -184,15 +184,15 @@ describe('RetrievalResultView', () => {
     const html = renderToStaticMarkup(createElement(RetrievalResultView, {
       result: result('ok', [pdf]), selected: item, onRead: (_item, page) => { got = page },
     }))
-    expect(html).toContain('跳到第 61 页')
+    expect(html).toContain('Go to page 61')
     expect(got).toBeUndefined() // render only; the handler is asserted in the browser check
   })
 
   it('labels subtitle and pdf locators distinctly', () => {
     const subtitle = render(result('ok', [passage({ source: 'subtitle', locator: 'subtitle:zh:2992-2999' })]))
-    expect(subtitle).toContain('字幕 zh:2992-2999')
+    expect(subtitle).toContain('Subtitle zh:2992-2999')
     const pdf = render(result('ok', [passage({ source: 'pdf', locator: 'pdf:hash:7:s2' })]))
-    expect(pdf).toContain('PDF 第 7 页')
+    expect(pdf).toContain('PDF page 7')
   })
 })
 
@@ -234,27 +234,27 @@ describe('RetrievalResultView pagination', () => {
 
   it('reports the shown and total counts so nothing looks dropped', () => {
     const html = render(value, { pageSize: 10 })
-    expect(html).toContain('已显示 10 / 共 25 条片段')
-    expect(html).toContain('其余 15 条尚未展开')
+    expect(html).toContain('Showing 10 of 25 passages')
+    expect(html).toContain('15 more are not expanded yet')
   })
 
   it('offers loading more and expanding everything', () => {
     const html = render(value, { pageSize: 10 })
-    expect(html).toContain('加载更多（还有 15 条）')
-    expect(html).toContain('全部展开')
+    expect(html).toContain('Load more (15 left)')
+    expect(html).toContain('Expand all')
   })
 
   it('still reports the server total in the metrics', () => {
     const html = render(value, { pageSize: 10 })
-    expect(html).toContain('命中片段')
+    expect(html).toContain('Matched passages')
     expect(html).toContain('>25</dd>')
   })
 
   it('shows no pager when everything fits', () => {
     const html = render(value, { pageSize: 50 })
     expect((html.match(/data-passage-id=/g) ?? []).length).toBe(25)
-    expect(html).not.toContain('加载更多')
-    expect(html).not.toContain('尚未展开')
+    expect(html).not.toContain('Load more')
+    expect(html).not.toContain('not expanded yet')
   })
 
   it('keeps the first page in server order', () => {

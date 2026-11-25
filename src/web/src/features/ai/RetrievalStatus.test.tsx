@@ -24,7 +24,7 @@ describe('RetrievalStatus (B-T25 / B-T05)', () => {
 
   it('renders an explicit no-match marker with no passage chips (B-T05)', () => {
     const html = renderToStaticMarkup(createElement(RetrievalStatus, { response: response('no_match') }))
-    expect(html).toContain('未找到')
+    expect(html).toContain('No matching')
     expect(html).toContain('data-status="no_match"')
     expect(html).not.toContain('ai-retrieval-chip')
   })
@@ -32,7 +32,7 @@ describe('RetrievalStatus (B-T25 / B-T05)', () => {
   it('renders semantic_sweep_limited as a coverage limitation, keeping passages (B-T25)', () => {
     const html = renderToStaticMarkup(createElement(RetrievalStatus, { response: response('semantic_sweep_limited', true) }))
     expect(html).toContain('data-status="semantic_sweep_limited"')
-    expect(html).toContain('覆盖')
+    expect(html).toContain('coverage')
     expect(html).not.toContain('data-status="no_match"')
     expect(html).toContain('ai-retrieval-chip') // valid passages not suppressed
     expect(html).toContain('rss:x#article:0:s0:0-5')
@@ -40,15 +40,15 @@ describe('RetrievalStatus (B-T25 / B-T05)', () => {
 
   it('renders PDF extracting/no-text states with a retry hint', () => {
     const extracting = renderToStaticMarkup(createElement(RetrievalStatus, { response: response('pdf_extracting') }))
-    expect(extracting).toContain('提取中')
-    expect(extracting).toContain('重试')
+    expect(extracting).toContain('Extracting')
+    expect(extracting).toContain('Try again')
     const noText = renderToStaticMarkup(createElement(RetrievalStatus, { response: response('pdf_no_text') }))
     expect(noText).toContain('OCR')
   })
 
   it('renders distinct error copy for invalid budget', () => {
     const html = renderToStaticMarkup(createElement(RetrievalStatus, { response: response('invalid_budget') }))
-    expect(html).toContain('预算无效')
+    expect(html).toContain('Invalid retrieval budget')
     expect(html).toContain('ai-retrieval-error')
   })
 })

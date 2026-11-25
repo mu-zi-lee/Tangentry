@@ -37,7 +37,7 @@ export function SamplesPanel({ status, pending, error, notice, confirmRemove, on
         <span className="samples-icon" aria-hidden="true"><BookOpen size={18} strokeWidth={1.8}/></span>
         <div>
           <h2>示例资料</h2>
-          <p>内置几份公开文件，让你在资料库为空时也能立刻试读与「检索服务」。{status && ` ${samplesSummary(status)}`}</p>
+          <p>内置几份公开文件，让你在资料库为空时也能立刻试读与「Retrieval」。{status && ` ${samplesSummary(status)}`}</p>
         </div>
       </header>
 
@@ -135,7 +135,7 @@ export function SamplesSettings({ active = true }: { active?: boolean }) {
         ? await setSamplesEnabled(enabled)
         : action === 'load' ? await loadSamplesNow() : await removeSamples()
       setStatus(next)
-      if (action === 'load') setNotice('示例资料已载入，可在「资料库」或「检索服务」中使用。')
+      if (action === 'load') setNotice('示例资料已载入，可在「资料库」或「Retrieval」中使用。')
       if (action === 'remove') { setNotice('示例资料已从资料库移除。'); setConfirmRemove(false) }
     } catch (cause) {
       setError(cause instanceof APIError ? cause.message : '操作失败，请重试。')

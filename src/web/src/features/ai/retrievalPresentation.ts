@@ -18,41 +18,41 @@ export interface RetrievalStatusView {
 export function retrievalStatusView(status: string): RetrievalStatusView {
   switch (status) {
     case 'ok':
-      return { label: '已检索到相关原文', tone: 'ok' }
+      return { label: 'Relevant passages found', tone: 'ok' }
     case 'lexical_only':
-      return { label: '仅词汇检索（嵌入不可用或未启用）', tone: 'info' }
+      return { label: 'Lexical retrieval only (embedding unavailable or off)', tone: 'info' }
     case 'semantic_sweep_limited':
-      return { label: '语义扫描覆盖有限', tone: 'warning', hint: '采样未覆盖全文，零重叠召回受覆盖率限制；这不是“无匹配”。' }
+      return { label: 'Semantic sweep coverage is limited', tone: 'warning', hint: 'The sample did not cover the whole document, so zero-overlap recall is capped by coverage. This is not a “no match”.' }
     case 'degraded_budget':
-      return { label: '预算降级（已省略摘要/历史）', tone: 'warning' }
+      return { label: 'Budget degraded (summary/history omitted)', tone: 'warning' }
     case 'no_match':
-      return { label: '未找到相关原文片段', tone: 'info' }
+      return { label: 'No matching passages', tone: 'info' }
     case 'no_verified_passages':
-      return { label: '候选片段均未通过原文校验', tone: 'warning' }
+      return { label: 'No passage passed source verification', tone: 'warning' }
     case 'source_unverified':
-      return { label: '部分片段未通过原文校验', tone: 'warning' }
+      return { label: 'Some passages failed source verification', tone: 'warning' }
     case 'stale_source':
-      return { label: '原文已更新，引用已失效', tone: 'warning', hint: '请重新检索以获取最新原文。' }
+      return { label: 'Source updated; citations are stale', tone: 'warning', hint: 'Search again to use the latest text.' }
     case 'invalid_budget':
-      return { label: '检索预算无效', tone: 'error' }
+      return { label: 'Invalid retrieval budget', tone: 'error' }
     case 'context_budget_exceeded':
-      return { label: '上下文超出预算', tone: 'error' }
+      return { label: 'Context exceeds the budget', tone: 'error' }
     case 'pdf_extracting':
-      return { label: 'PDF 文本提取中', tone: 'info', hint: '请稍后重试。' }
+      return { label: 'Extracting PDF text', tone: 'info', hint: 'Try again shortly.' }
     case 'pdf_no_text':
-      return { label: 'PDF 没有可用文本', tone: 'warning', hint: '可能为扫描件；请配置本地 OCR 后重试。' }
+      return { label: 'PDF has no extractable text', tone: 'warning', hint: 'It may be a scan; configure local OCR and retry.' }
     case 'pdf_ocr_unavailable':
-      return { label: '本地 OCR 不可用', tone: 'warning', hint: '请安装并配置本地 PaddleOCR；不会自动上传云端。' }
+      return { label: 'Local OCR unavailable', tone: 'warning', hint: 'Install and configure local PaddleOCR; nothing is uploaded.' }
     case 'pdf_extract_failed':
-      return { label: 'PDF 文本提取失败', tone: 'error', hint: '请重试或检查文件。' }
+      return { label: 'PDF text extraction failed', tone: 'error', hint: 'Retry or check the file.' }
     case 'embedding_unavailable':
-      return { label: '嵌入服务不可用', tone: 'warning' }
+      return { label: 'Embedding service unavailable', tone: 'warning' }
     case 'empty':
-      return { label: '问题为空', tone: 'info' }
+      return { label: 'Question is empty', tone: 'info' }
     case 'invalid_input':
-      return { label: '输入包含非法字符', tone: 'error' }
+      return { label: 'Input contains invalid characters', tone: 'error' }
     default:
-      return { label: `检索状态：${status}`, tone: 'info' }
+      return { label: `Status: ${status}`, tone: 'info' }
   }
 }
 
@@ -66,15 +66,15 @@ export function isCoverageLimited(status: string): boolean {
 export function passageChipLabel(passage: RetrievalPassageRef): string {
   switch (passage.source) {
     case 'subtitle':
-      return `字幕 ${passage.locator.replace(/^subtitle:/, '')}`
+      return `Subtitle ${passage.locator.replace(/^subtitle:/, '')}`
     case 'pdf': {
       const parts = passage.locator.split(':')
-      return `PDF 第 ${parts[2] ?? '?'} 页`
+      return `PDF page ${parts[2] ?? '?'}`
     }
     case 'discussion':
-      return `讨论 ${passage.locator.replace(/^discussion:/, '')}`
+      return `Post ${passage.locator.replace(/^discussion:/, '')}`
     default:
-      return `段落 ${passage.locator.replace(/^article:/, '')}`
+      return `Paragraph ${passage.locator.replace(/^article:/, '')}`
   }
 }
 

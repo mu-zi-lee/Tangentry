@@ -4,7 +4,7 @@ export type View = 'discovery' | 'bilibili' | 'search' | 'library' | 'subscripti
 export type ViewportTarget = { top: number; sourceID: string; focusID: string; routeKey: string }
 export type ViewportSnapshot = ViewportTarget & { view: View }
 export const viewPaths: Record<View, string> = { bilibili: '/bilibili', history: '/history', discovery: '/', search:'/search', library: '/library', subscriptions: '/subscriptions', downloads: '/downloads', tools: '/tools', reader: '/reader', notes: '/notes', retrieval: '/retrieval' }
-export const viewNames: Record<View, string> = { bilibili: 'B站', history: '历史', discovery: '发现', search:'统一搜索', library: '收藏', subscriptions: '订阅管理', downloads: '下载', tools: '设置', reader: '阅读与播放', notes: '笔记', retrieval: '检索服务' }
+export const viewNames: Record<View, string> = { bilibili: 'B站', history: '历史', discovery: '发现', search:'统一搜索', library: '收藏', subscriptions: '订阅管理', downloads: '下载', tools: '设置', reader: '阅读与播放', notes: '笔记', retrieval: 'Retrieval' }
 export const viewFromURL = (): View => Object.entries(viewPaths).find(([, path]) => path === location.pathname)?.[0] as View ?? 'discovery'
 
 /** Keep query and hash as part of a page identity so same-view history can restore itself. */
